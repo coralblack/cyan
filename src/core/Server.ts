@@ -13,7 +13,7 @@ export class Server {
     this._server = express();
   }
 
-  protected getServer(): Express {
+  public getServer(): Express {
     return this._server;
   }
 

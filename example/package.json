@@ -1,0 +1,29 @@
+{
+  "name": "example",
+  "version": "0.0.1",
+  "description": "Example",
+  "main": "index.js",
+  "scripts": {
+    "ts-node": "ts-node -r tsconfig-paths/register --files",
+    "start": "npm run ts-node src/main.ts",
+    "start:dev": "nodemon --watch ./ --ext ts,js,yaml,yml,json --exec 'TZ=UTC npm run ts-node src/main.ts'",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint --fix . --ext .js,.jsx,.ts,.tsx"
+  },
+  "author": "Gonzo",
+  "license": "MIT",
+  "dependencies": {
+    "cyan": "file:.."
+  },
+  "devDependencies": {
+    "@types/node": "^14.11.2",
+    "eslint": "^7.9.0",
+    "eslint-import-resolver-typescript": "^2.3.0",
+    "eslint-plugin-import": "^2.22.0",
+    "husky": "^4.3.0",
+    "lint-staged": "^10.4.0",
+    "ts-node": "^9.0.0",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^4.0.3"
+  }
+}

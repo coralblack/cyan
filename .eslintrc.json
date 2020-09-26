@@ -44,15 +44,7 @@
     "import/order": [
       "error",
       {
-        "groups": [
-          "builtin",
-          "internal",
-          "external",
-          "sibling",
-          "parent",
-          "object",
-          "index"
-        ],
+        "groups": ["builtin", "internal", "external", "sibling", "parent", "object", "index"],
         "pathGroups": [
           {
             "pattern": "@config/**",

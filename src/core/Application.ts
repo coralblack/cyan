@@ -39,9 +39,9 @@ export interface CyanSettings {
 }
 
 export class Cyan {
-  settings: CyanSettings;
-  logger: Logger;
-  server: Server;
+  public readonly settings: CyanSettings;
+  public readonly logger: Logger;
+  public readonly server: Server;
 
   constructor(settings?: CyanSettings) {
     this.settings = Object.assign(
@@ -60,9 +60,10 @@ export class Cyan {
 
   public start(): void {
     this.initialize();
+    this.listen();
   }
 
-  private initialize(): void {
+  public initialize(): Server {
     this.logger.info(`${this.settings.name}, Starting .. @ ${this.settings.stage}`);
 
     if (!this.settings.options || this.settings.options.bodyParser !== false) {
@@ -76,9 +77,15 @@ export class Cyan {
     this.server.use(this.server.onPageNotFound);
     this.server.use(this.server.onError);
 
-    this.server
-      .listen(this.settings.port, () => this.logger.info(`${this.settings.name}, listening HTTP at ${this.settings.port}`))
-      .on("error", (err: Error) => this.logger.error(err));
+    return this.server;
+  }
+
+  public listen(): void {
+    if (this.settings.port) {
+      this.server
+        .listen(this.settings.port, () => this.logger.info(`${this.settings.name}, listening HTTP at ${this.settings.port}`))
+        .on("error", (err: Error) => this.logger.error(err));
+    }
   }
 
   private initRoutes(): void {

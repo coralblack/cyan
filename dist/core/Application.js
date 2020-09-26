@@ -29,6 +29,7 @@ class Cyan {
     }
     start() {
         this.initialize();
+        this.listen();
     }
     initialize() {
         this.logger.info(`${this.settings.name}, Starting .. @ ${this.settings.stage}`);
@@ -40,9 +41,14 @@ class Cyan {
         this.server.afterInitRoutes();
         this.server.use(this.server.onPageNotFound);
         this.server.use(this.server.onError);
-        this.server
-            .listen(this.settings.port, () => this.logger.info(`${this.settings.name}, listening HTTP at ${this.settings.port}`))
-            .on("error", (err) => this.logger.error(err));
+        return this.server;
+    }
+    listen() {
+        if (this.settings.port) {
+            this.server
+                .listen(this.settings.port, () => this.logger.info(`${this.settings.name}, listening HTTP at ${this.settings.port}`))
+                .on("error", (err) => this.logger.error(err));
+        }
     }
     initRoutes() {
         this.settings.routes.map((router) => {

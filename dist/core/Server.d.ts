@@ -4,7 +4,7 @@ export declare class Server {
     protected readonly cyan: Cyan;
     private _server;
     constructor(cyan: Cyan);
-    protected getServer(): Express;
+    getServer(): Express;
     beforeInitRoutes(): void;
     afterInitRoutes(): void;
     onPageNotFound(request: ExpressRequest, response: ExpressResponse, next: NextFunction): void;

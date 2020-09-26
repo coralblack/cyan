@@ -24,12 +24,13 @@ export interface CyanSettings {
     };
 }
 export declare class Cyan {
-    settings: CyanSettings;
-    logger: Logger;
-    server: Server;
+    readonly settings: CyanSettings;
+    readonly logger: Logger;
+    readonly server: Server;
     constructor(settings?: CyanSettings);
     start(): void;
-    private initialize;
+    initialize(): Server;
+    listen(): void;
     private initRoutes;
     private initHandler;
 }

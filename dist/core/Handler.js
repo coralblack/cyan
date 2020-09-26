@@ -56,7 +56,7 @@ class Handler {
         };
     }
     static getActionParams(req, route, actionParams) {
-        return route.params.map((e, i) => {
+        return (route.params || []).map((e, i) => {
             const actionParam = actionParams.find(ap => ap.index === i);
             if (!actionParam)
                 return undefined;

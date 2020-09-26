@@ -1,0 +1,15 @@
+{
+  "name": "example",
+  "version": "0.0.1",
+  "description": "Example",
+  "main": "index.js",
+  "scripts": {
+    "lint": "echo OK",
+    "lint:fix": "echo OK"
+  },
+  "author": "Gonzo",
+  "license": "MIT",
+  "dependencies": {
+    "dp-ts": "file:.."
+  }
+}

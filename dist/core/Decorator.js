@@ -5,6 +5,7 @@ class MetadataStorage {
     constructor() {
         this.routes = [];
         this.routeParams = [];
+        this.middlewares = [];
     }
 }
 class Metadata {

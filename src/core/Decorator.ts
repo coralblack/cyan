@@ -1,8 +1,9 @@
-import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
+import { MiddlewareMetadataArgs, RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
 
 class MetadataStorage {
   public readonly routes: RouteMetadataArgs[] = [];
   public readonly routeParams: RouteParamMetadataArgs[] = [];
+  public readonly middlewares: MiddlewareMetadataArgs[] = [];
 }
 
 export class Metadata {

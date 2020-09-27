@@ -1,8 +1,10 @@
 import { HandlerFunction } from "./Handler";
 import { Method as HttpMethod } from "../http/Http.method";
+import { EntityColumnOptions, EntityColumnType, EntityOptions } from "../model/Model.repository";
 import { MiddlewareOptions } from "../router";
 import { RouteOptions } from "../router/Router.action";
 import { ParamOptions, ParamType } from "../router/Router.param";
+import { ClassType } from ".";
 export interface RouteMetadataArgs {
     target: Function;
     method: string;
@@ -24,4 +26,14 @@ export interface MiddlewareMetadataArgs {
     method: string;
     handler: HandlerFunction;
     options: MiddlewareOptions;
+}
+export interface EntityMetadataArgs<T = any> {
+    target: ClassType<T>;
+    options: EntityOptions;
+}
+export interface EntityColumnMetadataArgs {
+    target: Function;
+    propertyKey: string;
+    type: EntityColumnType;
+    options: EntityColumnOptions;
 }

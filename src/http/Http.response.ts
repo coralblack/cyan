@@ -9,16 +9,20 @@ export class Response {
     return new Response(Http.Status.Ok, content);
   }
 
-  static notFound(content: string | object, headers?: HttpHeaders): HttpError {
-    return new HttpError(Http.Status.NotFound, content, headers);
+  static notFound(content?: string | object, headers?: HttpHeaders): HttpError {
+    return new HttpError(Http.Status.NotFound, content || "Not Found", headers);
   }
 
-  static notImplemented(content: string | object, headers?: HttpHeaders): HttpError {
-    return new HttpError(Http.Status.NotImplemented, content, headers);
+  static notImplemented(content?: string | object, headers?: HttpHeaders): HttpError {
+    return new HttpError(Http.Status.NotImplemented, content || "Not Implemented", headers);
   }
 
-  static badRequest(content: string | object, headers?: HttpHeaders): HttpError {
-    return new HttpError(Http.Status.BadRequest, content, headers);
+  static badRequest(content?: string | object, headers?: HttpHeaders): HttpError {
+    return new HttpError(Http.Status.BadRequest, content || "Bad Request", headers);
+  }
+
+  static methodNotAllowed(content?: string | object, headers?: HttpHeaders): HttpError {
+    return new HttpError(Http.Status.MethodNotAllowed, content || "Method Not Allowed", headers);
   }
 
   setHeader(name: string, value: string): void {

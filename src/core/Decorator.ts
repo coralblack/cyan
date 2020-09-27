@@ -1,9 +1,17 @@
-import { MiddlewareMetadataArgs, RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
+import { 
+  EntityColumnMetadataArgs,
+  EntityMetadataArgs,
+  MiddlewareMetadataArgs,
+  RouteMetadataArgs,
+  RouteParamMetadataArgs
+} from "../types/MetadataArgs";
 
 class MetadataStorage {
   public readonly routes: RouteMetadataArgs[] = [];
   public readonly routeParams: RouteParamMetadataArgs[] = [];
   public readonly middlewares: MiddlewareMetadataArgs[] = [];
+  public readonly entities: EntityMetadataArgs[] = [];
+  public readonly entityColumns: EntityColumnMetadataArgs[] = [];
 }
 
 export class Metadata {

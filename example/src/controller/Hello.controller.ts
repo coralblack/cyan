@@ -20,7 +20,9 @@ export class HelloController extends BaseController {
   }
 
   @Get("/hello/json")
-  helloJson(): any {
+  async helloJson(): Promise<any> {
+    await this.helloService.model();
+
     return { hello: "world" };
   }
 

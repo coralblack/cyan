@@ -1,4 +1,4 @@
-import { ModelScope } from "./Model.connection";
+import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions } from "./Model.entity";
 import { ClassType } from "../types";
 export interface EntityInfo<T> {
@@ -41,7 +41,7 @@ export declare class Repository<T> {
     private readonly scope;
     private readonly entity;
     private readonly entityInfo;
-    constructor(scope: ModelScope, entity: ClassType<T>);
+    constructor(scope: TransactionScope, entity: ClassType<T>);
     static getEntityInfo<T>(entity: ClassType<T>): EntityInfo<T>;
     save(entity: T): Promise<InsertId>;
     findOne(options?: FindOneOptions<T>): Promise<T>;

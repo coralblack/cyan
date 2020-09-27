@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 import { plainToClass } from "class-transformer";
-import { ModelScope } from "./Model.connection";
+import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
 import { Metadata } from "../core/Decorator";
 import { TraceableError } from "../core/Error";
@@ -49,7 +49,7 @@ export const symEntityInfo = Symbol();
 export class Repository<T> {
   private readonly entityInfo: EntityInfo<T>;
 
-  constructor(private readonly scope: ModelScope, private readonly entity: ClassType<T>) {
+  constructor(private readonly scope: TransactionScope, private readonly entity: ClassType<T>) {
     this.entityInfo = Repository.getEntityInfo(entity);
   }
 

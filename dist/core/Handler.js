@@ -44,9 +44,9 @@ class Handler {
     }
     static beforeHandler(controller) {
         return (req, res, next) => {
-            req.handledRequest = Http_request_1.Request.getContext(req);
+            req.httpRequestContext = Http_request_1.Request.getContext(req);
             controller
-                .beforeHandle(req.handledRequest)
+                .beforeHandle(req.httpRequestContext)
                 .then(() => {
                 next();
             })
@@ -107,7 +107,7 @@ class Handler {
                 next(resp);
             }
             else {
-                res.handledResponse = resp;
+                res.preparedResponse = resp;
                 next();
             }
         };
@@ -115,7 +115,7 @@ class Handler {
     static afterHandler(controller) {
         return (req, res, next) => {
             controller
-                .afterHandle(req.handledRequest, res.handledResponse)
+                .afterHandle(req.httpRequestContext, res.preparedResponse)
                 .then((resp) => {
                 if (resp instanceof Http_error_1.HttpError) {
                     next(resp);
@@ -161,7 +161,7 @@ class Handler {
                 return;
             }
             controller
-                .onHttpError(req.handledRequest, err)
+                .onHttpError(req.httpRequestContext, err)
                 .then((resp) => {
                 next(resp);
             })

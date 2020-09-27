@@ -11,6 +11,8 @@ import { Injector } from "./Injector";
 import { Logger } from "./Logger";
 import { Server } from "./Server";
 import { Controller as HttpController } from "../http/Http.controller";
+import { MIDDLEWARE_PRIORITY_ACTION_HANDLER, MIDDLEWARE_PRIORITY_AFTER_HANDLER, MIDDLEWARE_PRIORITY_BEFORE_HANDLER } from "../router";
+import { HandlerFunction } from "../types/Handler";
 import { Controller as ControllerType } from "../types/Http";
 import { RouteMetadataArgs } from "../types/MetadataArgs";
 
@@ -104,11 +106,23 @@ export class Cyan {
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     this.logger.info(`${this.settings.name}, [router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
 
+    // Default middlewares
+    const handlers: Array<[number, HandlerFunction]> = [
+      [MIDDLEWARE_PRIORITY_BEFORE_HANDLER, Handler.beforeHandler(controller)],
+      [MIDDLEWARE_PRIORITY_ACTION_HANDLER, Handler.actionHandler(controller, route)],
+      [MIDDLEWARE_PRIORITY_AFTER_HANDLER, Handler.afterHandler(controller)],
+    ];
+
+    // Custom attached middlewares
+    Metadata.getStorage().middlewares
+      .filter(middleware => middleware.target === route.target && middleware.method === route.method)
+      .forEach(middleware => {
+        handlers.push([middleware.options.priority || (MIDDLEWARE_PRIORITY_ACTION_HANDLER - 100), middleware.handler]);
+      });
+
     this.server[route.action.toLowerCase()](
       path,
-      Handler.beforeHandler(controller),
-      Handler.actionHandler(controller, route),
-      Handler.afterHandler(controller),
+      ...handlers.sort((a, b) => a[0] - b[0]).map(e => e[1]),
       Handler.errorHandler(controller),
       Handler.httpErrorHandler(controller)
     );

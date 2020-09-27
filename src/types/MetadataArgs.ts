@@ -1,4 +1,6 @@
+import { HandlerFunction } from "./Handler";
 import { Method as HttpMethod } from "../http/Http.method";
+import { MiddlewareOptions } from "../router";
 import { RouteOptions } from "../router/Router.action";
 import { ParamOptions, ParamType } from "../router/Router.param";
 
@@ -20,4 +22,12 @@ export interface RouteParamMetadataArgs {
   type: ParamType;
   name: string;
   options: ParamOptions;
+}
+
+export interface MiddlewareMetadataArgs {
+  target: Function;
+  method: string;
+  
+  handler: HandlerFunction;
+  options: MiddlewareOptions;
 }

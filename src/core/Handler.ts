@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 
 import * as bodyParser from "body-parser";
-import { ErrorRequestHandler, Handler as ExpressHandler, Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
+import { NextFunction } from "express";
 import { get } from "lodash";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArgs";
 import { Metadata } from "./Decorator";
@@ -13,22 +13,14 @@ import { Request as HttpRequest } from "../http/Http.request";
 import { Response as HttpResponse } from "../http/Http.response";
 import { Status as HttpStatus } from "../http/Http.status";
 import { ParamType } from "../router";
-
-interface HandledRequest extends ExpressRequest {
-  handledRequest: HttpRequest;
-}
-
-interface HandledResponse extends ExpressResponse {
-  handledResponse: any;
-  finalized: boolean;
-}
+import { CyanRequest, CyanResponse, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";
 
 export class Handler {
-  public static jsonBodyParser(): ExpressHandler {
+  public static jsonBodyParser(): HandlerFunction {
     const jsonParser = bodyParser.json();
 
-    return (req: HandledRequest, res: ExpressResponse, next: NextFunction) => {
-      jsonParser(req, res, (err) => { // eslint-disable-line consistent-return
+    return (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
+      jsonParser(req as any, res as any, (err) => { // eslint-disable-line consistent-return
         if (err) {
           const respErr = new HttpError(HttpStatus.BadRequest, "The specified json body is invalid.");
 
@@ -41,11 +33,11 @@ export class Handler {
     };
   }
 
-  public static beforeHandler(controller: HttpController): ExpressHandler {
-    return (req: HandledRequest, res: ExpressResponse, next: NextFunction) => {
-      req.handledRequest = HttpRequest.getContext(req);
+  public static beforeHandler(controller: HttpController): HandlerFunction {
+    return (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
+      req.httpRequestContext = HttpRequest.getContext(req);
       controller
-        .beforeHandle(req.handledRequest)
+        .beforeHandle(req.httpRequestContext)
         .then(() => {
           next();
         })
@@ -57,7 +49,7 @@ export class Handler {
 
   private static symActionParams = Symbol();
 
-  public static getActionParams(req: HandledRequest, route: RouteMetadataArgs, actionParams: RouteParamMetadataArgs[]): any[] {
+  public static getActionParams(req: CyanRequest, route: RouteMetadataArgs, actionParams: RouteParamMetadataArgs[]): any[] {
     return (route.params || []).map((e, i) => {
       const actionParam = actionParams.find(ap => ap.index === i);
 
@@ -86,8 +78,8 @@ export class Handler {
     });
   }
 
-  public static actionHandler(controller: HttpController, route: RouteMetadataArgs): ExpressHandler {
-    return async (req: HandledRequest, res: HandledResponse, next: NextFunction) => {
+  public static actionHandler(controller: HttpController, route: RouteMetadataArgs): HandlerFunction {
+    return async (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       let resp: any;
       
       const actionParams: RouteParamMetadataArgs[] = (() => {
@@ -115,16 +107,16 @@ export class Handler {
       if (resp instanceof Error || resp instanceof HttpError) {
         next(resp);
       } else {
-        res.handledResponse = resp;
+        res.preparedResponse = resp;
         next();
       }
     };
   }
 
-  public static afterHandler(controller: HttpController): ExpressHandler {
-    return (req: HandledRequest, res: HandledResponse, next: NextFunction) => {
+  public static afterHandler(controller: HttpController): HandlerFunction {
+    return (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       controller
-        .afterHandle(req.handledRequest, res.handledResponse)
+        .afterHandle(req.httpRequestContext, res.preparedResponse)
         .then((resp) => {
           if (resp instanceof HttpError) {
             next(resp);
@@ -147,8 +139,8 @@ export class Handler {
     };
   }
 
-  public static errorHandler(controller: HttpController): ErrorRequestHandler {
-    return (err: Error, req: HandledRequest, res: HandledResponse, next: NextFunction) => {
+  public static errorHandler(controller: HttpController): ErrorHandlerFunction {
+    return (err: Error, req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       if (err instanceof HttpResponse || err instanceof HttpError) {
         next(err);
         return;
@@ -167,15 +159,15 @@ export class Handler {
     };
   }
 
-  public static httpErrorHandler(controller: HttpController): ErrorRequestHandler {
-    return (err: HttpError, req: HandledRequest, res: HandledResponse, next: NextFunction) => {
+  public static httpErrorHandler(controller: HttpController): ErrorHandlerFunction {
+    return (err: HttpError, req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       if (res.finalized) {
         next(err);
         return;
       }
 
       controller
-        .onHttpError(req.handledRequest, err)
+        .onHttpError(req.httpRequestContext, err)
         .then((resp) => {
           next(resp);
         })

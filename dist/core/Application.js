@@ -9,6 +9,7 @@ const Handler_1 = require("./Handler");
 const Injector_1 = require("./Injector");
 const Logger_1 = require("./Logger");
 const Server_1 = require("./Server");
+const router_1 = require("../router");
 var Stage;
 (function (Stage) {
     Stage["Local"] = "local";
@@ -61,7 +62,17 @@ class Cyan {
     initHandler(controller, route) {
         const path = path_1.resolve(this.settings.basePath || "/", route.path);
         this.logger.info(`${this.settings.name}, [router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
-        this.server[route.action.toLowerCase()](path, Handler_1.Handler.beforeHandler(controller), Handler_1.Handler.actionHandler(controller, route), Handler_1.Handler.afterHandler(controller), Handler_1.Handler.errorHandler(controller), Handler_1.Handler.httpErrorHandler(controller));
+        const handlers = [
+            [router_1.MIDDLEWARE_PRIORITY_BEFORE_HANDLER, Handler_1.Handler.beforeHandler(controller)],
+            [router_1.MIDDLEWARE_PRIORITY_ACTION_HANDLER, Handler_1.Handler.actionHandler(controller, route)],
+            [router_1.MIDDLEWARE_PRIORITY_AFTER_HANDLER, Handler_1.Handler.afterHandler(controller)],
+        ];
+        Decorator_1.Metadata.getStorage().middlewares
+            .filter(middleware => middleware.target === route.target && middleware.method === route.method)
+            .forEach(middleware => {
+            handlers.push([middleware.options.priority || (router_1.MIDDLEWARE_PRIORITY_ACTION_HANDLER - 100), middleware.handler]);
+        });
+        this.server[route.action.toLowerCase()](path, ...handlers.sort((a, b) => a[0] - b[0]).map(e => e[1]), Handler_1.Handler.errorHandler(controller), Handler_1.Handler.httpErrorHandler(controller));
     }
 }
 exports.Cyan = Cyan;

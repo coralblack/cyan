@@ -14,4 +14,5 @@ __exportStar(require("./Model"), exports);
 __exportStar(require("./Model.connection"), exports);
 __exportStar(require("./Model.query"), exports);
 __exportStar(require("./Model.repository"), exports);
+__exportStar(require("./Model.entity"), exports);
 //# sourceMappingURL=index.js.map

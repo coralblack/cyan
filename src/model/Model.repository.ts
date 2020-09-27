@@ -2,64 +2,22 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 import { plainToClass } from "class-transformer";
 import { ModelScope } from "./Model.connection";
+import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
 import { Metadata } from "../core/Decorator";
 import { TraceableError } from "../core/Error";
 import { ClassType } from "../types";
 
-export interface EntityOptions {
-  name: string;
-}
-
-export enum EntityColumnType {
-  Primary = "PRIMARY",
-  Column = "COLUMN"
-}
-
-export interface EntityColumnOptions {
-  name: string;
-}
-
-export function Entity(options?: EntityOptions): ClassDecorator {
-  return function RouteInner(target: any) {
-    Metadata.getStorage().entities.push({
-      target,
-      options,
-    });
-  };
-}
-
-function EntityColumn(type: EntityColumnType, options: EntityColumnOptions): PropertyDecorator {
-  return function RouteInner(target: any, propertyKey: string) {
-    Metadata.getStorage().entityColumns.push({
-      target: target.constructor,
-      propertyKey,
-      type,
-      options: Object.assign({ name: target.name }, options),
-    });
-  };
-}
-
-export function PrimaryColumn(options: EntityColumnOptions): PropertyDecorator {
-  return EntityColumn(EntityColumnType.Primary, options);
-}
-
-export function Column(options: EntityColumnOptions): PropertyDecorator {
-  return EntityColumn(EntityColumnType.Column, options);
-}
-
-const symEntityInfo = Symbol();
-
-interface EntityInfo<T> {
+export interface EntityInfo<T> {
   target: ClassType<T>;
   tableName: string;
   columns: Array<string>;
-  fields: {[key: string]: string};
+  fields: {[key: string]: EntityColumnOptions};
   primaryColumns: Array<string>;
   criteriaColumns: Array<string>;
 }
 
 type RawQuery = (k: string) => string;
-type InsertId = bigint | number;
+export type InsertId = bigint | number;
 
 type FindOperatorComp<T> = { 
   ">=": T | RawQuery;
@@ -86,6 +44,8 @@ export interface FindOptions<T> extends FindOneOptions<T> {
   limit?: number | bigint;
 }
 
+export const symEntityInfo = Symbol();
+
 export class Repository<T> {
   private readonly entityInfo: EntityInfo<T>;
 
@@ -94,7 +54,6 @@ export class Repository<T> {
   }
 
   static getEntityInfo<T>(entity: ClassType<T>): EntityInfo<T> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     if (entity[symEntityInfo]) return entity[symEntityInfo];
 
     const metadata = Metadata.getStorage().entities.find(e => e.target === entity);
@@ -110,7 +69,7 @@ export class Repository<T> {
       target: metadata.target,
       tableName: metadata.options.name,
       columns: columns.map(e => e.propertyKey),
-      fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options.name; return p; }, {}),
+      fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
       primaryColumns: columns.filter(e => e.type === EntityColumnType.Primary).map(e => e.propertyKey),
       criteriaColumns: columns.filter(e => e.type === EntityColumnType.Primary).map(e => e.propertyKey),
     };
@@ -121,10 +80,13 @@ export class Repository<T> {
 
   async save(entity: T): Promise<InsertId> {
     const [res] = await this.scope.kx.insert(this.entityInfo.columns.reduce((p, e) => {
-      const key = this.entityInfo.fields[e];
+      const key = this.entityInfo.fields[e].name;
       const val = ((v): any => {
         if (typeof v === "function") return this.scope.kx.raw(v(key));
-        return v;
+        else if (!v && this.entityInfo.fields[e].default) {
+          return this.scope.kx.raw(this.entityInfo.fields[e].default(key));
+        }
+        else return v;
       })(entity[e]);
 
       p[key] = val;
@@ -157,25 +119,30 @@ export class Repository<T> {
   private async select(options?: FindOptions<T>): Promise<T[]> {
     try {
       const selectColumns: any[] = options.select || this.entityInfo.columns;
-      const select = selectColumns.map(e => this.entityInfo.fields[e]);
+      const select = selectColumns.map(e => this.entityInfo.fields[e].name);
 
       let kx = this.scope.kx.select(select).from(this.entityInfo.tableName);
 
       // Query
       if (options.where) {
         Object.keys(options.where).forEach(ke => {
-          const k = this.entityInfo.fields[ke];
+          const k = this.entityInfo.fields[ke].name;
           const v = options.where[ke];
 
-          if (Array.isArray(v)) kx = kx.whereIn(k, v);
-          else if (typeof v === "function") kx = kx.where(this.scope.kx.raw(v(k)));
-          else kx = kx.where(k, v);
+          if (Array.isArray(v))
+            kx = kx.whereIn(k, v);
+          else if (typeof v === "function")
+            kx = kx.where(this.scope.kx.raw(v(k)));
+          else
+            kx = kx.where(k, v);
         });
       }
 
       // Pagination
-      if (options.offset) kx = kx.offset(String(options.offset) as any);
-      if (options.limit) kx = kx.limit(String(options.limit) as any);
+      if (options.offset)
+        kx = kx.offset(String(options.offset) as any);
+      if (options.limit)
+        kx = kx.limit(String(options.limit) as any);
 
       if (options.debug) {
         // eslint-disable-next-line no-console
@@ -184,11 +151,11 @@ export class Repository<T> {
 
       const rows = await kx;
 
-      if (!rows || !rows.length) return [];
-  
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      if (!rows || !rows.length)
+        return [];
+
       return rows.map((e: any) => this.mapping(selectColumns, e));
-      
+
     } catch (err) {
       throw TraceableError(err);
     }
@@ -196,7 +163,7 @@ export class Repository<T> {
 
   private mapping(select: string[], row: any): T {
     const x = plainToClass(this.entityInfo.target, select.reduce((p, e) => {
-      p[e] = row[this.entityInfo.fields[e]];
+      p[e] = row[this.entityInfo.fields[e].name];
       return p;
     }, {}));
 

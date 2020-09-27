@@ -1,6 +1,6 @@
 import { HandlerFunction } from "./Handler";
 import { Method as HttpMethod } from "../http/Http.method";
-import { EntityColumnOptions, EntityColumnType, EntityOptions } from "../model/Model.repository";
+import { EntityColumnOptions, EntityColumnType, EntityOptions } from "../model/Model.entity";
 import { MiddlewareOptions } from "../router";
 import { RouteOptions } from "../router/Router.action";
 import { ParamOptions, ParamType } from "../router/Router.param";

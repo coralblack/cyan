@@ -12,10 +12,10 @@ class HelloEntity {
   @PrimaryColumn({ name: "ID" })
   id: bigint;
 
-  @Column({ name: "NAME" })
+  @Column({ name: "NAME", default: () => "UUID()" })
   name: string;
 
-  @Column({ name: "CREATED_AT" })
+  @Column({ name: "CREATED_AT", default: () => "CURRENT_TIMESTAMP()" })
   createdAt: Date;
 }
 
@@ -53,10 +53,10 @@ export class HelloModel extends BaseModel {
       const save1 = await repo.save({
         id: (() => "UUID_SHORT()") as any,
         name: save1Name,
-        createdAt: new Date(),
+        createdAt: null,
       });
 
-      assert(save1 > 0);
+      assert(save1 > 100000000);
 
       const save2Id = BigInt(new Date().getTime());
       const save2Name = `${new Date().getTime()}`;
@@ -67,6 +67,13 @@ export class HelloModel extends BaseModel {
       });
 
       assert(save2Id === save2);
+
+      const save3Id = BigInt(new Date().getTime() + 1234);
+      const save3 = await repo.save({ id: save3Id } as any);
+      const found3 = await repo.findOne({ where: { id: save3 as bigint } });
+
+      assert(found3.name.length === "2ca4d1cc-010c-11eb-8052-51e99d56d62f".length);
+      assert(found3.createdAt.getTime() > 1000000);
 
       const found = await repo.findOne({
         select: ["name"],

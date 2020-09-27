@@ -1,42 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Repository = exports.Column = exports.PrimaryColumn = exports.Entity = exports.EntityColumnType = void 0;
+exports.Repository = exports.symEntityInfo = void 0;
 const class_transformer_1 = require("class-transformer");
+const Model_entity_1 = require("./Model.entity");
 const Decorator_1 = require("../core/Decorator");
 const Error_1 = require("../core/Error");
-var EntityColumnType;
-(function (EntityColumnType) {
-    EntityColumnType["Primary"] = "PRIMARY";
-    EntityColumnType["Column"] = "COLUMN";
-})(EntityColumnType = exports.EntityColumnType || (exports.EntityColumnType = {}));
-function Entity(options) {
-    return function RouteInner(target) {
-        Decorator_1.Metadata.getStorage().entities.push({
-            target,
-            options,
-        });
-    };
-}
-exports.Entity = Entity;
-function EntityColumn(type, options) {
-    return function RouteInner(target, propertyKey) {
-        Decorator_1.Metadata.getStorage().entityColumns.push({
-            target: target.constructor,
-            propertyKey,
-            type,
-            options: Object.assign({ name: target.name }, options),
-        });
-    };
-}
-function PrimaryColumn(options) {
-    return EntityColumn(EntityColumnType.Primary, options);
-}
-exports.PrimaryColumn = PrimaryColumn;
-function Column(options) {
-    return EntityColumn(EntityColumnType.Column, options);
-}
-exports.Column = Column;
-const symEntityInfo = Symbol();
+exports.symEntityInfo = Symbol();
 class Repository {
     constructor(scope, entity) {
         this.scope = scope;
@@ -44,8 +13,8 @@ class Repository {
         this.entityInfo = Repository.getEntityInfo(entity);
     }
     static getEntityInfo(entity) {
-        if (entity[symEntityInfo])
-            return entity[symEntityInfo];
+        if (entity[exports.symEntityInfo])
+            return entity[exports.symEntityInfo];
         const metadata = Decorator_1.Metadata.getStorage().entities.find(e => e.target === entity);
         const columns = Decorator_1.Metadata.getStorage().entityColumns.filter(e => e.target === entity);
         if (!metadata) {
@@ -58,20 +27,24 @@ class Repository {
             target: metadata.target,
             tableName: metadata.options.name,
             columns: columns.map(e => e.propertyKey),
-            fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options.name; return p; }, {}),
-            primaryColumns: columns.filter(e => e.type === EntityColumnType.Primary).map(e => e.propertyKey),
-            criteriaColumns: columns.filter(e => e.type === EntityColumnType.Primary).map(e => e.propertyKey),
+            fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
+            primaryColumns: columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
+            criteriaColumns: columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
         };
-        entity[symEntityInfo] = info;
+        entity[exports.symEntityInfo] = info;
         return info;
     }
     async save(entity) {
         const [res] = await this.scope.kx.insert(this.entityInfo.columns.reduce((p, e) => {
-            const key = this.entityInfo.fields[e];
+            const key = this.entityInfo.fields[e].name;
             const val = ((v) => {
                 if (typeof v === "function")
                     return this.scope.kx.raw(v(key));
-                return v;
+                else if (!v && this.entityInfo.fields[e].default) {
+                    return this.scope.kx.raw(this.entityInfo.fields[e].default(key));
+                }
+                else
+                    return v;
             })(entity[e]);
             p[key] = val;
             return p;
@@ -95,11 +68,11 @@ class Repository {
     async select(options) {
         try {
             const selectColumns = options.select || this.entityInfo.columns;
-            const select = selectColumns.map(e => this.entityInfo.fields[e]);
+            const select = selectColumns.map(e => this.entityInfo.fields[e].name);
             let kx = this.scope.kx.select(select).from(this.entityInfo.tableName);
             if (options.where) {
                 Object.keys(options.where).forEach(ke => {
-                    const k = this.entityInfo.fields[ke];
+                    const k = this.entityInfo.fields[ke].name;
                     const v = options.where[ke];
                     if (Array.isArray(v))
                         kx = kx.whereIn(k, v);
@@ -127,7 +100,7 @@ class Repository {
     }
     mapping(select, row) {
         const x = class_transformer_1.plainToClass(this.entityInfo.target, select.reduce((p, e) => {
-            p[e] = row[this.entityInfo.fields[e]];
+            p[e] = row[this.entityInfo.fields[e].name];
             return p;
         }, {}));
         return x;

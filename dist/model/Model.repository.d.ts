@@ -1,30 +1,18 @@
 import { ModelScope } from "./Model.connection";
+import { EntityColumnOptions } from "./Model.entity";
 import { ClassType } from "../types";
-export interface EntityOptions {
-    name: string;
-}
-export declare enum EntityColumnType {
-    Primary = "PRIMARY",
-    Column = "COLUMN"
-}
-export interface EntityColumnOptions {
-    name: string;
-}
-export declare function Entity(options?: EntityOptions): ClassDecorator;
-export declare function PrimaryColumn(options: EntityColumnOptions): PropertyDecorator;
-export declare function Column(options: EntityColumnOptions): PropertyDecorator;
-interface EntityInfo<T> {
+export interface EntityInfo<T> {
     target: ClassType<T>;
     tableName: string;
     columns: Array<string>;
     fields: {
-        [key: string]: string;
+        [key: string]: EntityColumnOptions;
     };
     primaryColumns: Array<string>;
     criteriaColumns: Array<string>;
 }
 declare type RawQuery = (k: string) => string;
-declare type InsertId = bigint | number;
+export declare type InsertId = bigint | number;
 declare type FindOperatorComp<T> = {
     ">=": T | RawQuery;
     ">": T | RawQuery;
@@ -48,6 +36,7 @@ export interface FindOptions<T> extends FindOneOptions<T> {
     offset?: number | bigint;
     limit?: number | bigint;
 }
+export declare const symEntityInfo: unique symbol;
 export declare class Repository<T> {
     private readonly scope;
     private readonly entity;

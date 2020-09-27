@@ -20,9 +20,6 @@
     "type": "git",
     "url": "git+https://github.com/coralblack/cyan.git"
   },
-  "exports": {
-    "core": "./dist/core"
-  },
   "author": "Gonzo",
   "license": "MIT",
   "bugs": {

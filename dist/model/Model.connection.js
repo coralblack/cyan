@@ -3,12 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ConnectionManager = exports.ModelScope = void 0;
+exports.ConnectionManager = exports.TransactionScope = void 0;
 const knex_1 = __importDefault(require("knex"));
 const Model_1 = require("./Model");
 const Model_repository_1 = require("./Model.repository");
 const managers = {};
-class ModelScope {
+class TransactionScope {
     constructor(kx) {
         this.kx = kx;
     }
@@ -20,7 +20,7 @@ class ModelScope {
         return new Model_repository_1.Repository(this, entity);
     }
 }
-exports.ModelScope = ModelScope;
+exports.TransactionScope = TransactionScope;
 class ConnectionManager {
     constructor(kx) {
         this.kx = kx;
@@ -75,7 +75,7 @@ class ConnectionManager {
     }
     transaction(ctx) {
         return this.kx.transaction((trx) => {
-            const connectivity = new ModelScope(trx);
+            const connectivity = new TransactionScope(trx);
             return ctx(connectivity);
         });
     }

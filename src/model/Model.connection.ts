@@ -17,7 +17,7 @@ export type QueryParameterTypes =
   | Array<boolean>
   | Buffer;
 
-export class ModelScope {
+export class TransactionScope {
   constructor(public readonly kx: knex) { }
   
   async execute(query: string, params?: Array<QueryParameterTypes>): Promise<any> {
@@ -93,9 +93,9 @@ export class ConnectionManager {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  transaction<T>(ctx: (conn: ModelScope) => Promise<T>): Promise<T> {
+  transaction<T>(ctx: (conn: TransactionScope) => Promise<T>): Promise<T> {
     return this.kx.transaction((trx: knex) => {
-      const connectivity = new ModelScope(trx);
+      const connectivity = new TransactionScope(trx);
 
       return ctx(connectivity);
     });

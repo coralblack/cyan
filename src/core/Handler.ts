@@ -58,7 +58,7 @@ export class Handler {
   private static symActionParams = Symbol();
 
   public static getActionParams(req: HandledRequest, route: RouteMetadataArgs, actionParams: RouteParamMetadataArgs[]): any[] {
-    return route.params.map((e, i) => {
+    return (route.params || []).map((e, i) => {
       const actionParam = actionParams.find(ap => ap.index === i);
 
       if (!actionParam) return undefined;

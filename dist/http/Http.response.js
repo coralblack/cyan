@@ -32,13 +32,16 @@ class Response {
         return new Response(Http.Status.Ok, content);
     }
     static notFound(content, headers) {
-        return new Http_error_1.HttpError(Http.Status.NotFound, content, headers);
+        return new Http_error_1.HttpError(Http.Status.NotFound, content || "Not Found", headers);
     }
     static notImplemented(content, headers) {
-        return new Http_error_1.HttpError(Http.Status.NotImplemented, content, headers);
+        return new Http_error_1.HttpError(Http.Status.NotImplemented, content || "Not Implemented", headers);
     }
     static badRequest(content, headers) {
-        return new Http_error_1.HttpError(Http.Status.BadRequest, content, headers);
+        return new Http_error_1.HttpError(Http.Status.BadRequest, content || "Bad Request", headers);
+    }
+    static methodNotAllowed(content, headers) {
+        return new Http_error_1.HttpError(Http.Status.MethodNotAllowed, content || "Method Not Allowed", headers);
     }
     setHeader(name, value) {
         this.headers[name] = value;

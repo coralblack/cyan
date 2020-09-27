@@ -83,7 +83,7 @@ export class Repository<T> {
       const key = this.entityInfo.fields[e].name;
       const val = ((v): any => {
         if (typeof v === "function") return this.scope.kx.raw(v(key));
-        else if (!v && this.entityInfo.fields[e].default) {
+        else if (v === undefined && this.entityInfo.fields[e].default) {
           return this.scope.kx.raw(this.entityInfo.fields[e].default(key));
         }
         else return v;

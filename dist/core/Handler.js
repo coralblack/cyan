@@ -122,10 +122,23 @@ class Handler {
                 }
                 else {
                     if (resp instanceof Http_response_1.Response) {
+                        const headers = resp.headers || {};
+                        const response = ((r) => {
+                            if (typeof r === "object") {
+                                return JSON.stringify(r, (_, v) => typeof v === "bigint" ? v.toString() : v);
+                            }
+                            else if (r)
+                                return r;
+                            else
+                                return "No Content";
+                        })(resp.content);
+                        if (typeof resp.content === "object") {
+                            headers["content-type"] = headers["content-type"] || "application/json";
+                        }
                         res
                             .status(resp.status)
-                            .set(resp.headers || {})
-                            .send(resp.content || "No Content")
+                            .set(headers)
+                            .send(response)
                             .end();
                         return;
                     }

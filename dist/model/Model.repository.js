@@ -40,7 +40,7 @@ class Repository {
             const val = ((v) => {
                 if (typeof v === "function")
                     return this.scope.kx.raw(v(key));
-                else if (!v && this.entityInfo.fields[e].default) {
+                else if (v === undefined && this.entityInfo.fields[e].default) {
                     return this.scope.kx.raw(this.entityInfo.fields[e].default(key));
                 }
                 else

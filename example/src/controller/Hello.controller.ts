@@ -1,11 +1,24 @@
+import { assert } from "console";
 import { Inject } from "cyan/dist/core";
-import { Get } from "cyan/dist/http";
+import { HttpHelper } from "cyan/dist/helper";
+import { Get, Method as HttpMethod } from "cyan/dist/http";
 import { BodyParam, HeaderParam, PathParam, QueryParam } from "cyan/dist/router";
 import { BaseController } from "./Base.controller";
 import { HelloService } from "../service/Hello.service";
 
+interface HttpEchoPost {
+  foo: string;
+  bar: {
+    baz: string;
+    foz: number;
+  };
+}
+
 export class HelloController extends BaseController {
-  constructor(@Inject() private readonly helloService: HelloService) {
+  constructor(
+    @Inject() private readonly helloService: HelloService,
+    @Inject() private readonly httpHelper: HttpHelper
+  ) {
     super();
   }
 
@@ -22,6 +35,22 @@ export class HelloController extends BaseController {
   @Get("/hello/json")
   async helloJson(): Promise<any> {
     await this.helloService.model();
+
+    const data: HttpEchoPost = {
+      foo: "foo",
+      bar: {
+        baz: "baz",
+        foz: 1004,
+      },
+    };
+
+    const echo = await this.httpHelper.post<HttpEchoPost>({
+      url: "https://postman-echo.com/post",
+      data,
+    });
+
+    assert(echo.request.method === HttpMethod.Post);
+    assert(echo.body);
 
     return { hello: "world" };
   }

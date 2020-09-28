@@ -6,30 +6,27 @@ const Http_response_1 = require("./Http.response");
 const Http_status_1 = require("./Http.status");
 class ApiController extends Http_controller_1.Controller {
     async afterHandle(request, response) {
-        if (response instanceof Http_response_1.Response) {
+        if (response instanceof Http_response_1.HttpResponse) {
             response.content = {
                 result: true,
                 data: response.content || undefined,
             };
             return response;
         }
-        return new Http_response_1.Response(Http_status_1.Status.Ok, {
+        return new Http_response_1.HttpResponse(Http_status_1.Status.Ok, {
             result: true,
             data: response || undefined,
         });
     }
     async onHttpError(request, error) {
-        error.content = {
-            result: false,
-            message: typeof error.content === "string" ? error.content : undefined,
-            data: typeof error.content === "string" ? undefined : error.content,
-        };
+        error.content = Object.assign({ result: false }, error.additional || {}, { data: error.content || undefined });
         return error;
     }
     async onError(error) {
         const resp = await super.onError(error);
         resp.content = {
             result: false,
+            code: error.name || undefined,
             message: error.message,
         };
         return resp;

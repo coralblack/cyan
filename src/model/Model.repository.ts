@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 import { plainToClass } from "class-transformer";
-import knex from "knex";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
 import { Metadata } from "../core/Decorator";

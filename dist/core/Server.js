@@ -24,7 +24,7 @@ class Server {
         if (error instanceof Http_error_1.HttpError) {
             response.status(error.status).send(error.content).set(error.headers).end();
         }
-        else if (error instanceof Http_response_1.Response) {
+        else if (error instanceof Http_response_1.HttpResponse) {
             response.status(error.status).send(error.content).set(error.headers).end();
         }
         else {

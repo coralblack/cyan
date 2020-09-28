@@ -5,7 +5,7 @@
 import { Controller } from "./Http.controller";
 import { HttpError } from "./Http.error";
 import { Request as HttpRequest } from "./Http.request";
-import { Response as HttpResponse } from "./Http.response";
+import { HttpResponse } from "./Http.response";
 import { Status as HttpStatus } from "./Http.status";
 
 export class ApiController extends Controller {
@@ -28,11 +28,11 @@ export class ApiController extends Controller {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async onHttpError(request: HttpRequest, error: HttpError): Promise<HttpError> {
-    error.content = {
-      result: false,
-      message: typeof error.content === "string" ? error.content : undefined,
-      data: typeof error.content === "string" ? undefined : error.content,
-    };
+    error.content = Object.assign(
+      { result: false },
+      error.additional || {},
+      { data: error.content || undefined }
+    );
 
     return error;
   }
@@ -42,6 +42,7 @@ export class ApiController extends Controller {
 
     resp.content = {
       result: false,
+      code: error.name || undefined,
       message: error.message,
     };
 

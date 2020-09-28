@@ -6,7 +6,7 @@
 
 import { HttpError } from "./Http.error";
 import { Request as HttpRequest } from "./Http.request";
-import { Response as HttpResponse } from "./Http.response";
+import { HttpResponse } from "./Http.response";
 import { Status as HttpStatus } from "./Http.status";
 import { Logger } from "../core/Logger";
 

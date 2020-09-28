@@ -14,7 +14,7 @@ class Controller {
     }
     async onError(error) {
         Logger_1.Logger.getInstance().error(error);
-        return new Http_response_1.Response(Http_status_1.Status.InternalServerError, `An error has occurred. (${error.message})`);
+        return new Http_response_1.HttpResponse(Http_status_1.Status.InternalServerError, `An error has occurred. (${error.message})`);
     }
 }
 exports.Controller = Controller;

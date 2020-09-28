@@ -121,7 +121,7 @@ class Handler {
                     next(resp);
                 }
                 else {
-                    if (resp instanceof Http_response_1.Response) {
+                    if (resp instanceof Http_response_1.HttpResponse) {
                         const headers = resp.headers || {};
                         const response = ((r) => {
                             if (typeof r === "object") {
@@ -152,7 +152,7 @@ class Handler {
     }
     static errorHandler(controller) {
         return (err, req, res, next) => {
-            if (err instanceof Http_response_1.Response || err instanceof Http_error_1.HttpError) {
+            if (err instanceof Http_response_1.HttpResponse || err instanceof Http_error_1.HttpError) {
                 next(err);
                 return;
             }

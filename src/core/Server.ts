@@ -4,7 +4,7 @@
 import express, { Application as Express, Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
 import { Cyan } from "./Application";
 import { HttpError } from "../http/Http.error";
-import { Response as HttpResponse } from "../http/Http.response";
+import { HttpResponse } from "../http/Http.response";
 
 export class Server {
   private _server: Express;

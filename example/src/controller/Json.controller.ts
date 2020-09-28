@@ -16,7 +16,7 @@ export class JsonController extends ApiController {
 
   @Get("/json/resp")
   helloResp(): Response {
-    return new Response(HttpStatus.Created, { hello: "world" });
+    return Response.done(HttpStatus.Created, { hello: "world" });
   }
 
   @Get("/json/error")
@@ -31,7 +31,7 @@ export class JsonController extends ApiController {
 
   @Get("/json/ethrow")
   helloErrThrow(): never {
-    throw Response.badRequest({ hello: "bad" });
+    throw Response.notFound.code("ERR").message("Ethrow")({});
   }
 
   @Get("/json/middleware")

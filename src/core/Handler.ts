@@ -10,7 +10,7 @@ import { Metadata } from "./Decorator";
 import { Controller as HttpController } from "../http/Http.controller";
 import { HttpError } from "../http/Http.error";
 import { Request as HttpRequest } from "../http/Http.request";
-import { Response as HttpResponse } from "../http/Http.response";
+import { HttpResponse } from "../http/Http.response";
 import { Status as HttpStatus } from "../http/Http.status";
 import { ParamType } from "../router";
 import { CyanRequest, CyanResponse, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";

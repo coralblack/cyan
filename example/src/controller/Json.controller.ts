@@ -34,6 +34,11 @@ export class JsonController extends ApiController {
     throw Response.notFound.code("ERR").message("Ethrow")({});
   }
 
+  @Get("/json/ethro")
+  helloErrThro(): never {
+    throw Response.notFound.code("ERR").message("Ethrow");
+  }
+
   @Get("/json/middleware")
   @Middleware((req, res, next) => {
     res.status(200).send("gotcha").end();

@@ -100,10 +100,15 @@ export class Handler {
         const params = this.getActionParams(req, route, actionParams);
 
         resp = await controller[route.method](...params);
+
       } catch (err) {
         resp = err;
       }
 
+      if (typeof resp === "function") {
+        resp = resp();
+      }
+      
       if (resp instanceof Error || resp instanceof HttpError) {
         next(resp);
       } else {

@@ -103,6 +103,9 @@ class Handler {
             catch (err) {
                 resp = err;
             }
+            if (typeof resp === "function") {
+                resp = resp();
+            }
             if (resp instanceof Error || resp instanceof Http_error_1.HttpError) {
                 next(resp);
             }

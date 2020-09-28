@@ -8,11 +8,7 @@ class HttpError {
         this.content = content;
         this.headers = headers;
         this.additional = {};
-        this.content = ((c) => {
-            if (c)
-                return c;
-            return `${status} ${Http_status_1.Status[status]}`;
-        })(content);
+        this.default = `${status} ${Http_status_1.Status[status]}`;
     }
     code(val) {
         this.additional.code = val;

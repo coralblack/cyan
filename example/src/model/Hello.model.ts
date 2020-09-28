@@ -1,5 +1,7 @@
-import { assert } from "console";
+/* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+
+import { assert } from "console";
 import { Column, Entity, PrimaryColumn } from "cyan/dist/model";
 import { BaseModel } from "./Base.model";
 
@@ -33,9 +35,7 @@ class DummyEntity {
 
 export class HelloModel extends BaseModel {
   async test(): Promise<void> {
-    await new Promise(r => r());
-
-    const res = await this.transactionWith<Hello>(async (scope) => {
+    await this.transactionWith<Hello>(async (scope) => {
       await new Promise(r => r());
 
       await scope.execute(`
@@ -87,6 +87,54 @@ export class HelloModel extends BaseModel {
 
       assert(!!found);
       assert(founds.length > 0);
+
+      const updateName = "xxx";
+      const updateCreatedAt = new Date("2020-01-01");
+      const entity: HelloEntity = {
+        id: save2Id,
+        name: updateName,
+        createdAt: updateCreatedAt,
+      };
+
+      const updated1 = await repo.update(entity, { update: ["name"], where: { name: updateName } });
+
+      assert(updated1 === 0);
+
+      const updated2 = await repo.update(entity, { update: ["name"] });
+
+      assert(updated2 === 1);
+
+      const updated3 = await repo.update(entity, { update: ["name"], where: { name: updateName } });
+
+      assert(updated3 === 1);
+
+      const updated4 = await repo.update(entity, { update: ["name"], where: { name: updateName, createdAt: updateCreatedAt } });
+
+      assert(updated4 === 0);
+
+      const updated5 = await repo.update(entity);
+
+      assert(updated5 === 1);
+
+      const updated6 = await repo.update(entity, { where: { name: updateName, createdAt: updateCreatedAt } });
+
+      assert(updated6 === 1);
+
+      const found6 = await repo.findOne({ where: { id: save2Id } });
+
+      assert(found6.id === entity.id && found6.name === updateName && found6.createdAt.getTime() === updateCreatedAt.getTime());
+
+      const deleted1 = await repo.delete(entity, { where: { name: `${updateName}--` } });
+
+      assert(deleted1 === 0);
+
+      const deleted2 = await repo.delete(entity, { where: { name: updateName } });
+
+      assert(deleted2 === 1);
+
+      const found7 = await repo.findOne({ where: { id: save2Id } });
+
+      assert(found7 === null);
 
       return null;
     });

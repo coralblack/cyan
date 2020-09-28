@@ -35,35 +35,92 @@ class Repository {
         return info;
     }
     async save(entity) {
-        const [res] = await this.scope.kx.insert(this.entityInfo.columns.reduce((p, e) => {
-            const key = this.entityInfo.fields[e].name;
-            const val = ((v) => {
-                if (typeof v === "function")
-                    return this.scope.kx.raw(v(key));
-                else if (v === undefined && this.entityInfo.fields[e].default) {
-                    return this.scope.kx.raw(this.entityInfo.fields[e].default(key));
+        try {
+            const [res] = await this.scope.kx.insert(this.entityInfo.columns.reduce((p, e) => {
+                const key = this.entityInfo.fields[e].name;
+                const val = ((v) => {
+                    if (typeof v === "function")
+                        return this.scope.kx.raw(v(key));
+                    else if (v === undefined && this.entityInfo.fields[e].default) {
+                        return this.scope.kx.raw(this.entityInfo.fields[e].default(key));
+                    }
+                    else
+                        return v;
+                })(entity[e]);
+                p[key] = val;
+                return p;
+            }, {})).into(this.entityInfo.tableName);
+            if (this.entityInfo.primaryColumns.length === 1) {
+                const id = entity[this.entityInfo.primaryColumns[0]];
+                if (id && typeof id !== "function") {
+                    return entity[this.entityInfo.primaryColumns[0]];
                 }
-                else
-                    return v;
-            })(entity[e]);
-            p[key] = val;
-            return p;
-        }, {})).into(this.entityInfo.tableName);
-        if (this.entityInfo.primaryColumns.length === 1) {
-            const id = entity[this.entityInfo.primaryColumns[0]];
-            if (id && typeof id !== "function") {
-                return entity[this.entityInfo.primaryColumns[0]];
             }
+            const [[lid]] = await this.scope.kx.raw("SELECT LAST_INSERT_ID() AS seq");
+            return res || lid.seq;
         }
-        const [[lid]] = await this.scope.kx.raw("SELECT LAST_INSERT_ID() AS seq");
-        return res || lid.seq;
+        catch (err) {
+            throw Error_1.TraceableError(err);
+        }
+    }
+    async update(entity, options) {
+        try {
+            let kx = this.scope.kx.from(this.entityInfo.tableName);
+            const conditions = Object.assign({}, (options === null || options === void 0 ? void 0 : options.where) || {});
+            this.entityInfo.primaryColumns.forEach(e => {
+                conditions[e] = entity[e];
+            });
+            kx = this.where(kx, conditions);
+            kx = kx.update(((options === null || options === void 0 ? void 0 : options.update) || this.entityInfo.columns).reduce((p, e) => {
+                p[this.entityInfo.fields[e].name] = entity[e];
+                return p;
+            }, {}));
+            if (options === null || options === void 0 ? void 0 : options.debug) {
+                console.log(">", kx.toSQL());
+            }
+            const affected = await kx;
+            return Number(affected);
+        }
+        catch (err) {
+            throw Error_1.TraceableError(err);
+        }
+    }
+    async delete(entity, options) {
+        try {
+            let kx = this.scope.kx.from(this.entityInfo.tableName);
+            const conditions = Object.assign({}, (options === null || options === void 0 ? void 0 : options.where) || {});
+            this.entityInfo.primaryColumns.forEach(e => {
+                conditions[e] = entity[e];
+            });
+            kx = this.where(kx, conditions);
+            kx = kx.del();
+            if (options === null || options === void 0 ? void 0 : options.debug) {
+                console.log(">", kx.toSQL());
+            }
+            const affected = await kx;
+            return Number(affected);
+        }
+        catch (err) {
+            throw Error_1.TraceableError(err);
+        }
     }
     async findOne(options) {
-        const [res] = await this.select(Object.assign(Object.assign({}, options), { limit: 1 }));
-        return res;
+        try {
+            const [res] = await this.select(Object.assign(Object.assign({}, options), { limit: 1 }));
+            return res || null;
+        }
+        catch (err) {
+            throw Error_1.TraceableError(err);
+        }
     }
-    find(options) {
-        return this.select(options);
+    async find(options) {
+        try {
+            const res = await this.select(options);
+            return res;
+        }
+        catch (err) {
+            throw Error_1.TraceableError(err);
+        }
     }
     async select(options) {
         try {
@@ -71,16 +128,7 @@ class Repository {
             const select = selectColumns.map(e => this.entityInfo.fields[e].name);
             let kx = this.scope.kx.select(select).from(this.entityInfo.tableName);
             if (options.where) {
-                Object.keys(options.where).forEach(ke => {
-                    const k = this.entityInfo.fields[ke].name;
-                    const v = options.where[ke];
-                    if (Array.isArray(v))
-                        kx = kx.whereIn(k, v);
-                    else if (typeof v === "function")
-                        kx = kx.where(this.scope.kx.raw(v(k)));
-                    else
-                        kx = kx.where(k, v);
-                });
+                kx = this.where(kx, options.where);
             }
             if (options.offset)
                 kx = kx.offset(String(options.offset));
@@ -97,6 +145,20 @@ class Repository {
         catch (err) {
             throw Error_1.TraceableError(err);
         }
+    }
+    where(kx, where) {
+        let kxx = kx;
+        Object.keys(where).forEach(ke => {
+            const k = this.entityInfo.fields[ke].name;
+            const v = where[ke];
+            if (Array.isArray(v))
+                kxx = kxx.whereIn(k, v);
+            else if (typeof v === "function")
+                kxx = kxx.where(this.scope.kx.raw(v(k)));
+            else
+                kxx = kxx.where(k, v);
+        });
+        return kxx;
     }
     mapping(select, row) {
         const x = class_transformer_1.plainToClass(this.entityInfo.target, select.reduce((p, e) => {

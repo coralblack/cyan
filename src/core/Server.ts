@@ -28,7 +28,7 @@ export class Server {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars-experimental, @typescript-eslint/no-unused-vars
   public onError(error: Error, request: ExpressRequest, response: ExpressResponse, next: NextFunction) {
     if (error instanceof HttpError) {
-      response.status(error.status).send(error.content).set(error.headers).end();
+      response.status(error.status).send(error.content || error.default).set(error.headers).end();
     } else if (error instanceof HttpResponse) {
       response.status(error.status).send(error.content).set(error.headers).end();
     } else {

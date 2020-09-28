@@ -3,12 +3,10 @@ import { Headers as HttpHeaders } from "../types/Http";
 
 export class HttpError {
   public readonly additional: {[key: string]: any} = {};
+  public readonly default: string;
 
   constructor(public status: HttpStatus, public content?: string | object, public headers?: HttpHeaders) {
-    this.content = ((c) => {
-      if (c) return c;
-      return `${status} ${HttpStatus[status]}`;
-    })(content);
+    this.default = `${status} ${HttpStatus[status]}`;
   }
 
   code(val: string | number): this {

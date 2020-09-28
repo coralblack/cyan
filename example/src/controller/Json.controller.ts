@@ -31,7 +31,7 @@ export class JsonController extends ApiController {
 
   @Get("/json/ethrow")
   helloErrThrow(): never {
-    throw Response.notFound.code("ERR").message("Ethrow")({});
+    throw Response.notFound.code("ERR").message("Ethrow")();
   }
 
   @Get("/json/ethro")

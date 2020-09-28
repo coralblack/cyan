@@ -7,6 +7,7 @@ export declare class HttpError {
     readonly additional: {
         [key: string]: any;
     };
+    readonly default: string;
     constructor(status: HttpStatus, content?: string | object, headers?: HttpHeaders);
     code(val: string | number): this;
     message(val: string): this;

@@ -36,6 +36,15 @@ export interface FindOptions<T> extends FindOneOptions<T> {
     offset?: number | bigint;
     limit?: number | bigint;
 }
+export interface UpdateOptions<T> {
+    where?: FindConditions<T>;
+    update?: (keyof T)[];
+    debug?: boolean;
+}
+export interface DeleteOptions<T> {
+    where?: FindConditions<T>;
+    debug?: boolean;
+}
 export declare const symEntityInfo: unique symbol;
 export declare class Repository<T> {
     private readonly scope;
@@ -44,9 +53,12 @@ export declare class Repository<T> {
     constructor(scope: TransactionScope, entity: ClassType<T>);
     static getEntityInfo<T>(entity: ClassType<T>): EntityInfo<T>;
     save(entity: T): Promise<InsertId>;
+    update(entity: T, options?: UpdateOptions<T>): Promise<number>;
+    delete(entity: T, options?: DeleteOptions<T>): Promise<number>;
     findOne(options?: FindOneOptions<T>): Promise<T>;
     find(options?: FindOptions<T>): Promise<T[]>;
     private select;
+    private where;
     private mapping;
 }
 export {};

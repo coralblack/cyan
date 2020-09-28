@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 import { plainToClass } from "class-transformer";
+import knex from "knex";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
 import { Metadata } from "../core/Decorator";
@@ -44,6 +45,17 @@ export interface FindOptions<T> extends FindOneOptions<T> {
   limit?: number | bigint;
 }
 
+export interface UpdateOptions<T> {
+  where?: FindConditions<T>;
+  update?: (keyof T)[];
+  debug?: boolean;
+}
+
+export interface DeleteOptions<T> {
+  where?: FindConditions<T>;
+  debug?: boolean;
+}
+
 export const symEntityInfo = Symbol();
 
 export class Repository<T> {
@@ -79,41 +91,110 @@ export class Repository<T> {
   }
 
   async save(entity: T): Promise<InsertId> {
-    const [res] = await this.scope.kx.insert(this.entityInfo.columns.reduce((p, e) => {
-      const key = this.entityInfo.fields[e].name;
-      const val = ((v): any => {
-        if (typeof v === "function") return this.scope.kx.raw(v(key));
-        else if (v === undefined && this.entityInfo.fields[e].default) {
-          return this.scope.kx.raw(this.entityInfo.fields[e].default(key));
+    try {
+      const [res] = await this.scope.kx.insert(this.entityInfo.columns.reduce((p, e) => {
+        const key = this.entityInfo.fields[e].name;
+        const val = ((v): any => {
+          if (typeof v === "function") return this.scope.kx.raw(v(key));
+          else if (v === undefined && this.entityInfo.fields[e].default) {
+            return this.scope.kx.raw(this.entityInfo.fields[e].default(key));
+          }
+          else return v;
+        })(entity[e]);
+
+        p[key] = val;
+        return p;
+      }, {})).into(this.entityInfo.tableName);
+
+      if (this.entityInfo.primaryColumns.length === 1) {
+        const id = entity[this.entityInfo.primaryColumns[0]];
+
+        if (id && typeof id !== "function") {
+          return entity[this.entityInfo.primaryColumns[0]];
         }
-        else return v;
-      })(entity[e]);
-
-      p[key] = val;
-      return p;
-    }, {})).into(this.entityInfo.tableName);
-
-    if (this.entityInfo.primaryColumns.length === 1) {
-      const id = entity[this.entityInfo.primaryColumns[0]];
-
-      if (id && typeof id !== "function") {
-        return entity[this.entityInfo.primaryColumns[0]];
       }
+
+      const [[lid]] = await this.scope.kx.raw("SELECT LAST_INSERT_ID() AS seq");
+
+      return res || lid.seq;
+    } catch (err) {
+      throw TraceableError(err);
     }
+  }
 
-    const [[lid]] = await this.scope.kx.raw("SELECT LAST_INSERT_ID() AS seq");
+  async update(entity: T, options?: UpdateOptions<T>): Promise<number> {
+    try {
+      let kx = this.scope.kx.from(this.entityInfo.tableName);
+      
+      const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
-    return res || lid.seq;
+      this.entityInfo.primaryColumns.forEach(e => {
+        conditions[e] = entity[e];
+      });
+
+      kx = this.where(kx, conditions);
+      kx = kx.update(((options?.update || this.entityInfo.columns) as any).reduce((p, e) => {
+        p[this.entityInfo.fields[e].name] = entity[e];
+        return p;
+      }, {}));
+      
+      if (options?.debug) {
+        // eslint-disable-next-line no-console
+        console.log(">", kx.toSQL());
+      }
+
+      const affected = await kx;
+
+      return Number(affected);
+    } catch (err) {
+      throw TraceableError(err);
+    }
+  }
+
+  async delete(entity: T, options?: DeleteOptions<T>): Promise<number> {
+    try {
+      let kx = this.scope.kx.from(this.entityInfo.tableName);
+      
+      const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
+
+      this.entityInfo.primaryColumns.forEach(e => {
+        conditions[e] = entity[e];
+      });
+
+      kx = this.where(kx, conditions);
+      kx = kx.del();
+
+      if (options?.debug) {
+        // eslint-disable-next-line no-console
+        console.log(">", kx.toSQL());
+      }
+
+      const affected = await kx;
+
+      return Number(affected);
+    } catch (err) {
+      throw TraceableError(err);
+    }
   }
 
   async findOne(options?: FindOneOptions<T>): Promise<T> {
-    const [res] = await this.select({ ...options, limit: 1 });
+    try {
+      const [res] = await this.select({ ...options, limit: 1 });
 
-    return res;
+      return res || null;
+    } catch (err) {
+      throw TraceableError(err);
+    }
   }
 
-  find(options?: FindOptions<T>): Promise<T[]> {
-    return this.select(options);
+  async find(options?: FindOptions<T>): Promise<T[]> {
+    try {
+      const res = await this.select(options);
+
+      return res;
+    } catch (err) {
+      throw TraceableError(err);
+    }
   }
 
   private async select(options?: FindOptions<T>): Promise<T[]> {
@@ -125,17 +206,7 @@ export class Repository<T> {
 
       // Query
       if (options.where) {
-        Object.keys(options.where).forEach(ke => {
-          const k = this.entityInfo.fields[ke].name;
-          const v = options.where[ke];
-
-          if (Array.isArray(v))
-            kx = kx.whereIn(k, v);
-          else if (typeof v === "function")
-            kx = kx.where(this.scope.kx.raw(v(k)));
-          else
-            kx = kx.where(k, v);
-        });
+        kx = this.where(kx, options.where);
       }
 
       // Pagination
@@ -155,10 +226,24 @@ export class Repository<T> {
         return [];
 
       return rows.map((e: any) => this.mapping(selectColumns, e));
-
     } catch (err) {
       throw TraceableError(err);
     }
+  }
+
+  private where(kx: any, where?: FindConditions<T>): any {
+    let kxx = kx;
+    
+    Object.keys(where).forEach(ke => {
+      const k = this.entityInfo.fields[ke].name;
+      const v = where[ke];
+
+      if (Array.isArray(v)) kxx = kxx.whereIn(k, v);
+      else if (typeof v === "function") kxx = kxx.where(this.scope.kx.raw(v(k)));
+      else kxx = kxx.where(k, v);
+    });
+
+    return kxx;
   }
 
   private mapping(select: string[], row: any): T {

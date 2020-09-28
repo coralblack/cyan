@@ -1,47 +1,26 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Response = void 0;
+exports.Response = exports.HttpResponse = void 0;
 const Http_error_1 = require("./Http.error");
-const Http = __importStar(require("."));
-class Response {
+const Http_status_1 = require("./Http.status");
+class HttpResponse {
     constructor(status, content, headers) {
         this.status = status;
         this.content = content;
         this.headers = headers;
+        this.additional = {};
     }
-    static ok(content) {
-        return new Response(Http.Status.Ok, content);
+    code(val) {
+        this.additional.code = val;
+        return this;
     }
-    static notFound(content, headers) {
-        return new Http_error_1.HttpError(Http.Status.NotFound, content || "Not Found", headers);
+    message(val) {
+        this.additional.message = val;
+        return this;
     }
-    static notImplemented(content, headers) {
-        return new Http_error_1.HttpError(Http.Status.NotImplemented, content || "Not Implemented", headers);
-    }
-    static badRequest(content, headers) {
-        return new Http_error_1.HttpError(Http.Status.BadRequest, content || "Bad Request", headers);
-    }
-    static methodNotAllowed(content, headers) {
-        return new Http_error_1.HttpError(Http.Status.MethodNotAllowed, content || "Method Not Allowed", headers);
+    data(val) {
+        this.additional.data = val;
+        return this;
     }
     setHeader(name, value) {
         this.headers[name] = value;
@@ -50,5 +29,40 @@ class Response {
         this.headers = Object.assign(this.headers, headers);
     }
 }
+exports.HttpResponse = HttpResponse;
+const responser = (statusCode) => {
+    function Responser(content, headers) {
+        return new Http_error_1.HttpError(statusCode, content, headers);
+    }
+    Responser.code = function (code) {
+        function withCode(content, headers) {
+            return new Http_error_1.HttpError(statusCode, content, headers).code(code);
+        }
+        withCode.message = function (message) {
+            return function (content, headers) {
+                return new Http_error_1.HttpError(statusCode, content, headers).code(code).message(message);
+            };
+        };
+        return withCode;
+    };
+    Responser.message = function (message) {
+        return function (content, headers) {
+            return new Http_error_1.HttpError(statusCode, content, headers).message(message);
+        };
+    };
+    return Responser;
+};
+class Response {
+    static done(status, content) {
+        return new HttpResponse(status, content);
+    }
+    static ok(content) {
+        return new HttpResponse(Http_status_1.Status.Ok, content);
+    }
+}
 exports.Response = Response;
+Response.notFound = responser(Http_status_1.Status.NotFound);
+Response.notImplemented = responser(Http_status_1.Status.NotImplemented);
+Response.badRequest = responser(Http_status_1.Status.BadRequest);
+Response.methodNotAllowed = responser(Http_status_1.Status.MethodNotAllowed);
 //# sourceMappingURL=Http.response.js.map

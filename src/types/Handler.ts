@@ -1,10 +1,11 @@
 import { NextFunction } from "express";
 import { Headers as HttpHeaders, Params as HttpParams, Queries as HttpQueries } from "./Http";
+import { HttpError } from "../http/Http.error";
 import { Request as HttpRequest } from "../http/Http.request";
 import { Status as HttpStatus } from "../http/Http.status";
 
 export type HandlerFunction = (req: CyanRequest, res: CyanResponse, next: NextFunction) => void;
-export type ErrorHandlerFunction = (err: Error, req: CyanRequest, res: CyanResponse, next: NextFunction) => void;
+export type ErrorHandlerFunction = (err: Error | HttpError, req: CyanRequest, res: CyanResponse, next: NextFunction) => void;
 
 export interface CyanRequest {
   headers: HttpHeaders;

@@ -1,28 +1,28 @@
 import { HttpError } from "./Http.error";
+import { Status as HttpStatus } from "./Http.status";
 import { Headers as HttpHeaders } from "../types/Http";
-import * as Http from ".";
 
-export class Response {
-  constructor(public status: Http.Status, public content?: string | object, public headers?: HttpHeaders) {}
+export class HttpResponse {
+  public readonly additional: {[key: string]: any} = {};
 
-  static ok(content: string | object): Response {
-    return new Response(Http.Status.Ok, content);
+  constructor(public status: HttpStatus, public content?: string | object, public headers?: HttpHeaders) {}
+
+  code(val: string | number): this {
+    this.additional.code = val;
+
+    return this;
   }
 
-  static notFound(content?: string | object, headers?: HttpHeaders): HttpError {
-    return new HttpError(Http.Status.NotFound, content || "Not Found", headers);
+  message(val: string): this {
+    this.additional.message = val;
+
+    return this;
   }
 
-  static notImplemented(content?: string | object, headers?: HttpHeaders): HttpError {
-    return new HttpError(Http.Status.NotImplemented, content || "Not Implemented", headers);
-  }
+  data(val: string): this {
+    this.additional.data = val;
 
-  static badRequest(content?: string | object, headers?: HttpHeaders): HttpError {
-    return new HttpError(Http.Status.BadRequest, content || "Bad Request", headers);
-  }
-
-  static methodNotAllowed(content?: string | object, headers?: HttpHeaders): HttpError {
-    return new HttpError(Http.Status.MethodNotAllowed, content || "Method Not Allowed", headers);
+    return this;
   }
 
   setHeader(name: string, value: string): void {
@@ -32,4 +32,47 @@ export class Response {
   setHeaders(headers: HttpHeaders): void {
     this.headers = Object.assign(this.headers, headers);
   }
+}
+
+const responser = (statusCode: HttpStatus) => {
+  function Responser(content?: string | object, headers?: HttpHeaders): HttpError {
+    return new HttpError(statusCode, content, headers);
+  }
+
+  Responser.code = function(code: number | string) {
+    function withCode(content?: string | object, headers?: HttpHeaders): HttpError {
+      return new HttpError(statusCode, content, headers).code(code);
+    }
+  
+    withCode.message = function(message: string) {
+      return function(content?: string | object, headers?: HttpHeaders): HttpError {
+        return new HttpError(statusCode, content, headers).code(code).message(message);
+      };
+    };
+
+    return withCode;
+  };
+
+  Responser.message = function(message: string) {
+    return function(content?: string | object, headers?: HttpHeaders): HttpError {
+      return new HttpError(statusCode, content, headers).message(message);
+    };
+  };
+
+  return Responser;
+};
+
+export class Response {
+  static done(status: HttpStatus, content: string | object): HttpResponse {
+    return new HttpResponse(status, content);
+  }
+
+  static ok(content: string | object): HttpResponse {
+    return new HttpResponse(HttpStatus.Ok, content);
+  }
+
+  static notFound = responser(HttpStatus.NotFound);
+  static notImplemented = responser(HttpStatus.NotImplemented);
+  static badRequest = responser(HttpStatus.BadRequest);
+  static methodNotAllowed = responser(HttpStatus.MethodNotAllowed);
 }

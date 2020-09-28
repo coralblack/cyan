@@ -10,11 +10,11 @@ export class WorldController extends BaseController {
 
   @Get("/world/bad")
   helloJson(): Response {
-    return new Response(HttpStatus.BadRequest, "Bad!");
+    return Response.done(HttpStatus.BadRequest, "Bad!");
   }
 
   @Get("/world/error")
   helloError(): any {
-    throw Response.notImplemented("Not Implemented!");
+    throw Response.notImplemented();
   }
 }

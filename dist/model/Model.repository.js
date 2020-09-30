@@ -153,6 +153,26 @@ class Repository {
             const v = where[ke];
             if (Array.isArray(v))
                 kxx = kxx.whereIn(k, v);
+            else if (typeof v === "object" && (v[">="] || v[">"] || v["<="] || v["<"] || typeof v["IS_NULL"] === "boolean" || typeof v["IS_NOT_NULL"] === "boolean")) {
+                kxx.andWhere(function () {
+                    Object.keys(v).forEach((condition) => {
+                        if (condition === "IS_NULL" || condition === "IS_NOT_NULL") {
+                            if (v["IS_NULL"] === true || v["IS_NOT_NULL"] === false) {
+                                this.whereNull(k);
+                            }
+                            else if (v["IS_NULL"] === false || v["IS_NOT_NULL"] === true) {
+                                this.whereNotNull(k);
+                            }
+                        }
+                        else if (typeof v[condition] === "function") {
+                            this.whereRaw(`${k} ${condition} ${v[condition](k)}`);
+                        }
+                        else {
+                            this.where(k, condition, v[condition]);
+                        }
+                    });
+                });
+            }
             else if (typeof v === "function")
                 kxx = kxx.where(this.scope.kx.raw(v(k)));
             else

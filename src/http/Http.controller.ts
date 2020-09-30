@@ -11,7 +11,7 @@ import { Status as HttpStatus } from "./Http.status";
 import { Logger } from "../core/Logger";
 
 export abstract class Controller {
-  async beforeHandle(request: HttpRequest): Promise<void> {}
+  async beforeHandle(request: HttpRequest): Promise<void> { }
 
   async afterHandle(request: HttpRequest, response: any): Promise<HttpResponse> {
     return response;
@@ -24,6 +24,6 @@ export abstract class Controller {
   async onError(error: Error): Promise<HttpResponse> {
     Logger.getInstance().error(error);
 
-    return new HttpResponse(HttpStatus.InternalServerError, `An error has occurred. (${error.message})`);
+    return new HttpResponse(HttpStatus.InternalServerError, "An error has occurred.");
   }
 }

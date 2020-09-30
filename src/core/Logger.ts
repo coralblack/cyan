@@ -14,19 +14,23 @@ export class Logger {
     return Logger._instance;
   }
 
+  log(...args: any[]): void {
+    console.log(datetime(","), `${this.appName} [LOG]`, ...args);
+  }
+
   debug(...args: any[]): void {
-    console.debug(datetime(","), `${this.appName},`, ...args);
+    console.debug(datetime(","), `${this.appName} [DEBUG]`, ...args);
   }
 
   warn(...args: any[]): void {
-    console.warn(datetime(","), `${this.appName},`, ...args);
+    console.warn(datetime(","), `${this.appName} [WARN]`, ...args);
   }
 
   error(...args: any[]): void {
-    console.error(datetime(","), `${this.appName},`, ...args);
+    console.error(datetime(","), `${this.appName} [ERROR]`, ...args);
   }
 
   info(...args: any[]): void {
-    console.info(datetime(","), `${this.appName},`, ...args);
+    console.info(datetime(","), `${this.appName} [INFO]`, ...args);
   }
 }

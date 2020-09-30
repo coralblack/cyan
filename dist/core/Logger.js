@@ -12,17 +12,20 @@ class Logger {
         Logger._instance = new Logger();
         return Logger._instance;
     }
+    log(...args) {
+        console.log(util_1.datetime(","), `${this.appName} [LOG]`, ...args);
+    }
     debug(...args) {
-        console.debug(util_1.datetime(","), `${this.appName},`, ...args);
+        console.debug(util_1.datetime(","), `${this.appName} [DEBUG]`, ...args);
     }
     warn(...args) {
-        console.warn(util_1.datetime(","), `${this.appName},`, ...args);
+        console.warn(util_1.datetime(","), `${this.appName} [WARN]`, ...args);
     }
     error(...args) {
-        console.error(util_1.datetime(","), `${this.appName},`, ...args);
+        console.error(util_1.datetime(","), `${this.appName} [ERROR]`, ...args);
     }
     info(...args) {
-        console.info(util_1.datetime(","), `${this.appName},`, ...args);
+        console.info(util_1.datetime(","), `${this.appName} [INFO]`, ...args);
     }
 }
 exports.Logger = Logger;

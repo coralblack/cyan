@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+
+import { ClassType } from "../types";
 export const DECLARED_INJECT_PROPERTIES = Symbol("DECLARED_INJECT_PROPERTIES");
 export const DECLARED_AUTO_INJECT_FLAG = Symbol("DECLARED_AUTO_INJECT_FLAG");
 
 export class Injector {
-  public static resolve(cls) {
+  public static resolve<T>(cls: ClassType<T>): T {
     const injectProperties = Reflect.getMetadata(DECLARED_INJECT_PROPERTIES, cls);
     const autoInjectable = Reflect.getMetadata(DECLARED_AUTO_INJECT_FLAG, cls);
 
@@ -29,14 +31,14 @@ export class Injector {
 }
 
 export function Inject() {
-  return function(target: any, propertyKey: string, index?: number) {
+  return function (target: any, propertyKey: string, index?: number) {
     const type = Reflect.getMetadata("design:type", target, propertyKey);
     let instance: any;
 
     if (index === undefined) { // Property-based injection
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get: function() {
+        get: function () {
           if (instance) return instance;
           instance = Injector.resolve(type);
           return instance;

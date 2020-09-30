@@ -4,6 +4,7 @@ import "reflect-metadata";
 import "source-map-support";
 
 import { resolve } from "path";
+import * as bodyParser from "body-parser";
 import { CorsOptions, CorsOptionsDelegate } from "cors";
 import { Metadata } from "./Decorator";
 import { Handler } from "./Handler";
@@ -35,8 +36,11 @@ export interface CyanSettings {
   routes: Array<ControllerType>;
 
   options?: {
+    accessLog?: boolean;
     cors?: boolean | CorsOptions | CorsOptionsDelegate;
     bodyParser?: boolean;
+    jsonBodyParser?: boolean | bodyParser.OptionsJson;
+    urlEncodedBodyParser?: boolean | bodyParser.OptionsUrlencoded;
   };
 }
 
@@ -57,6 +61,8 @@ export class Cyan {
     );
 
     this.logger = (settings.logger || Logger).getInstance();
+    this.logger.appName = this.settings.name;
+
     this.server = settings.server ? new settings.server(this) : new Server(this);
   }
 
@@ -66,11 +72,11 @@ export class Cyan {
   }
 
   public initialize(): Server {
-    this.logger.info(`${this.settings.name}, Starting .. @ ${this.settings.stage}`);
+    this.logger.info(`Starting Server @ ${this.settings.stage}`);
 
-    if (!this.settings.options || this.settings.options.bodyParser !== false) {
-      this.server.use(Handler.jsonBodyParser());
-    }
+    this.server.beforeInitSys();
+    this.initSysHandlers();
+    this.server.afterInitSys();
 
     this.server.beforeInitRoutes();
     this.initRoutes();
@@ -85,8 +91,42 @@ export class Cyan {
   public listen(): void {
     if (this.settings.port) {
       this.server
-        .listen(this.settings.port, () => this.logger.info(`${this.settings.name}, listening HTTP at ${this.settings.port}`))
+        .listen(this.settings.port, () => this.logger.info(`listening HTTP at ${this.settings.port}`))
         .on("error", (err: Error) => this.logger.error(err));
+    }
+  }
+
+  private initSysHandlers(): void {
+    if (this.settings.options?.accessLog) {
+      this.logger.info("[handler] AccessLogger registered");
+      this.server.use(Handler.accessLogger(this.settings.name));
+    }
+
+    if (this.settings.options?.cors) {
+      this.logger.info("[handler] CorsHandler registered");
+      this.server.use(Handler.corsHandler(
+        typeof this.settings.options?.cors === "boolean" ?
+          undefined :
+          this.settings.options?.cors)
+      );
+    }
+
+    if (this.settings.options?.jsonBodyParser || this.settings.options?.bodyParser) {
+      this.logger.info("[handler] JsonBodyParser registered");
+      this.server.use(Handler.jsonBodyParser(
+        typeof this.settings.options?.jsonBodyParser === "boolean" ?
+          undefined :
+          this.settings.options?.jsonBodyParser)
+      );
+    }
+
+    if (this.settings.options?.urlEncodedBodyParser || this.settings.options?.bodyParser) {
+      this.logger.info("[handler] UrlEncodedBodyParser registered");
+      this.server.use(Handler.urlEncodedBodyParser(
+        typeof this.settings.options?.urlEncodedBodyParser === "boolean" ?
+          undefined :
+          this.settings.options?.urlEncodedBodyParser)
+      );
     }
   }
 
@@ -104,7 +144,7 @@ export class Cyan {
     const path = resolve(this.settings.basePath || "/", route.path);
 
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    this.logger.info(`${this.settings.name}, [router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
+    this.logger.info(`[router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
 
     // Default middlewares
     const handlers: Array<[number, HandlerFunction]> = [

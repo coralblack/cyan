@@ -15,6 +15,8 @@ class Server {
     getServer() {
         return this._server;
     }
+    beforeInitSys() { }
+    afterInitSys() { }
     beforeInitRoutes() { }
     afterInitRoutes() { }
     onPageNotFound(request, response, next) {

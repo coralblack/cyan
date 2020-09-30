@@ -18,30 +18,23 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Handler = void 0;
 const bodyParser = __importStar(require("body-parser"));
+const cors_1 = __importDefault(require("cors"));
 const lodash_1 = require("lodash");
+const morgan_1 = __importDefault(require("morgan"));
 const Decorator_1 = require("./Decorator");
 const Http_error_1 = require("../http/Http.error");
 const Http_request_1 = require("../http/Http.request");
 const Http_response_1 = require("../http/Http.response");
 const Http_status_1 = require("../http/Http.status");
 const router_1 = require("../router");
+const util_1 = require("../util");
 class Handler {
-    static jsonBodyParser() {
-        const jsonParser = bodyParser.json();
-        return (req, res, next) => {
-            jsonParser(req, res, (err) => {
-                if (err) {
-                    const respErr = new Http_error_1.HttpError(Http_status_1.Status.BadRequest, "The specified json body is invalid.");
-                    next(respErr);
-                    return;
-                }
-                next();
-            });
-        };
-    }
     static beforeHandler(controller) {
         return (req, res, next) => {
             req.httpRequestContext = Http_request_1.Request.getContext(req);
@@ -185,6 +178,38 @@ class Handler {
                 next(err);
             });
         };
+    }
+    static accessLogger(name) {
+        return morgan_1.default((tokens, req, res) => [
+            `${util_1.datetime(",")}`,
+            `${name},`,
+            tokens.method(req, res),
+            tokens.url(req, res),
+            tokens.status(req, res),
+            tokens.res(req, res, "content-length"),
+            "-",
+            tokens["response-time"](req, res),
+            "ms",
+        ].join(" "));
+    }
+    static jsonBodyParser(options) {
+        const jsonParser = bodyParser.json(options);
+        return (req, res, next) => {
+            jsonParser(req, res, (err) => {
+                if (err) {
+                    const respErr = new Http_error_1.HttpError(Http_status_1.Status.BadRequest, "The specified json body is invalid.");
+                    next(respErr);
+                    return;
+                }
+                next();
+            });
+        };
+    }
+    static urlEncodedBodyParser(options) {
+        return bodyParser.urlencoded(options || { extended: true });
+    }
+    static corsHandler(options) {
+        return cors_1.default(options);
     }
 }
 exports.Handler = Handler;

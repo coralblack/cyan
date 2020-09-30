@@ -1,8 +1,9 @@
+import * as bodyParser from "body-parser";
+import { CorsOptions, CorsOptionsDelegate } from "cors";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArgs";
 import { Controller as HttpController } from "../http/Http.controller";
 import { CyanRequest, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";
 export declare class Handler {
-    static jsonBodyParser(): HandlerFunction;
     static beforeHandler(controller: HttpController): HandlerFunction;
     private static symActionParams;
     static getActionParams(req: CyanRequest, route: RouteMetadataArgs, actionParams: RouteParamMetadataArgs[]): any[];
@@ -10,4 +11,8 @@ export declare class Handler {
     static afterHandler(controller: HttpController): HandlerFunction;
     static errorHandler(controller: HttpController): ErrorHandlerFunction;
     static httpErrorHandler(controller: HttpController): ErrorHandlerFunction;
+    static accessLogger(name: string): HandlerFunction;
+    static jsonBodyParser(options?: bodyParser.OptionsJson): HandlerFunction;
+    static urlEncodedBodyParser(options?: bodyParser.OptionsUrlencoded): HandlerFunction;
+    static corsHandler(options?: CorsOptions | CorsOptionsDelegate): HandlerFunction;
 }

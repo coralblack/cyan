@@ -21,10 +21,12 @@ export type FindConditions<T> = {
   [P in keyof T]?: T[P] | T[P][] | Partial<FindOperatorComp<T[P]>> | RawQuery;
 };
 
+export type OrderCondition<T> = { [P in keyof T]?: "ASC" | "DESC" | RawQuery };
+
 export interface FindOneOptions<T> {
   select?: (keyof T)[];
   where?: FindConditions<T>;
-  order?: { [P in keyof T]?: "ASC" | "DESC" };
+  order?: OrderCondition<T>;
   debug?: boolean;
 }
 

@@ -26,5 +26,6 @@ export declare class Repository<T> {
     find(options?: FindOptions<T>): Promise<T[]>;
     private select;
     private where;
+    private order;
     private mapping;
 }

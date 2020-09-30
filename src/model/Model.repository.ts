@@ -4,7 +4,7 @@
 import { plainToClass } from "class-transformer";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
-import { DeleteOptions, FindConditions, FindOneOptions, FindOptions, InsertId, UpdateOptions } from "./Model.query";
+import { DeleteOptions, FindConditions, FindOneOptions, FindOptions, InsertId, OrderCondition, UpdateOptions } from "./Model.query";
 import { Metadata } from "../core/Decorator";
 import { TraceableError } from "../core/Error";
 import { ClassType } from "../types";
@@ -171,6 +171,11 @@ export class Repository<T> {
         kx = this.where(kx, options.where);
       }
 
+      // Sort
+      if (options.order) {
+        kx = this.order(kx, options.order);
+      }
+
       // Pagination
       if (options.offset)
         kx = kx.offset(String(options.offset) as any);
@@ -221,6 +226,23 @@ export class Repository<T> {
       }
       else if (typeof v === "function") kxx = kxx.where(this.scope.kx.raw(v(k)));
       else kxx = kxx.where(k, v);
+    });
+
+    return kxx;
+  }
+
+  private order(kx: any, order?: OrderCondition<T>): any {
+    let kxx = kx;
+
+    Object.keys(order).forEach(ke => {
+      const k = this.entityInfo.fields[ke].name;
+      const v = order[ke];
+
+      if (typeof v === "function") {
+        kxx = kx.orderByRaw(v(k));
+      } else {
+        kxx = kx.orderBy(k, v);
+      }
     });
 
     return kxx;

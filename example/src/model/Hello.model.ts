@@ -96,6 +96,28 @@ export class HelloModel extends BaseModel {
         createdAt: updateCreatedAt,
       };
 
+      const queryOrder1 = await repo.findOne({
+        where: {
+          createdAt: {
+            ">=": new Date("2000-01-01 00:00:00"),
+            "<=": () => "CURRENT_TIMESTAMP()",
+          },
+        },
+        order: { createdAt: "ASC" },
+      });
+
+      const queryOrder2 = await repo.findOne({
+        where: {
+          createdAt: {
+            ">=": new Date("2000-01-01 00:00:00"),
+            "<=": () => "CURRENT_TIMESTAMP()",
+          },
+        },
+        order: { createdAt: (k: string) => `${k} IS NOT NULL, ${k} DESC` },
+      });
+
+      assert(queryOrder1.id && queryOrder2.id && String(queryOrder1.id) !== String(queryOrder2.id), "failed order by");
+
       const query1 = await repo.findOne({
         where: {
           createdAt: {

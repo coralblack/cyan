@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 import { plainToClass } from "class-transformer";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
+import { DeleteOptions, FindConditions, FindOneOptions, FindOptions, InsertId, UpdateOptions } from "./Model.query";
 import { Metadata } from "../core/Decorator";
 import { TraceableError } from "../core/Error";
 import { ClassType } from "../types";
@@ -11,48 +13,9 @@ export interface EntityInfo<T> {
   target: ClassType<T>;
   tableName: string;
   columns: Array<string>;
-  fields: {[key: string]: EntityColumnOptions};
+  fields: { [key: string]: EntityColumnOptions };
   primaryColumns: Array<string>;
   criteriaColumns: Array<string>;
-}
-
-type RawQuery = (k: string) => string;
-export type InsertId = bigint | number;
-
-type FindOperatorComp<T> = { 
-  ">=": T | RawQuery;
-  ">": T | RawQuery;
-  "<=": T | RawQuery;
-  "<": T | RawQuery;
-  "IS_NULL": boolean;
-  "IS_NOT_NULL": boolean;
-};
-
-export type FindConditions<T> = {
-  [P in keyof T]?: T[P] | T[P][] | Partial<FindOperatorComp<T[P]>>| RawQuery;
-};
-
-export interface FindOneOptions<T> {
-  select?: (keyof T)[];
-  where?: FindConditions<T>;
-  order?: {[P in keyof T]?: "ASC" | "DESC"};
-  debug?: boolean;
-}
-
-export interface FindOptions<T> extends FindOneOptions<T> {
-  offset?: number | bigint;
-  limit?: number | bigint;
-}
-
-export interface UpdateOptions<T> {
-  where?: FindConditions<T>;
-  update?: (keyof T)[];
-  debug?: boolean;
-}
-
-export interface DeleteOptions<T> {
-  where?: FindConditions<T>;
-  debug?: boolean;
 }
 
 export const symEntityInfo = Symbol();
@@ -124,7 +87,7 @@ export class Repository<T> {
   async update(entity: T, options?: UpdateOptions<T>): Promise<number> {
     try {
       let kx = this.scope.kx.from(this.entityInfo.tableName);
-      
+
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
       this.entityInfo.primaryColumns.forEach(e => {
@@ -136,7 +99,7 @@ export class Repository<T> {
         p[this.entityInfo.fields[e].name] = entity[e];
         return p;
       }, {}));
-      
+
       if (options?.debug) {
         // eslint-disable-next-line no-console
         console.log(">", kx.toSQL());
@@ -153,7 +116,7 @@ export class Repository<T> {
   async delete(entity: T, options?: DeleteOptions<T>): Promise<number> {
     try {
       let kx = this.scope.kx.from(this.entityInfo.tableName);
-      
+
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
       this.entityInfo.primaryColumns.forEach(e => {
@@ -232,12 +195,30 @@ export class Repository<T> {
 
   private where(kx: any, where?: FindConditions<T>): any {
     let kxx = kx;
-    
+
     Object.keys(where).forEach(ke => {
       const k = this.entityInfo.fields[ke].name;
       const v = where[ke];
 
       if (Array.isArray(v)) kxx = kxx.whereIn(k, v);
+      else if (typeof v === "object" && (v[">="] || v[">"] || v["<="] || v["<"] || typeof v["IS_NULL"] === "boolean" || typeof v["IS_NOT_NULL"] === "boolean")) {
+        kxx.andWhere(function () {
+          Object.keys(v).forEach((condition) => {
+            if (condition === "IS_NULL" || condition === "IS_NOT_NULL") {
+              if (v["IS_NULL"] === true || v["IS_NOT_NULL"] === false) {
+                this.whereNull(k);
+              } else if (v["IS_NULL"] === false || v["IS_NOT_NULL"] === true) {
+                this.whereNotNull(k);
+              }
+            }
+            else if (typeof v[condition] === "function") {
+              this.whereRaw(`${k} ${condition} ${v[condition](k)}`);
+            } else {
+              this.where(k, condition, v[condition]);
+            }
+          });
+        });
+      }
       else if (typeof v === "function") kxx = kxx.where(this.scope.kx.raw(v(k)));
       else kxx = kxx.where(k, v);
     });

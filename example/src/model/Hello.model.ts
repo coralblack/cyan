@@ -49,7 +49,7 @@ export class HelloModel extends BaseModel {
 
       const repo = scope.getRepository(HelloEntity);
 
-      const save1Name = `${new Date().getTime()}`; 
+      const save1Name = `${new Date().getTime()}`;
       const save1 = await repo.save({
         id: (() => "UUID_SHORT()") as any,
         name: save1Name,
@@ -77,10 +77,10 @@ export class HelloModel extends BaseModel {
 
       const found = await repo.findOne({
         select: ["name"],
-        where: { 
+        where: {
           id: (k: string) => `${k} = ${save2Id}`,
           name: [save2Name, "xxx"],
-        }, 
+        },
       });
 
       const founds = await repo.find({ limit: 3 });
@@ -96,6 +96,33 @@ export class HelloModel extends BaseModel {
         createdAt: updateCreatedAt,
       };
 
+      const query1 = await repo.findOne({
+        where: {
+          createdAt: {
+            ">=": new Date("2000-01-01 00:00:00"),
+            "<=": () => "CURRENT_TIMESTAMP()",
+          },
+        },
+      });
+
+      assert(!!query1);
+
+      const query2 = await repo.findOne({ where: { createdAt: { IS_NULL: true } } });
+
+      assert(!!query2);
+
+      const query3 = await repo.findOne({ where: { createdAt: { IS_NULL: false } } });
+
+      assert(!!query3);
+
+      const query4 = await repo.findOne({ where: { createdAt: { IS_NOT_NULL: true } } });
+
+      assert(!!query4);
+
+      const query5 = await repo.findOne({ where: { createdAt: { IS_NOT_NULL: false } } });
+
+      assert(!!query5);
+
       const updated1 = await repo.update(entity, { update: ["name"], where: { name: updateName } });
 
       assert(updated1 === 0);
@@ -106,19 +133,19 @@ export class HelloModel extends BaseModel {
 
       const updated3 = await repo.update(entity, { update: ["name"], where: { name: updateName } });
 
-      assert(updated3 === 1);
+      assert(updated3 === 1, "updated3 failed");
 
       const updated4 = await repo.update(entity, { update: ["name"], where: { name: updateName, createdAt: updateCreatedAt } });
 
-      assert(updated4 === 0);
+      assert(updated4 === 0, "updated4 failed");
 
       const updated5 = await repo.update(entity);
 
-      assert(updated5 === 1);
+      assert(updated5 === 1, "updated5 failed");
 
       const updated6 = await repo.update(entity, { where: { name: updateName, createdAt: updateCreatedAt } });
 
-      assert(updated6 === 1);
+      assert(updated6 === 1, "updated6 failed");
 
       const found6 = await repo.findOne({ where: { id: save2Id } });
 
@@ -126,15 +153,15 @@ export class HelloModel extends BaseModel {
 
       const deleted1 = await repo.delete(entity, { where: { name: `${updateName}--` } });
 
-      assert(deleted1 === 0);
+      assert(deleted1 === 0, "deleted1 failed");
 
       const deleted2 = await repo.delete(entity, { where: { name: updateName } });
 
-      assert(deleted2 === 1);
+      assert(deleted2 === 1, "deleted2 failed");
 
       const found7 = await repo.findOne({ where: { id: save2Id } });
 
-      assert(found7 === null);
+      assert(found7 === null, "found7 failed");
 
       return null;
     });

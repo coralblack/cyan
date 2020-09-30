@@ -1,15 +1,15 @@
-import { Status as HttpStatus, Response } from "cyan/dist/http";
+import { HttpResponse, Status as HttpStatus, Response } from "cyan/dist/http";
 import { Get } from "cyan/dist/router";
 import { BaseController } from "./Base.controller";
 
 export class WorldController extends BaseController {
   @Get("/world/ok")
-  helloString(): Response {
+  helloString(): HttpResponse {
     return Response.ok("OK");
   }
 
   @Get("/world/bad")
-  helloJson(): Response {
+  helloJson(): HttpResponse {
     return Response.done(HttpStatus.BadRequest, "Bad!");
   }
 

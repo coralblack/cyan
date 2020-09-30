@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ApiController, Status as HttpStatus, Response } from "cyan/dist/http";
+import { ApiController, HttpResponse, Status as HttpStatus, Response } from "cyan/dist/http";
 import { Get, Middleware, MIDDLEWARE_PRIORITY_ACTION_HANDLER } from "cyan/dist/router";
 
 export class JsonController extends ApiController {
@@ -15,7 +15,7 @@ export class JsonController extends ApiController {
   }
 
   @Get("/json/resp")
-  helloResp(): Response {
+  helloResp(): HttpResponse {
     return Response.done(HttpStatus.Created, { hello: "world" });
   }
 

@@ -31,14 +31,14 @@ export class Injector {
 }
 
 export function Inject() {
-  return function (target: any, propertyKey: string, index?: number) {
+  return function(target: any, propertyKey: string, index?: number) {
     const type = Reflect.getMetadata("design:type", target, propertyKey);
     let instance: any;
 
     if (index === undefined) { // Property-based injection
       Object.defineProperty(target, propertyKey, {
         enumerable: true,
-        get: function () {
+        get: function() {
           if (instance) return instance;
           instance = Injector.resolve(type);
           return instance;

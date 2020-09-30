@@ -202,7 +202,7 @@ export class Repository<T> {
 
       if (Array.isArray(v)) kxx = kxx.whereIn(k, v);
       else if (typeof v === "object" && (v[">="] || v[">"] || v["<="] || v["<"] || typeof v["IS_NULL"] === "boolean" || typeof v["IS_NOT_NULL"] === "boolean")) {
-        kxx.andWhere(function () {
+        kxx.andWhere(function() {
           Object.keys(v).forEach((condition) => {
             if (condition === "IS_NULL" || condition === "IS_NOT_NULL") {
               if (v["IS_NULL"] === true || v["IS_NOT_NULL"] === false) {

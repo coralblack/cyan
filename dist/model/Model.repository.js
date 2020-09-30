@@ -130,6 +130,9 @@ class Repository {
             if (options.where) {
                 kx = this.where(kx, options.where);
             }
+            if (options.order) {
+                kx = this.order(kx, options.order);
+            }
             if (options.offset)
                 kx = kx.offset(String(options.offset));
             if (options.limit)
@@ -177,6 +180,20 @@ class Repository {
                 kxx = kxx.where(this.scope.kx.raw(v(k)));
             else
                 kxx = kxx.where(k, v);
+        });
+        return kxx;
+    }
+    order(kx, order) {
+        let kxx = kx;
+        Object.keys(order).forEach(ke => {
+            const k = this.entityInfo.fields[ke].name;
+            const v = order[ke];
+            if (typeof v === "function") {
+                kxx = kx.orderByRaw(v(k));
+            }
+            else {
+                kxx = kx.orderBy(k, v);
+            }
         });
         return kxx;
     }

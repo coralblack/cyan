@@ -17,8 +17,11 @@ export class Server {
     return this._server;
   }
 
-  public beforeInitRoutes() {}
-  public afterInitRoutes() {}
+  public beforeInitSys() { }
+  public afterInitSys() { }
+
+  public beforeInitRoutes() { }
+  public afterInitRoutes() { }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars-experimental, @typescript-eslint/no-unused-vars
   public onPageNotFound(request: ExpressRequest, response: ExpressResponse, next: NextFunction) {

@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import "source-map-support";
+import * as bodyParser from "body-parser";
 import { CorsOptions, CorsOptionsDelegate } from "cors";
 import { Logger } from "./Logger";
 import { Server } from "./Server";
@@ -19,8 +20,11 @@ export interface CyanSettings {
     server?: typeof Server;
     routes: Array<ControllerType>;
     options?: {
+        accessLog?: boolean;
         cors?: boolean | CorsOptions | CorsOptionsDelegate;
         bodyParser?: boolean;
+        jsonBodyParser?: boolean | bodyParser.OptionsJson;
+        urlEncodedBodyParser?: boolean | bodyParser.OptionsUrlencoded;
     };
 }
 export declare class Cyan {
@@ -31,6 +35,7 @@ export declare class Cyan {
     start(): void;
     initialize(): Server;
     listen(): void;
+    private initSysHandlers;
     private initRoutes;
     private initHandler;
 }

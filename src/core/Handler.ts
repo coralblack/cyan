@@ -3,8 +3,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 
 import * as bodyParser from "body-parser";
+import cors, { CorsOptions, CorsOptionsDelegate } from "cors";
 import { NextFunction } from "express";
 import { get } from "lodash";
+import morgan from "morgan";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArgs";
 import { Metadata } from "./Decorator";
 import { Controller as HttpController } from "../http/Http.controller";
@@ -14,25 +16,9 @@ import { HttpResponse } from "../http/Http.response";
 import { Status as HttpStatus } from "../http/Http.status";
 import { ParamType } from "../router";
 import { CyanRequest, CyanResponse, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";
+import { datetime } from "../util";
 
 export class Handler {
-  public static jsonBodyParser(): HandlerFunction {
-    const jsonParser = bodyParser.json();
-
-    return (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
-      jsonParser(req as any, res as any, (err) => { // eslint-disable-line consistent-return
-        if (err) {
-          const respErr = new HttpError(HttpStatus.BadRequest, "The specified json body is invalid.");
-
-          next(respErr);
-          return;
-        }
-
-        next();
-      });
-    };
-  }
-
   public static beforeHandler(controller: HttpController): HandlerFunction {
     return (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       req.httpRequestContext = HttpRequest.getContext(req);
@@ -81,13 +67,13 @@ export class Handler {
   public static actionHandler(controller: HttpController, route: RouteMetadataArgs): HandlerFunction {
     return async (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       let resp: any;
-      
+
       const actionParams: RouteParamMetadataArgs[] = (() => {
         if (controller[this.symActionParams] && controller[this.symActionParams][route.method]) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           return controller[this.symActionParams][route.method];
         }
-        
+
         const aps = Metadata.getStorage().routeParams.filter(rp => rp.target === route.target && rp.method === route.method);
 
         controller[this.symActionParams] = controller[this.symActionParams] || {};
@@ -108,7 +94,7 @@ export class Handler {
       if (typeof resp === "function") {
         resp = resp();
       }
-      
+
       if (resp instanceof Error || resp instanceof HttpError) {
         next(resp);
       } else {
@@ -193,5 +179,46 @@ export class Handler {
           next(err);
         });
     };
+  }
+
+  public static accessLogger(name: string): HandlerFunction {
+    return morgan((tokens, req, res): any =>
+      [
+        `${datetime(",")}`,
+        `${name},`,
+        tokens.method(req, res),
+        tokens.url(req, res),
+        tokens.status(req, res),
+        tokens.res(req, res, "content-length"),
+        "-",
+        tokens["response-time"](req, res),
+        "ms",
+      ].join(" ")
+    ) as unknown as HandlerFunction;
+  }
+
+  public static jsonBodyParser(options?: bodyParser.OptionsJson): HandlerFunction {
+    const jsonParser = bodyParser.json(options);
+
+    return (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
+      jsonParser(req as any, res as any, (err) => { // eslint-disable-line consistent-return
+        if (err) {
+          const respErr = new HttpError(HttpStatus.BadRequest, "The specified json body is invalid.");
+
+          next(respErr);
+          return;
+        }
+
+        next();
+      });
+    };
+  }
+
+  public static urlEncodedBodyParser(options?: bodyParser.OptionsUrlencoded): HandlerFunction {
+    return bodyParser.urlencoded(options || { extended: true }) as unknown as HandlerFunction;
+  }
+
+  public static corsHandler(options?: CorsOptions | CorsOptionsDelegate): HandlerFunction {
+    return cors(options) as unknown as HandlerFunction;
   }
 }

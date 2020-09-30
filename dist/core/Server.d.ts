@@ -5,6 +5,8 @@ export declare class Server {
     private _server;
     constructor(cyan: Cyan);
     getServer(): Express;
+    beforeInitSys(): void;
+    afterInitSys(): void;
     beforeInitRoutes(): void;
     afterInitRoutes(): void;
     onPageNotFound(request: ExpressRequest, response: ExpressResponse, next: NextFunction): void;

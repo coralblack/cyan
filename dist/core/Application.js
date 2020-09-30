@@ -26,6 +26,7 @@ class Cyan {
             routes: [],
         }, settings || {});
         this.logger = (settings.logger || Logger_1.Logger).getInstance();
+        this.logger.appName = this.settings.name;
         this.server = settings.server ? new settings.server(this) : new Server_1.Server(this);
     }
     start() {
@@ -33,10 +34,10 @@ class Cyan {
         this.listen();
     }
     initialize() {
-        this.logger.info(`${this.settings.name}, Starting .. @ ${this.settings.stage}`);
-        if (!this.settings.options || this.settings.options.bodyParser !== false) {
-            this.server.use(Handler_1.Handler.jsonBodyParser());
-        }
+        this.logger.info(`Starting Server @ ${this.settings.stage}`);
+        this.server.beforeInitSys();
+        this.initSysHandlers();
+        this.server.afterInitSys();
         this.server.beforeInitRoutes();
         this.initRoutes();
         this.server.afterInitRoutes();
@@ -47,8 +48,30 @@ class Cyan {
     listen() {
         if (this.settings.port) {
             this.server
-                .listen(this.settings.port, () => this.logger.info(`${this.settings.name}, listening HTTP at ${this.settings.port}`))
+                .listen(this.settings.port, () => this.logger.info(`listening HTTP at ${this.settings.port}`))
                 .on("error", (err) => this.logger.error(err));
+        }
+    }
+    initSysHandlers() {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+        if ((_a = this.settings.options) === null || _a === void 0 ? void 0 : _a.accessLog) {
+            this.logger.info("[handler] AccessLogger registered");
+            this.server.use(Handler_1.Handler.accessLogger(this.settings.name));
+        }
+        if ((_b = this.settings.options) === null || _b === void 0 ? void 0 : _b.cors) {
+            this.logger.info("[handler] CorsHandler registered");
+            this.server.use(Handler_1.Handler.corsHandler(typeof ((_c = this.settings.options) === null || _c === void 0 ? void 0 : _c.cors) === "boolean" ?
+                undefined : (_d = this.settings.options) === null || _d === void 0 ? void 0 : _d.cors));
+        }
+        if (((_e = this.settings.options) === null || _e === void 0 ? void 0 : _e.jsonBodyParser) || ((_f = this.settings.options) === null || _f === void 0 ? void 0 : _f.bodyParser)) {
+            this.logger.info("[handler] JsonBodyParser registered");
+            this.server.use(Handler_1.Handler.jsonBodyParser(typeof ((_g = this.settings.options) === null || _g === void 0 ? void 0 : _g.jsonBodyParser) === "boolean" ?
+                undefined : (_h = this.settings.options) === null || _h === void 0 ? void 0 : _h.jsonBodyParser));
+        }
+        if (((_j = this.settings.options) === null || _j === void 0 ? void 0 : _j.urlEncodedBodyParser) || ((_k = this.settings.options) === null || _k === void 0 ? void 0 : _k.bodyParser)) {
+            this.logger.info("[handler] UrlEncodedBodyParser registered");
+            this.server.use(Handler_1.Handler.urlEncodedBodyParser(typeof ((_l = this.settings.options) === null || _l === void 0 ? void 0 : _l.urlEncodedBodyParser) === "boolean" ?
+                undefined : (_m = this.settings.options) === null || _m === void 0 ? void 0 : _m.urlEncodedBodyParser));
         }
     }
     initRoutes() {
@@ -61,7 +84,7 @@ class Cyan {
     }
     initHandler(controller, route) {
         const path = path_1.resolve(this.settings.basePath || "/", route.path);
-        this.logger.info(`${this.settings.name}, [router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
+        this.logger.info(`[router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
         const handlers = [
             [router_1.MIDDLEWARE_PRIORITY_BEFORE_HANDLER, Handler_1.Handler.beforeHandler(controller)],
             [router_1.MIDDLEWARE_PRIORITY_ACTION_HANDLER, Handler_1.Handler.actionHandler(controller, route)],

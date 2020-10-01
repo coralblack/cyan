@@ -131,14 +131,20 @@ class Handler {
                         if (typeof resp.content === "object") {
                             headers["content-type"] = headers["content-type"] || "application/json";
                         }
-                        res
-                            .status(resp.status)
-                            .set(headers)
-                            .send(response)
-                            .end();
+                        res.processedResponse = {
+                            status: resp.status,
+                            headers,
+                            content: response,
+                        };
+                        next();
                         return;
                     }
-                    res.status(200).send(resp).end();
+                    res.processedResponse = {
+                        status: 200,
+                        headers: {},
+                        content: resp,
+                    };
+                    next();
                 }
             })
                 .catch((err) => {

@@ -5,6 +5,25 @@ const Http_response_1 = require("./Http.response");
 const Http_status_1 = require("./Http.status");
 const Logger_1 = require("../core/Logger");
 class Controller {
+    beforeMiddleware(cyan) {
+        return (request, response, next) => {
+            next();
+        };
+    }
+    afterMiddleware(cyan) {
+        return (request, response, next) => {
+            next();
+        };
+    }
+    render(cyan) {
+        return (request, response, next) => {
+            response
+                .status(response.processedResponse.status)
+                .set(response.processedResponse.headers)
+                .send(response.processedResponse.content)
+                .end();
+        };
+    }
     async beforeHandle(request) { }
     async afterHandle(request, response) {
         return response;

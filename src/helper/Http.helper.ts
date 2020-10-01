@@ -1,19 +1,6 @@
+import axios from "axios";
 import { Method as HttpMethod } from "../http/Http.method";
 import { Headers as HttpHeaders, ReqData as HttpReqData, ReqParams as HttpReqParams } from "../types/Http";
-
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-let axios: any;
-
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  axios = require("axios").default;
-} catch (e) {
-  if (e.message.indexOf("Cannot find module") !== -1) {
-    throw Error("Please install the `axios` library to use `HttpHelper` (use `npm install --save axios@0.20`).");
-  } else {
-    throw e;
-  }
-}
 
 export type HttpResponseType = "arraybuffer" | "document" | "json" | "text" | "stream";
 

@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/coralblack/cyan#readme",
   "dependencies": {
+    "axios": "^0.20.0",
     "body-parser": "^1.19.0",
     "class-transformer": "^0.3.1",
     "cors": "^2.8.5",
@@ -50,7 +51,6 @@
     "@types/source-map-support": "^0.5.3",
     "@typescript-eslint/eslint-plugin": "^4.2.0",
     "@typescript-eslint/parser": "^4.2.0",
-    "axios": "^0.20.0",
     "eslint": "^7.9.0",
     "eslint-plugin-import": "^2.22.0",
     "husky": "^4.3.0",

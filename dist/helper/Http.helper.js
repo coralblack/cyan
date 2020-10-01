@@ -1,19 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HttpHelper = void 0;
+const axios_1 = __importDefault(require("axios"));
 const Http_method_1 = require("../http/Http.method");
-let axios;
-try {
-    axios = require("axios").default;
-}
-catch (e) {
-    if (e.message.indexOf("Cannot find module") !== -1) {
-        throw Error("Please install the `axios` library to use `HttpHelper` (use `npm install --save axios@0.20`).");
-    }
-    else {
-        throw e;
-    }
-}
 class HttpHelper {
     async request(payload) {
         try {
@@ -23,7 +15,7 @@ class HttpHelper {
             if (payload.debug === true) {
                 console.debug("> HttpHelper.request, Request", payload);
             }
-            const e = await axios.request(payload);
+            const e = await axios_1.default.request(payload);
             const resp = {};
             resp.body = e.data;
             resp.status = e.status;

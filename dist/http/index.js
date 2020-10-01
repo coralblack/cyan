@@ -15,6 +15,5 @@ __exportStar(require("./Http.controller"), exports);
 __exportStar(require("./Http.method"), exports);
 __exportStar(require("./Http.request"), exports);
 __exportStar(require("./Http.response"), exports);
-__exportStar(require("../router/Router.action"), exports);
 __exportStar(require("./Http.status"), exports);
 //# sourceMappingURL=index.js.map

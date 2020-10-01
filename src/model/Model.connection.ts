@@ -45,6 +45,7 @@ export class ConnectionManager {
       connection: {
         host: settings.host,
         user: settings.username,
+        port: settings.port,
         password: settings.password,
         database: settings.database,
         timezone: settings.timezone,

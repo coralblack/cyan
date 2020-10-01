@@ -9,7 +9,7 @@ import { get } from "lodash";
 import morgan from "morgan";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArgs";
 import { Metadata } from "./Decorator";
-import { Controller as HttpController } from "../http/Http.controller";
+import { Controller as HttpController, ProcessedExpressResponse } from "../http/Http.controller";
 import { HttpError } from "../http/Http.error";
 import { Request as HttpRequest } from "../http/Http.request";
 import { HttpResponse } from "../http/Http.response";
@@ -126,15 +126,21 @@ export class Handler {
                 headers["content-type"] = headers["content-type"] || "application/json";
               }
 
-              res
-                .status(resp.status)
-                .set(headers)
-                .send(response)
-                .end();
+              (res as unknown as ProcessedExpressResponse).processedResponse = {
+                status: resp.status,
+                headers,
+                content: response,
+              };
+              next();
               return;
             }
 
-            res.status(200).send(resp).end();
+            (res as unknown as ProcessedExpressResponse).processedResponse = {
+              status: 200,
+              headers: {},
+              content: resp,
+            };
+            next();
           }
         })
         .catch((err: Error) => {

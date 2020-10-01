@@ -162,7 +162,10 @@ export class Cyan {
 
     this.server[route.action.toLowerCase()](
       path,
+      controller.beforeMiddleware(this),
       ...handlers.sort((a, b) => a[0] - b[0]).map(e => e[1]),
+      controller.afterMiddleware(this),
+      controller.render(this),
       Handler.errorHandler(controller),
       Handler.httpErrorHandler(controller)
     );

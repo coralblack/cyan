@@ -1,8 +1,8 @@
 import { assert } from "console";
 import { Inject } from "cyan/dist/core";
 import { HttpHelper } from "cyan/dist/helper";
-import { Get, Method as HttpMethod } from "cyan/dist/http";
-import { BodyParam, HeaderParam, PathParam, QueryParam } from "cyan/dist/router";
+import { Method as HttpMethod } from "cyan/dist/http";
+import { BodyParam, Get, HeaderParam, PathParam, QueryParam } from "cyan/dist/router";
 import { BaseController } from "./Base.controller";
 import { HelloService } from "../service/Hello.service";
 

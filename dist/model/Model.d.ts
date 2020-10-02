@@ -20,5 +20,5 @@ export declare type TxDelegate<T> = (scope: TransactionScope) => Promise<T>;
 export declare abstract class Model {
     protected readonly settings: ModelSettings;
     constructor(settings?: ModelSettings);
-    transactionWith<T>(delegate: TxDelegate<T>): Promise<T>;
+    transactionWith<T>(delegate: TxDelegate<T>, scope?: TransactionScope): Promise<T>;
 }

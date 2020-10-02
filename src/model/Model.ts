@@ -1,4 +1,5 @@
 import { ConnectionManager, TransactionScope } from "./Model.connection";
+import { TraceableError } from "../core/Error";
 
 export enum ModelConnectivitySettingsDriver {
   MySQL = "mysql2",
@@ -42,7 +43,17 @@ export abstract class Model {
     }, settings);
   }
 
-  transactionWith<T>(delegate: TxDelegate<T>): Promise<T> {
+  async transactionWith<T>(delegate: TxDelegate<T>, scope?: TransactionScope): Promise<T> {
+    if (scope) {
+      try {
+        const resp = await delegate(scope);
+
+        return resp;
+      } catch (err) {
+        throw TraceableError(err);
+      }
+    }
+
     const manager = ConnectionManager.getConnectionManager(this.settings);
 
     return manager.transaction(async (scope) => {

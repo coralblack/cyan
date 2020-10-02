@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Model = exports.ModelConnectivitySettingsDriver = void 0;
 const Model_connection_1 = require("./Model.connection");
+const Error_1 = require("../core/Error");
 var ModelConnectivitySettingsDriver;
 (function (ModelConnectivitySettingsDriver) {
     ModelConnectivitySettingsDriver["MySQL"] = "mysql2";
@@ -21,7 +22,16 @@ class Model {
             poolMax: process.env.CYAN_DB_POOL_MAX || 10,
         }, settings);
     }
-    transactionWith(delegate) {
+    async transactionWith(delegate, scope) {
+        if (scope) {
+            try {
+                const resp = await delegate(scope);
+                return resp;
+            }
+            catch (err) {
+                throw Error_1.TraceableError(err);
+            }
+        }
         const manager = Model_connection_1.ConnectionManager.getConnectionManager(this.settings);
         return manager.transaction(async (scope) => {
             const resp = await delegate(scope);

@@ -36,8 +36,6 @@ class DummyEntity {
 export class HelloModel extends BaseModel {
   async test(): Promise<void> {
     await this.transactionWith<Hello>(async (scope) => {
-      await new Promise(r => r());
-
       await scope.execute(`
         CREATE TABLE IF NOT EXISTS HELLO (
             ID BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -128,6 +126,13 @@ export class HelloModel extends BaseModel {
       const queryRaw = await scope.execute("SELECT ID FROM HELLO WHERE ID = ?", [queryPagination1.items[0].id]);
 
       assert(queryPagination1.items[0].id === queryRaw[0].ID);
+
+      await this.transactionWith(async (innerScope) => {
+        const repoX = innerScope.getRepository(HelloEntity);
+        const foundX = await repoX.findOne({ where: { id: queryPagination1.items[0].id } });
+
+        assert(foundX.id === queryPagination1.items[0].id);
+      }, scope);
 
       const query1 = await repo.findOne({
         where: {

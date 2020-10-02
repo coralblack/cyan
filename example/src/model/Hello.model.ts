@@ -118,6 +118,13 @@ export class HelloModel extends BaseModel {
 
       assert(queryOrder1.id && queryOrder2.id && String(queryOrder1.id) !== String(queryOrder2.id), "failed order by");
 
+      const queryPagination1 = await repo.pagination({ page: 1, rpp: 2, order: { createdAt: "DESC" } });
+      const queryPagination2 = await repo.pagination({ page: 1, rpp: 1, order: { createdAt: "DESC" } });
+      const queryPagination3 = await repo.pagination({ page: 2, rpp: 1, order: { createdAt: "DESC" } });
+
+      assert(queryPagination1.items[0].id === queryPagination2.items[0].id);
+      assert(queryPagination1.items[1].id === queryPagination3.items[0].id);
+
       const query1 = await repo.findOne({
         where: {
           createdAt: {

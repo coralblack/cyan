@@ -35,6 +35,18 @@ export interface FindOptions<T> extends FindOneOptions<T> {
   limit?: number | bigint;
 }
 
+export interface PaginationOptions<T> extends FindOneOptions<T> {
+  page?: number;
+  rpp?: number;
+}
+
+export interface Paginatable<T> {
+  page: number;
+  rpp: number;
+  count: bigint;
+  items: Array<T>;
+}
+
 export interface UpdateOptions<T> {
   where?: FindConditions<T>;
   update?: (keyof T)[];

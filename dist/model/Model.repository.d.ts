@@ -1,6 +1,6 @@
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions } from "./Model.entity";
-import { DeleteOptions, FindOneOptions, FindOptions, InsertId, UpdateOptions } from "./Model.query";
+import { DeleteOptions, FindOneOptions, FindOptions, InsertId, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
 import { ClassType } from "../types";
 export interface EntityInfo<T> {
     target: ClassType<T>;
@@ -24,6 +24,7 @@ export declare class Repository<T> {
     delete(entity: T, options?: DeleteOptions<T>): Promise<number>;
     findOne(options?: FindOneOptions<T>): Promise<T>;
     find(options?: FindOptions<T>): Promise<T[]>;
+    pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>>;
     private select;
     private where;
     private order;

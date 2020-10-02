@@ -4,7 +4,7 @@
 import { plainToClass } from "class-transformer";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
-import { DeleteOptions, FindConditions, FindOneOptions, FindOptions, InsertId, OrderCondition, UpdateOptions } from "./Model.query";
+import { DeleteOptions, FindConditions, FindOneOptions, FindOptions, InsertId, OrderCondition, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
 import { Metadata } from "../core/Decorator";
 import { TraceableError } from "../core/Error";
 import { ClassType } from "../types";
@@ -154,6 +154,30 @@ export class Repository<T> {
       const res = await this.select(options);
 
       return res;
+    } catch (err) {
+      throw TraceableError(err);
+    }
+  }
+
+  async pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>> {
+    try {
+      const page = Math.max(1, options && options.page ? options.page : 1);
+      const rpp = Math.max(1, options && options.rpp ? options.rpp : 30);
+      const limit = BigInt(rpp);
+      const offset: bigint = (BigInt(page) - BigInt(1)) * limit;
+      
+      const count = (await this
+        .where(this.scope.kx.from(this.entityInfo.tableName), options.where || {})
+        .count("* as cnt"))[0].cnt;
+
+      const items = await this.find({ ...options, limit, offset });
+
+      return {
+        page,
+        rpp,
+        count,
+        items,
+      };
     } catch (err) {
       throw TraceableError(err);
     }

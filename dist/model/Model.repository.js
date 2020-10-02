@@ -122,6 +122,27 @@ class Repository {
             throw Error_1.TraceableError(err);
         }
     }
+    async pagination(options) {
+        try {
+            const page = Math.max(1, options && options.page ? options.page : 1);
+            const rpp = Math.max(1, options && options.rpp ? options.rpp : 30);
+            const limit = BigInt(rpp);
+            const offset = (BigInt(page) - BigInt(1)) * limit;
+            const count = (await this
+                .where(this.scope.kx.from(this.entityInfo.tableName), options.where || {})
+                .count("* as cnt"))[0].cnt;
+            const items = await this.find(Object.assign(Object.assign({}, options), { limit, offset }));
+            return {
+                page,
+                rpp,
+                count,
+                items,
+            };
+        }
+        catch (err) {
+            throw Error_1.TraceableError(err);
+        }
+    }
     async select(options) {
         try {
             const selectColumns = options.select || this.entityInfo.columns;

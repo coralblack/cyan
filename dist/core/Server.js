@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Server = void 0;
 const express_1 = __importDefault(require("express"));
+const Logger_1 = require("./Logger");
 const Http_error_1 = require("../http/Http.error");
 const Http_response_1 = require("../http/Http.response");
 class Server {
@@ -30,6 +31,7 @@ class Server {
             response.status(error.status).send(error.content).set(error.headers).end();
         }
         else {
+            Logger_1.Logger.getInstance().error(error);
             response.status(500).send("An error has occurred.").end();
         }
     }

@@ -64,9 +64,11 @@ class Handler {
                     return lodash_1.get(req.body, name);
             })(actionParam.type, actionParam.name);
             try {
-                value = value && e(value);
-                if (e.name === Number.name && isNaN(value))
-                    throw new Error("..");
+                if (value) {
+                    value = value && e(value);
+                    if (e.name === Number.name && isNaN(value))
+                        throw new Error("..");
+                }
             }
             catch (err) {
                 throw new Http_error_1.HttpError(Http_status_1.Status.BadRequest, `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`);

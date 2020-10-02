@@ -71,8 +71,12 @@ export class Response {
     return new HttpResponse(HttpStatus.Ok, content);
   }
 
-  static notFound = responser(HttpStatus.NotFound);
-  static notImplemented = responser(HttpStatus.NotImplemented);
-  static badRequest = responser(HttpStatus.BadRequest);
-  static methodNotAllowed = responser(HttpStatus.MethodNotAllowed);
+  static badRequest = responser(HttpStatus.BadRequest); // 400
+  static unauthorized = responser(HttpStatus.Unauthorized); // 401
+  static forbidden = responser(HttpStatus.Forbidden); // 403
+  static notFound = responser(HttpStatus.NotFound); // 404
+  static methodNotAllowed = responser(HttpStatus.MethodNotAllowed); // 405
+  static conflict = responser(HttpStatus.Conflict); // 409
+  static toManyRequests = responser(HttpStatus.TooManyRequests); // 409
+  static notImplemented = responser(HttpStatus.NotImplemented); // 501
 }

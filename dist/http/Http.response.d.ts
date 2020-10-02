@@ -19,22 +19,6 @@ export declare class HttpResponse {
 export declare class Response {
     static done(status: HttpStatus, content: string | object): HttpResponse;
     static ok(content: string | object): HttpResponse;
-    static notFound: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
-    static notImplemented: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
     static badRequest: {
         (content?: string | object, headers?: HttpHeaders): HttpError;
         code(code: import("fs").Mode): {
@@ -43,7 +27,55 @@ export declare class Response {
         };
         message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
     };
+    static unauthorized: {
+        (content?: string | object, headers?: HttpHeaders): HttpError;
+        code(code: import("fs").Mode): {
+            (content?: string | object, headers?: HttpHeaders): HttpError;
+            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+        };
+        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+    };
+    static forbidden: {
+        (content?: string | object, headers?: HttpHeaders): HttpError;
+        code(code: import("fs").Mode): {
+            (content?: string | object, headers?: HttpHeaders): HttpError;
+            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+        };
+        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+    };
+    static notFound: {
+        (content?: string | object, headers?: HttpHeaders): HttpError;
+        code(code: import("fs").Mode): {
+            (content?: string | object, headers?: HttpHeaders): HttpError;
+            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+        };
+        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+    };
     static methodNotAllowed: {
+        (content?: string | object, headers?: HttpHeaders): HttpError;
+        code(code: import("fs").Mode): {
+            (content?: string | object, headers?: HttpHeaders): HttpError;
+            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+        };
+        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+    };
+    static conflict: {
+        (content?: string | object, headers?: HttpHeaders): HttpError;
+        code(code: import("fs").Mode): {
+            (content?: string | object, headers?: HttpHeaders): HttpError;
+            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+        };
+        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+    };
+    static toManyRequests: {
+        (content?: string | object, headers?: HttpHeaders): HttpError;
+        code(code: import("fs").Mode): {
+            (content?: string | object, headers?: HttpHeaders): HttpError;
+            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+        };
+        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+    };
+    static notImplemented: {
         (content?: string | object, headers?: HttpHeaders): HttpError;
         code(code: import("fs").Mode): {
             (content?: string | object, headers?: HttpHeaders): HttpError;

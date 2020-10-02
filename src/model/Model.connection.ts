@@ -65,11 +65,15 @@ export class ConnectionManager {
       delete opts.connection.timezone;
 
       opts.options = { bindObjectAsString: true };
-      opts.pool.afterCreate = function(connection: any, callback: any) {
-        connection.query(`SET time_zone = '${settings.timezone.replace(/'/g, "\\'")}';`, function(err) {
-          callback(err, connection);
-        });
-      };
+
+      if (settings.timezone) {
+        opts.pool.afterCreate = function(connection: any, callback: any) {
+          connection.query(`SET time_zone = '${settings.timezone.replace(/'/g, "\\'")}';`, function(err) {
+            callback(err, connection);
+          });
+        };
+      }
+      
       opts.connection.typeCast = function(field: any, next: any): any {
         /* eslint-disable @typescript-eslint/no-unsafe-return */
         if (["NEWDECIMAL", "DECIMAL", "LONGLONG"].includes(field.type)) {

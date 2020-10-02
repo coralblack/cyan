@@ -36,7 +36,7 @@ export abstract class Model {
       password: process.env.CYAN_DB_PASSWORD || null,
       database: process.env.CYAN_DB_DATABASE || null,
       charset: process.env.CYAN_DB_CHARSET || "utf8",
-      timezone: process.env.CYAN_DB_TIMEZONE || "+00:00",
+      timezone: process.env.CYAN_DB_TIMEZONE || null,
       poolMin: process.env.CYAN_DB_POOL_MIN || 0,
       poolMax: process.env.CYAN_DB_POOL_MAX || 10,
     }, settings);

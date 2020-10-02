@@ -50,11 +50,13 @@ class ConnectionManager {
         if (settings.driver === Model_1.ModelConnectivitySettingsDriver.MySQL) {
             delete opts.connection.timezone;
             opts.options = { bindObjectAsString: true };
-            opts.pool.afterCreate = function (connection, callback) {
-                connection.query(`SET time_zone = '${settings.timezone.replace(/'/g, "\\'")}';`, function (err) {
-                    callback(err, connection);
-                });
-            };
+            if (settings.timezone) {
+                opts.pool.afterCreate = function (connection, callback) {
+                    connection.query(`SET time_zone = '${settings.timezone.replace(/'/g, "\\'")}';`, function (err) {
+                        callback(err, connection);
+                    });
+                };
+            }
             opts.connection.typeCast = function (field, next) {
                 if (["NEWDECIMAL", "DECIMAL", "LONGLONG"].includes(field.type)) {
                     const val = field.string();

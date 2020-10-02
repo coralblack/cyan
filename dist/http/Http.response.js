@@ -61,8 +61,12 @@ class Response {
     }
 }
 exports.Response = Response;
-Response.notFound = responser(Http_status_1.Status.NotFound);
-Response.notImplemented = responser(Http_status_1.Status.NotImplemented);
 Response.badRequest = responser(Http_status_1.Status.BadRequest);
+Response.unauthorized = responser(Http_status_1.Status.Unauthorized);
+Response.forbidden = responser(Http_status_1.Status.Forbidden);
+Response.notFound = responser(Http_status_1.Status.NotFound);
 Response.methodNotAllowed = responser(Http_status_1.Status.MethodNotAllowed);
+Response.conflict = responser(Http_status_1.Status.Conflict);
+Response.toManyRequests = responser(Http_status_1.Status.TooManyRequests);
+Response.notImplemented = responser(Http_status_1.Status.NotImplemented);
 //# sourceMappingURL=Http.response.js.map

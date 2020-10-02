@@ -8,6 +8,7 @@ const managers: { [key: string]: ConnectionManager } = {};
 export type QueryParameterTypes =
   | string
   | number
+  | bigint
   | boolean
   | null
   | Date
@@ -21,7 +22,7 @@ export class TransactionScope {
   constructor(public readonly kx: knex) { }
   
   async execute(query: string, params?: Array<QueryParameterTypes>): Promise<any> {
-    const [res] = await this.kx.raw(query, params);
+    const [res] = await this.kx.raw(query, params as any);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return res;

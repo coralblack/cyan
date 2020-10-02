@@ -49,9 +49,11 @@ export class Handler {
       })(actionParam.type, actionParam.name);
 
       try {
-        value = value && e(value);
+        if (value) {
+          value = value && e(value);
 
-        if (e.name === Number.name && isNaN(value)) throw new Error("..");
+          if (e.name === Number.name && isNaN(value)) throw new Error("..");
+        }
       } catch (err) {
         throw new HttpError(HttpStatus.BadRequest, `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`);
       }

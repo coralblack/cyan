@@ -7,11 +7,16 @@ export class Logger {
   public appName = "App";
 
   public static _instance: Logger = null;
+  
   static getInstance(): Logger {
     if (Logger._instance) return Logger._instance;
 
     Logger._instance = new Logger();
     return Logger._instance;
+  }
+
+  static setInstance(logger: Logger): void {
+    Logger._instance = logger;
   }
 
   log(...args: any[]): void {

@@ -12,6 +12,9 @@ class Logger {
         Logger._instance = new Logger();
         return Logger._instance;
     }
+    static setInstance(logger) {
+        Logger._instance = logger;
+    }
     log(...args) {
         console.log(util_1.datetime(","), `${this.appName} [LOG]`, ...args);
     }

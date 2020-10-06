@@ -1,4 +1,4 @@
-!(cyan)[./cyan.png]
+![cyan](./cyan.png =128x128)
 
 # cyan
 

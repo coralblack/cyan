@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Response = exports.HttpResponse = void 0;
+exports.HttpResponder = exports.HttpResponse = void 0;
 const Http_error_1 = require("./Http.error");
 const Http_status_1 = require("./Http.status");
 class HttpResponse {
@@ -52,7 +52,7 @@ const responser = (statusCode) => {
     };
     return Responser;
 };
-class Response {
+class HttpResponder {
     static done(status, content) {
         return new HttpResponse(status, content);
     }
@@ -60,13 +60,13 @@ class Response {
         return new HttpResponse(Http_status_1.Status.Ok, content);
     }
 }
-exports.Response = Response;
-Response.badRequest = responser(Http_status_1.Status.BadRequest);
-Response.unauthorized = responser(Http_status_1.Status.Unauthorized);
-Response.forbidden = responser(Http_status_1.Status.Forbidden);
-Response.notFound = responser(Http_status_1.Status.NotFound);
-Response.methodNotAllowed = responser(Http_status_1.Status.MethodNotAllowed);
-Response.conflict = responser(Http_status_1.Status.Conflict);
-Response.toManyRequests = responser(Http_status_1.Status.TooManyRequests);
-Response.notImplemented = responser(Http_status_1.Status.NotImplemented);
+exports.HttpResponder = HttpResponder;
+HttpResponder.badRequest = responser(Http_status_1.Status.BadRequest);
+HttpResponder.unauthorized = responser(Http_status_1.Status.Unauthorized);
+HttpResponder.forbidden = responser(Http_status_1.Status.Forbidden);
+HttpResponder.notFound = responser(Http_status_1.Status.NotFound);
+HttpResponder.methodNotAllowed = responser(Http_status_1.Status.MethodNotAllowed);
+HttpResponder.conflict = responser(Http_status_1.Status.Conflict);
+HttpResponder.toManyRequests = responser(Http_status_1.Status.TooManyRequests);
+HttpResponder.notImplemented = responser(Http_status_1.Status.NotImplemented);
 //# sourceMappingURL=Http.response.js.map

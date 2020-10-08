@@ -62,7 +62,7 @@ const responser = (statusCode: HttpStatus) => {
   return Responser;
 };
 
-export class Response {
+export class HttpResponder {
   static done(status: HttpStatus, content: string | object): HttpResponse {
     return new HttpResponse(status, content);
   }

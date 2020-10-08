@@ -1,13 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Request = void 0;
-class Request {
+exports.HttpRequest = void 0;
+class HttpRequest {
     constructor(headers) {
         this.headers = headers;
     }
     static getContext(request) {
-        return new Request(request.headers);
+        return new HttpRequest(request.headers);
     }
 }
-exports.Request = Request;
+exports.HttpRequest = HttpRequest;
 //# sourceMappingURL=Http.request.js.map

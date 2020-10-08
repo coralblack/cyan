@@ -16,7 +16,7 @@ export declare class HttpResponse {
     setHeader(name: string, value: string): void;
     setHeaders(headers: HttpHeaders): void;
 }
-export declare class Response {
+export declare class HttpResponder {
     static done(status: HttpStatus, content: string | object): HttpResponse;
     static ok(content: string | object): HttpResponse;
     static badRequest: {

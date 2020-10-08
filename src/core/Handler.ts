@@ -11,8 +11,8 @@ import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArg
 import { Metadata } from "./Decorator";
 import { Controller as HttpController, ProcessedExpressResponse } from "../http/Http.controller";
 import { HttpError } from "../http/Http.error";
-import { Request as HttpRequest } from "../http/Http.request";
-import { HttpResponse } from "../http/Http.response";
+import { HttpRequest as HttpRequest } from "../http/Http.request";
+import { HttpResponder, HttpResponse } from "../http/Http.response";
 import { Status as HttpStatus } from "../http/Http.status";
 import { ParamType } from "../router";
 import { CyanRequest, CyanResponse, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";
@@ -50,16 +50,38 @@ export class Handler {
 
       try {
         if (value) {
-          value = value && e(value);
-
-          if (e.name === Number.name && isNaN(value)) throw new Error("..");
+          if (String.prototype === e.prototype) {
+            value = e(value);
+          }
+          else if (Number.prototype === e.prototype) {
+            value = e(value);
+            if (isNaN(value)) throw new Error("..");
+          }
+          else if (BigInt.prototype === e.prototype) {
+            value = e(value);
+          }
+          else if (Boolean.prototype === e.prototype) {
+            value = e(
+              value === "0" || 
+              value === "-0" || 
+              value.toLowerCase() === "nan" || 
+              value.toLowerCase() === "null" || 
+              value.toLowerCase() === "undefined" || 
+              value.toLowerCase() === "false" ? false : value);
+          }
+          else if (Date.prototype === e.prototype) {
+            value = new e(value);
+            if (isNaN(value.getTime())) throw new Error("..");
+          }
         }
       } catch (err) {
-        throw new HttpError(HttpStatus.BadRequest, `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`);
+        throw HttpResponder.badRequest.message(
+          actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
       }
 
       if (actionParam.options.required && !value) {
-        throw new HttpError(HttpStatus.BadRequest, `BadRequest (Missing ${actionParam.type.toString()}: ${actionParam.name})`);
+        throw HttpResponder.badRequest.message(
+          actionParam.options.missing || `BadRequest (Missing ${actionParam.type.toString()}: ${actionParam.name})`)();
       }
 
       return value;

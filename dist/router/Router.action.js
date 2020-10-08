@@ -17,23 +17,23 @@ function Route(action, path, options) {
     };
 }
 function Delete(path, options) {
-    return Route(Http_method_1.Method.Delete, path, options || {});
+    return Route(Http_method_1.HttpMethod.Delete, path, options || {});
 }
 exports.Delete = Delete;
 function Get(path, options) {
-    return Route(Http_method_1.Method.Get, path, options || {});
+    return Route(Http_method_1.HttpMethod.Get, path, options || {});
 }
 exports.Get = Get;
 function Patch(path, options) {
-    return Route(Http_method_1.Method.Patch, path, options || {});
+    return Route(Http_method_1.HttpMethod.Patch, path, options || {});
 }
 exports.Patch = Patch;
 function Post(path, options) {
-    return Route(Http_method_1.Method.Post, path, options || {});
+    return Route(Http_method_1.HttpMethod.Post, path, options || {});
 }
 exports.Post = Post;
 function Put(path, options) {
-    return Route(Http_method_1.Method.Put, path, options || {});
+    return Route(Http_method_1.HttpMethod.Put, path, options || {});
 }
 exports.Put = Put;
 //# sourceMappingURL=Router.action.js.map

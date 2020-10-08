@@ -1,5 +1,5 @@
 import { Metadata } from "../core/Decorator";
-import { Method as HttpMethod } from "../http/Http.method";
+import { HttpMethod } from "../http/Http.method";
 
 export interface RouteOptions {}
 

@@ -1,6 +1,8 @@
 export interface ParamOptions {
     required?: boolean;
     default?: any;
+    invalid?: string;
+    missing?: string;
 }
 export declare enum ParamType {
     Query = "QUERY",

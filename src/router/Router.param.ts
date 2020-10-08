@@ -3,6 +3,8 @@ import { Metadata } from "../core/Decorator";
 export interface ParamOptions {
   required?: boolean;
   default?: any;
+  invalid?: string;
+  missing?: string;
 }
 
 export enum ParamType {

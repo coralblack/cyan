@@ -1,5 +1,5 @@
 import { HandlerFunction } from "./Handler";
-import { Method as HttpMethod } from "../http/Http.method";
+import { HttpMethod } from "../http/Http.method";
 import { EntityColumnOptions, EntityColumnType, EntityOptions } from "../model/Model.entity";
 import { MiddlewareOptions } from "../router";
 import { RouteOptions } from "../router/Router.action";

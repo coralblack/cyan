@@ -1,6 +1,6 @@
 import { Handler as ExpressHandler, Response as ExpressResponse } from "express";
 import { HttpError } from "./Http.error";
-import { Request as HttpRequest } from "./Http.request";
+import { HttpRequest as HttpRequest } from "./Http.request";
 import { HttpResponse } from "./Http.response";
 import { Cyan } from "../core";
 export interface ProcessedExpressResponse extends ExpressResponse {

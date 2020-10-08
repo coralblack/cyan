@@ -29,6 +29,10 @@ class Controller {
         return response;
     }
     async onHttpError(request, error) {
+        var _a;
+        if (!error.content && ((_a = error.additional) === null || _a === void 0 ? void 0 : _a.message)) {
+            error.content = error.additional.message;
+        }
         return error;
     }
     async onError(error) {

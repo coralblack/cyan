@@ -6,7 +6,7 @@
 
 import { Handler as ExpressHandler, Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
 import { HttpError } from "./Http.error";
-import { Request as HttpRequest } from "./Http.request";
+import { HttpRequest as HttpRequest } from "./Http.request";
 import { HttpResponse } from "./Http.response";
 import { Status as HttpStatus } from "./Http.status";
 import { Cyan } from "../core";
@@ -50,6 +50,10 @@ export abstract class Controller {
   }
 
   async onHttpError(request: HttpRequest, error: HttpError): Promise<HttpError> {
+    if (!error.content && error.additional?.message) {
+      error.content = error.additional.message;
+    }
+
     return error;
   }
 

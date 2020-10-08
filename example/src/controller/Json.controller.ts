@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ApiController, HttpResponse, Status as HttpStatus, Response } from "cyan/dist/http";
-import { Get, Middleware, MIDDLEWARE_PRIORITY_ACTION_HANDLER } from "cyan/dist/router";
+import { ApiController, HttpResponder, HttpResponse, Status as HttpStatus } from "cyan/dist/http";
+import { Get, Middleware, MIDDLEWARE_PRIORITY_ACTION_HANDLER, QueryParam } from "cyan/dist/router";
 
 export class JsonController extends ApiController {
   @Get("/json/string")
@@ -14,9 +14,16 @@ export class JsonController extends ApiController {
     return { hello: "world" };
   }
 
+  @Get("/json/req")
+  helloReq(
+    @QueryParam("foo", { required: true }) foo: string
+  ): any {
+    return { foo };
+  }
+
   @Get("/json/resp")
   helloResp(): HttpResponse {
-    return Response.done(HttpStatus.Created, { hello: "world" });
+    return HttpResponder.done(HttpStatus.Created, { hello: "world" });
   }
 
   @Get("/json/error")
@@ -26,17 +33,17 @@ export class JsonController extends ApiController {
 
   @Get("/json/eresp")
   helloErrResp(): any {
-    return Response.badRequest("Bad!");
+    return HttpResponder.badRequest("Bad!");
   }
 
   @Get("/json/ethrow")
   helloErrThrow(): never {
-    throw Response.notFound.code("ERR").message("Ethrow")();
+    throw HttpResponder.notFound.code("ERR").message("Ethrow")();
   }
 
   @Get("/json/ethro")
   helloErrThro(): never {
-    throw Response.notFound.code("ERR").message("Ethrow");
+    throw HttpResponder.notFound.code("ERR").message("Ethrow");
   }
 
   @Get("/json/middleware")

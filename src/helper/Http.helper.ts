@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Method as HttpMethod } from "../http/Http.method";
+import { HttpMethod } from "../http/Http.method";
 import { Headers as HttpHeaders, ReqData as HttpReqData, ReqParams as HttpReqParams } from "../types/Http";
 
 export type HttpResponseType = "arraybuffer" | "document" | "json" | "text" | "stream";

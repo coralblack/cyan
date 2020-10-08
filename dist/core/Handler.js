@@ -37,7 +37,7 @@ const util_1 = require("../util");
 class Handler {
     static beforeHandler(controller) {
         return (req, res, next) => {
-            req.httpRequestContext = Http_request_1.Request.getContext(req);
+            req.httpRequestContext = Http_request_1.HttpRequest.getContext(req);
             controller
                 .beforeHandle(req.httpRequestContext)
                 .then(() => {
@@ -65,16 +65,37 @@ class Handler {
             })(actionParam.type, actionParam.name);
             try {
                 if (value) {
-                    value = value && e(value);
-                    if (e.name === Number.name && isNaN(value))
-                        throw new Error("..");
+                    if (String.prototype === e.prototype) {
+                        value = e(value);
+                    }
+                    else if (Number.prototype === e.prototype) {
+                        value = e(value);
+                        if (isNaN(value))
+                            throw new Error("..");
+                    }
+                    else if (BigInt.prototype === e.prototype) {
+                        value = e(value);
+                    }
+                    else if (Boolean.prototype === e.prototype) {
+                        value = e(value === "0" ||
+                            value === "-0" ||
+                            value.toLowerCase() === "nan" ||
+                            value.toLowerCase() === "null" ||
+                            value.toLowerCase() === "undefined" ||
+                            value.toLowerCase() === "false" ? false : value);
+                    }
+                    else if (Date.prototype === e.prototype) {
+                        value = new e(value);
+                        if (isNaN(value.getTime()))
+                            throw new Error("..");
+                    }
                 }
             }
             catch (err) {
-                throw new Http_error_1.HttpError(Http_status_1.Status.BadRequest, `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`);
+                throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
             }
             if (actionParam.options.required && !value) {
-                throw new Http_error_1.HttpError(Http_status_1.Status.BadRequest, `BadRequest (Missing ${actionParam.type.toString()}: ${actionParam.name})`);
+                throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.missing || `BadRequest (Missing ${actionParam.type.toString()}: ${actionParam.name})`)();
             }
             return value;
         });

@@ -1,10 +1,3 @@
-export interface Paginator<T> {
-  count: bigint;
-  page: number;
-  rpp: number;
-  items: T[];
-}
-
 export type RawQuery = (k: string) => string;
 export type InsertId = bigint | number;
 

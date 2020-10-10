@@ -1,9 +1,3 @@
-export interface Paginator<T> {
-    count: bigint;
-    page: number;
-    rpp: number;
-    items: T[];
-}
 export declare type RawQuery = (k: string) => string;
 export declare type InsertId = bigint | number;
 declare type FindOperatorComp<T> = {

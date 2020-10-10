@@ -65,6 +65,7 @@ export class HttpHelper {
     try {
       if (payload.data && typeof payload.data === "object" && payload.rawData !== true) {
         payload.data = JSON.parse(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           JSON.stringify(payload.data, (_k, v) => typeof v === "bigint" ? v.toString() : v)
         );
       }

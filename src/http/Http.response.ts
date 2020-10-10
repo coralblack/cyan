@@ -34,12 +34,27 @@ export class HttpResponse {
   }
 }
 
-const responser = (statusCode: HttpStatus) => {
-  function Responser(content?: string | object, headers?: HttpHeaders): HttpError {
+type ResponderBody = {
+  (content?: string | object, headers?: HttpHeaders): HttpError;
+};
+
+type ResponderWithCode = {
+  (content?: string | object, headers?: HttpHeaders): HttpError;
+  message: (message: string) => ResponderBody;
+};
+
+type Responder = {
+  (content?: string | object, headers?: HttpHeaders): HttpError;
+  code: (code: number | string) => ResponderWithCode;
+  message: (message: string) => ResponderBody;
+};
+
+const responder = (statusCode: HttpStatus): Responder => {
+  function ResponderInner(content?: string | object, headers?: HttpHeaders): HttpError {
     return new HttpError(statusCode, content, headers);
   }
 
-  Responser.code = function(code: number | string) {
+  ResponderInner.code = function(code: number | string) {
     function withCode(content?: string | object, headers?: HttpHeaders): HttpError {
       return new HttpError(statusCode, content, headers).code(code);
     }
@@ -53,13 +68,13 @@ const responser = (statusCode: HttpStatus) => {
     return withCode;
   };
 
-  Responser.message = function(message: string) {
+  ResponderInner.message = function(message: string) {
     return function(content?: string | object, headers?: HttpHeaders): HttpError {
       return new HttpError(statusCode, content, headers).message(message);
     };
   };
 
-  return Responser;
+  return ResponderInner;
 };
 
 export class HttpResponder {
@@ -71,13 +86,14 @@ export class HttpResponder {
     return new HttpResponse(HttpStatus.Ok, content);
   }
 
-  static badRequest = responser(HttpStatus.BadRequest); // 400
-  static unauthorized = responser(HttpStatus.Unauthorized); // 401
-  static forbidden = responser(HttpStatus.Forbidden); // 403
-  static notFound = responser(HttpStatus.NotFound); // 404
-  static methodNotAllowed = responser(HttpStatus.MethodNotAllowed); // 405
-  static conflict = responser(HttpStatus.Conflict); // 409
-  static toManyRequests = responser(HttpStatus.TooManyRequests); // 409
-  static internalServerError = responser(HttpStatus.InternalServerError); // 500
-  static notImplemented = responser(HttpStatus.NotImplemented); // 501
+  static badRequest = responder(HttpStatus.BadRequest); // 400
+  static unauthorized = responder(HttpStatus.Unauthorized); // 401
+  static forbidden = responder(HttpStatus.Forbidden); // 403
+  static notFound = responder(HttpStatus.NotFound); // 404
+  static methodNotAllowed = responder(HttpStatus.MethodNotAllowed); // 405
+  static conflict = responder(HttpStatus.Conflict); // 409
+  static toManyRequests = responder(HttpStatus.TooManyRequests); // 409
+  static internalServerError = responder(HttpStatus.InternalServerError); // 500
+  static notImplemented = responder(HttpStatus.NotImplemented); // 501
+  static withStatus = (status: HttpStatus): Responder => responder(status); // Any
 }

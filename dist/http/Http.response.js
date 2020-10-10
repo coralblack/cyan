@@ -30,11 +30,11 @@ class HttpResponse {
     }
 }
 exports.HttpResponse = HttpResponse;
-const responser = (statusCode) => {
-    function Responser(content, headers) {
+const responder = (statusCode) => {
+    function ResponderInner(content, headers) {
         return new Http_error_1.HttpError(statusCode, content, headers);
     }
-    Responser.code = function (code) {
+    ResponderInner.code = function (code) {
         function withCode(content, headers) {
             return new Http_error_1.HttpError(statusCode, content, headers).code(code);
         }
@@ -45,12 +45,12 @@ const responser = (statusCode) => {
         };
         return withCode;
     };
-    Responser.message = function (message) {
+    ResponderInner.message = function (message) {
         return function (content, headers) {
             return new Http_error_1.HttpError(statusCode, content, headers).message(message);
         };
     };
-    return Responser;
+    return ResponderInner;
 };
 class HttpResponder {
     static done(status, content) {
@@ -61,13 +61,14 @@ class HttpResponder {
     }
 }
 exports.HttpResponder = HttpResponder;
-HttpResponder.badRequest = responser(Http_status_1.Status.BadRequest);
-HttpResponder.unauthorized = responser(Http_status_1.Status.Unauthorized);
-HttpResponder.forbidden = responser(Http_status_1.Status.Forbidden);
-HttpResponder.notFound = responser(Http_status_1.Status.NotFound);
-HttpResponder.methodNotAllowed = responser(Http_status_1.Status.MethodNotAllowed);
-HttpResponder.conflict = responser(Http_status_1.Status.Conflict);
-HttpResponder.toManyRequests = responser(Http_status_1.Status.TooManyRequests);
-HttpResponder.internalServerError = responser(Http_status_1.Status.InternalServerError);
-HttpResponder.notImplemented = responser(Http_status_1.Status.NotImplemented);
+HttpResponder.badRequest = responder(Http_status_1.Status.BadRequest);
+HttpResponder.unauthorized = responder(Http_status_1.Status.Unauthorized);
+HttpResponder.forbidden = responder(Http_status_1.Status.Forbidden);
+HttpResponder.notFound = responder(Http_status_1.Status.NotFound);
+HttpResponder.methodNotAllowed = responder(Http_status_1.Status.MethodNotAllowed);
+HttpResponder.conflict = responder(Http_status_1.Status.Conflict);
+HttpResponder.toManyRequests = responder(Http_status_1.Status.TooManyRequests);
+HttpResponder.internalServerError = responder(Http_status_1.Status.InternalServerError);
+HttpResponder.notImplemented = responder(Http_status_1.Status.NotImplemented);
+HttpResponder.withStatus = (status) => responder(status);
 //# sourceMappingURL=Http.response.js.map

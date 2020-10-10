@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { HttpError } from "./Http.error";
 import { Status as HttpStatus } from "./Http.status";
 import { Headers as HttpHeaders } from "../types/Http";
@@ -16,79 +15,30 @@ export declare class HttpResponse {
     setHeader(name: string, value: string): void;
     setHeaders(headers: HttpHeaders): void;
 }
+declare type ResponderBody = {
+    (content?: string | object, headers?: HttpHeaders): HttpError;
+};
+declare type ResponderWithCode = {
+    (content?: string | object, headers?: HttpHeaders): HttpError;
+    message: (message: string) => ResponderBody;
+};
+declare type Responder = {
+    (content?: string | object, headers?: HttpHeaders): HttpError;
+    code: (code: number | string) => ResponderWithCode;
+    message: (message: string) => ResponderBody;
+};
 export declare class HttpResponder {
     static done(status: HttpStatus, content: string | object): HttpResponse;
     static ok(content: string | object): HttpResponse;
-    static badRequest: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
-    static unauthorized: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
-    static forbidden: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
-    static notFound: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
-    static methodNotAllowed: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
-    static conflict: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
-    static toManyRequests: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
-    static internalServerError: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
-    static notImplemented: {
-        (content?: string | object, headers?: HttpHeaders): HttpError;
-        code(code: import("fs").Mode): {
-            (content?: string | object, headers?: HttpHeaders): HttpError;
-            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-        };
-        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
-    };
+    static badRequest: Responder;
+    static unauthorized: Responder;
+    static forbidden: Responder;
+    static notFound: Responder;
+    static methodNotAllowed: Responder;
+    static conflict: Responder;
+    static toManyRequests: Responder;
+    static internalServerError: Responder;
+    static notImplemented: Responder;
+    static withStatus: (status: HttpStatus) => Responder;
 }
+export {};

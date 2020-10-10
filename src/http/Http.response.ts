@@ -78,5 +78,6 @@ export class HttpResponder {
   static methodNotAllowed = responser(HttpStatus.MethodNotAllowed); // 405
   static conflict = responser(HttpStatus.Conflict); // 409
   static toManyRequests = responser(HttpStatus.TooManyRequests); // 409
+  static internalServerError = responser(HttpStatus.InternalServerError); // 500
   static notImplemented = responser(HttpStatus.NotImplemented); // 501
 }

@@ -75,6 +75,14 @@ export declare class HttpResponder {
         };
         message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
     };
+    static internalServerError: {
+        (content?: string | object, headers?: HttpHeaders): HttpError;
+        code(code: import("fs").Mode): {
+            (content?: string | object, headers?: HttpHeaders): HttpError;
+            message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+        };
+        message(message: string): (content?: string | object, headers?: HttpHeaders) => HttpError;
+    };
     static notImplemented: {
         (content?: string | object, headers?: HttpHeaders): HttpError;
         code(code: import("fs").Mode): {

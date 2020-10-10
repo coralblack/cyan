@@ -68,5 +68,6 @@ HttpResponder.notFound = responser(Http_status_1.Status.NotFound);
 HttpResponder.methodNotAllowed = responser(Http_status_1.Status.MethodNotAllowed);
 HttpResponder.conflict = responser(Http_status_1.Status.Conflict);
 HttpResponder.toManyRequests = responser(Http_status_1.Status.TooManyRequests);
+HttpResponder.internalServerError = responser(Http_status_1.Status.InternalServerError);
 HttpResponder.notImplemented = responser(Http_status_1.Status.NotImplemented);
 //# sourceMappingURL=Http.response.js.map

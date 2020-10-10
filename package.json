@@ -1,5 +1,5 @@
 {
-  "name": "cyan",
+  "name": "@coralblack/cyan",
   "version": "0.0.1",
   "description": "Node.js, Faster, cheaper, better web framework written in Typescript",
   "main": "dist/index.js",

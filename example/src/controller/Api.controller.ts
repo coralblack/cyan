@@ -1,52 +1,52 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { JsonController as BaseJsonController, HttpResponder, HttpResponse, Status as HttpStatus } from "cyan/dist/http";
+import { ApiController as BaseApiController, HttpResponder, HttpResponse, Status as HttpStatus } from "cyan/dist/http";
 import { Get, Middleware, MIDDLEWARE_PRIORITY_ACTION_HANDLER, QueryParam } from "cyan/dist/router";
 
-export class JsonController extends BaseJsonController {
-  @Get("/json/string")
+export class ApiController extends BaseApiController {
+  @Get("/api/string")
   helloString(): string {
     return "HiHi";
   }
 
-  @Get("/json/json")
+  @Get("/api/json")
   helloJson(): any {
     return { hello: "world" };
   }
 
-  @Get("/json/req")
+  @Get("/api/req")
   helloReq(
     @QueryParam("foo", { required: true }) foo: string
   ): any {
     return { foo };
   }
 
-  @Get("/json/resp")
+  @Get("/api/resp")
   helloResp(): HttpResponse {
     return HttpResponder.done(HttpStatus.Created, { hello: "world" });
   }
 
-  @Get("/json/error")
+  @Get("/api/error")
   helloError(): never {
     throw new Error("Unknown error");
   }
 
-  @Get("/json/eresp")
+  @Get("/api/eresp")
   helloErrResp(): any {
     return HttpResponder.badRequest("Bad!");
   }
 
-  @Get("/json/ethrow")
+  @Get("/api/ethrow")
   helloErrThrow(): never {
     throw HttpResponder.notFound.code("ERR").message("Ethrow")();
   }
 
-  @Get("/json/ethro")
+  @Get("/api/ethro")
   helloErrThro(): never {
     throw HttpResponder.notFound.code("ERR").message("Ethrow");
   }
 
-  @Get("/json/middleware")
+  @Get("/api/middleware")
   @Middleware((req, res, next) => {
     res.status(200).send("gotcha").end();
   })
@@ -54,7 +54,7 @@ export class JsonController extends BaseJsonController {
     throw new Error("It's a proxied request.");
   }
 
-  @Get("/json/middleware2")
+  @Get("/api/middleware2")
   @Middleware((req, res, next) => {
     res.status(200).send({ ...res.preparedResponse, world: "hello" }).end();
   }, { priority: MIDDLEWARE_PRIORITY_ACTION_HANDLER + 1 })

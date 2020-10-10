@@ -11,6 +11,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Http.controller.api"), exports);
+__exportStar(require("./Http.controller.json"), exports);
 __exportStar(require("./Http.controller"), exports);
 __exportStar(require("./Http.method"), exports);
 __exportStar(require("./Http.request"), exports);

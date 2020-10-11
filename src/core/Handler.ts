@@ -3,10 +3,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 
 import * as bodyParser from "body-parser";
-import { plainToClass } from "class-transformer";
 import cors, { CorsOptions, CorsOptionsDelegate } from "cors";
 import { NextFunction } from "express";
-import { get, values } from "lodash";
+import { get } from "lodash";
 import morgan from "morgan";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArgs";
 import { Metadata } from "./Decorator";

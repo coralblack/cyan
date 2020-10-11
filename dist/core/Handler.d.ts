@@ -6,6 +6,7 @@ import { CyanRequest, ErrorHandlerFunction, HandlerFunction } from "../types/Han
 export declare class Handler {
     static beforeHandler(controller: HttpController): HandlerFunction;
     private static symActionParams;
+    private static paramTransformer;
     static getActionParams(req: CyanRequest, route: RouteMetadataArgs, actionParams: RouteParamMetadataArgs[]): any[];
     static actionHandler(controller: HttpController, route: RouteMetadataArgs): HandlerFunction;
     static afterHandler(controller: HttpController): HandlerFunction;

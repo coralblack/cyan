@@ -33,7 +33,16 @@ export class HelloController extends BaseController {
   }
 
   @Get("/hello/json")
-  async helloJson(): Promise<any> {
+  async helloJson(
+    @QueryParam("arr", { delimiter: ",", required: true, type: BigInt }) arr1: bigint[],
+    @QueryParam("arr", { delimiter: ",", required: true, type: Number }) arr2: number[],
+    @QueryParam("arr", { delimiter: ",", required: true, type: String }) arr3: string[],
+    @QueryParam("arr", { delimiter: ",", required: true, type: Boolean }) arr4: boolean[],
+    @QueryParam("drr", { delimiter: ",", required: true, type: Date }) arr5: Date[]
+  ): Promise<any> {
+    // eslint-disable-next-line no-console
+    console.log(arr1, arr2, arr3, arr4, arr5);
+
     await this.helloService.model();
 
     const data: HttpEchoPost = {

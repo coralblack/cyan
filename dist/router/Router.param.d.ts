@@ -1,8 +1,11 @@
+import { ClassType } from "../types";
 export interface ParamOptions {
     required?: boolean;
     default?: any;
     invalid?: string;
     missing?: string;
+    type?: ClassType<any> | BigIntConstructor;
+    delimiter?: string;
 }
 export declare enum ParamType {
     Query = "QUERY",

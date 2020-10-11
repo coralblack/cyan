@@ -48,6 +48,33 @@ class Handler {
             });
         };
     }
+    static paramTransformer(value, type) {
+        if (String.prototype === type.prototype) {
+            value = type(value);
+        }
+        else if (Number.prototype === type.prototype) {
+            value = type(value);
+            if (isNaN(value))
+                throw new Error("..");
+        }
+        else if (BigInt.prototype === type.prototype) {
+            value = type(value);
+        }
+        else if (Boolean.prototype === type.prototype) {
+            value = type(value === "0" ||
+                value === "-0" ||
+                value.toLowerCase() === "nan" ||
+                value.toLowerCase() === "null" ||
+                value.toLowerCase() === "undefined" ||
+                value.toLowerCase() === "false" ? false : value);
+        }
+        else if (Date.prototype === type.prototype) {
+            value = new type(value);
+            if (isNaN(value.getTime()))
+                throw new Error("..");
+        }
+        return value;
+    }
     static getActionParams(req, route, actionParams) {
         return (route.params || []).map((e, i) => {
             const actionParam = actionParams.find(ap => ap.index === i);
@@ -65,29 +92,21 @@ class Handler {
             })(actionParam.type, actionParam.name);
             try {
                 if (value) {
-                    if (String.prototype === e.prototype) {
-                        value = e(value);
+                    if (Array.prototype === e.prototype) {
+                        if (typeof value === "string") {
+                            if (actionParam.options.delimiter) {
+                                value = value.split(actionParam.options.delimiter);
+                            }
+                            else {
+                                value = [value];
+                            }
+                        }
+                        if (actionParam.options.type) {
+                            value = value.map((v) => this.paramTransformer(v, actionParam.options.type));
+                        }
                     }
-                    else if (Number.prototype === e.prototype) {
-                        value = e(value);
-                        if (isNaN(value))
-                            throw new Error("..");
-                    }
-                    else if (BigInt.prototype === e.prototype) {
-                        value = e(value);
-                    }
-                    else if (Boolean.prototype === e.prototype) {
-                        value = e(value === "0" ||
-                            value === "-0" ||
-                            value.toLowerCase() === "nan" ||
-                            value.toLowerCase() === "null" ||
-                            value.toLowerCase() === "undefined" ||
-                            value.toLowerCase() === "false" ? false : value);
-                    }
-                    else if (Date.prototype === e.prototype) {
-                        value = new e(value);
-                        if (isNaN(value.getTime()))
-                            throw new Error("..");
+                    else {
+                        value = this.paramTransformer(value, e);
                     }
                 }
             }

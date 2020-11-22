@@ -3,8 +3,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TaskInvoker = void 0;
 const util_1 = require("../util");
 class TaskInvoker {
-    constructor(target, options, logger) {
+    constructor(target, method, options, logger) {
         this.target = target;
+        this.method = method;
         this.options = options;
         this.logger = logger;
         this.invokeEnabled = true;
@@ -19,7 +20,7 @@ class TaskInvoker {
     async run() {
         while (this.invokeEnabled) {
             try {
-                await this.target();
+                await this.target[this.method].call(this.target);
                 await util_1.delay(this.options.nextInvokeDelay);
             }
             catch (err) {

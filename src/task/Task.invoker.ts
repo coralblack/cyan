@@ -5,7 +5,12 @@ import { delay } from "../util";
 export class TaskInvoker {
   private invokeEnabled = true;
 
-  constructor(private readonly target: Function, private readonly options: TaskOptions, private readonly logger: Logger) {}
+  constructor(
+    private readonly target: Function, 
+    private readonly method: string, 
+    private readonly options: TaskOptions, 
+    private readonly logger: Logger
+  ) {}
 
   public init(): void {
     this.run()
@@ -20,7 +25,7 @@ export class TaskInvoker {
     // eslint-disable-next-line no-constant-condition
     while (this.invokeEnabled) {
       try {
-        await this.target();
+        await this.target[this.method].call(this.target);
         await delay(this.options.nextInvokeDelay);
       } catch (err) {
         this.logger.error(err);

@@ -118,7 +118,7 @@ class Cyan {
         })();
         this.logger.info(`[task] ${readableType}${taskOptions} - ${meta.target.name}.${meta.method}`);
         const task = Injector_1.Injector.resolve(meta.target);
-        const invoker = new Task_invoker_1.TaskInvoker(task[meta.method], meta.options, this.logger);
+        const invoker = new Task_invoker_1.TaskInvoker(task, meta.method, meta.options, this.logger);
         invoker.init();
     }
 }

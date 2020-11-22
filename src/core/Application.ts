@@ -199,7 +199,7 @@ export class Cyan {
     this.logger.info(`[task] ${readableType}${taskOptions} - ${meta.target.name}.${meta.method}`);
 
     const task = Injector.resolve(meta.target);
-    const invoker = new TaskInvoker(task[meta.method], meta.options, this.logger);
+    const invoker = new TaskInvoker(task, meta.method, meta.options, this.logger);
 
     invoker.init();
   }

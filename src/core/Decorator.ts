@@ -3,7 +3,8 @@ import {
   EntityMetadataArgs,
   MiddlewareMetadataArgs,
   RouteMetadataArgs,
-  RouteParamMetadataArgs
+  RouteParamMetadataArgs,
+  TaskMetadataArgs
 } from "../types/MetadataArgs";
 
 class MetadataStorage {
@@ -12,6 +13,7 @@ class MetadataStorage {
   public readonly middlewares: MiddlewareMetadataArgs[] = [];
   public readonly entities: EntityMetadataArgs[] = [];
   public readonly entityColumns: EntityColumnMetadataArgs[] = [];
+  public readonly tasks: TaskMetadataArgs[] = [];
 }
 
 export class Metadata {

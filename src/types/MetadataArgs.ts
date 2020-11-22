@@ -1,3 +1,4 @@
+import { TaskOptions, TaskType } from "src/task/Task.types";
 import { HandlerFunction } from "./Handler";
 import { HttpMethod } from "../http/Http.method";
 import { EntityColumnOptions, EntityColumnType, EntityOptions } from "../model/Model.entity";
@@ -46,4 +47,12 @@ export interface EntityColumnMetadataArgs {
   
   type: EntityColumnType;
   options: EntityColumnOptions;
+}
+
+export interface TaskMetadataArgs<T = any> {
+  target: ClassType<T>;
+  method: string;
+
+  type: TaskType;
+  options: TaskOptions;
 }

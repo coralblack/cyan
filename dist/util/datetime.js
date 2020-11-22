@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.time = exports.date = exports.datetime = void 0;
+exports.delay = exports.time = exports.date = exports.datetime = void 0;
 function datetime(suffix, base) {
     const dt = base || new Date();
     return `${date(dt)} ${time(dt)}${suffix || ""}`;
@@ -22,4 +22,12 @@ function time(base) {
     return `${hour < 10 ? "0" : ""}${hour}:${min < 10 ? "0" : ""}${min}:${sec < 10 ? "0" : ""}${sec}`;
 }
 exports.time = time;
+async function delay(delayMs) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve();
+        }, delayMs);
+    });
+}
+exports.delay = delay;
 //# sourceMappingURL=datetime.js.map

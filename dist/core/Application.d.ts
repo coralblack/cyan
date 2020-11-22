@@ -4,6 +4,7 @@ import * as bodyParser from "body-parser";
 import { CorsOptions, CorsOptionsDelegate } from "cors";
 import { Logger } from "./Logger";
 import { Server } from "./Server";
+import { ClassType } from "../types";
 import { Controller as ControllerType } from "../types/Http";
 export declare enum Stage {
     Local = "local",
@@ -19,6 +20,7 @@ export interface CyanSettings {
     logger?: typeof Logger;
     server?: typeof Server;
     routes: Array<ControllerType>;
+    tasks?: Array<ClassType<any>>;
     options?: {
         accessLog?: boolean;
         cors?: boolean | CorsOptions | CorsOptionsDelegate;
@@ -38,4 +40,6 @@ export declare class Cyan {
     private initSysHandlers;
     private initRoutes;
     private initHandler;
+    private initTasks;
+    private initTask;
 }

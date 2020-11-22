@@ -13,9 +13,12 @@ import { Logger } from "./Logger";
 import { Server } from "./Server";
 import { Controller as HttpController } from "../http/Http.controller";
 import { MIDDLEWARE_PRIORITY_ACTION_HANDLER, MIDDLEWARE_PRIORITY_AFTER_HANDLER, MIDDLEWARE_PRIORITY_BEFORE_HANDLER } from "../router";
+import { TaskInvoker } from "../task/Task.invoker";
+import { TaskType } from "../task/Task.types";
+import { ClassType } from "../types";
 import { HandlerFunction } from "../types/Handler";
 import { Controller as ControllerType } from "../types/Http";
-import { RouteMetadataArgs } from "../types/MetadataArgs";
+import { RouteMetadataArgs, TaskMetadataArgs } from "../types/MetadataArgs";
 
 export enum Stage {
   Local = "local",
@@ -34,6 +37,7 @@ export interface CyanSettings {
   server?: typeof Server;
 
   routes: Array<ControllerType>;
+  tasks?: Array<ClassType<any>>;
 
   options?: {
     accessLog?: boolean;
@@ -74,6 +78,7 @@ export class Cyan {
   public initialize(): Server {
     this.logger.info(`Starting Server @ ${this.settings.stage}`);
 
+    // HTTP Server
     this.server.beforeInitSys();
     this.initSysHandlers();
     this.server.afterInitSys();
@@ -84,6 +89,9 @@ export class Cyan {
 
     this.server.use(this.server.onPageNotFound);
     this.server.use(this.server.onError);
+
+    // Task
+    this.initTasks();
 
     return this.server;
   }
@@ -143,7 +151,6 @@ export class Cyan {
   private initHandler(controller: HttpController, route: RouteMetadataArgs) {
     const path = resolve(this.settings.basePath || "/", route.path);
 
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
     this.logger.info(`[router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
 
     // Default middlewares
@@ -169,5 +176,31 @@ export class Cyan {
       Handler.errorHandler(controller),
       Handler.httpErrorHandler(controller)
     );
+  }
+
+  private initTasks(): void {
+    if (!this.settings.tasks) {
+      this.logger.info("[task] No task registered");
+      return;
+    }
+    
+    Metadata.getStorage().tasks.filter(task => this.settings.tasks.includes(task.target)).forEach(task => {
+      this.initTask(task);
+    });
+  }
+
+  private initTask(meta: TaskMetadataArgs) {
+    const readableType = `${meta.type.slice(0, 1)}${meta.type.slice(1).toLowerCase()}`;
+    const taskOptions = (() => {
+      if (meta.type === TaskType.Repeat) return `(${meta.options.nextInvokeDelay})`;
+      return "";
+    })();
+   
+    this.logger.info(`[task] ${readableType}${taskOptions} - ${meta.target.name}.${meta.method}`);
+
+    const task = Injector.resolve(meta.target);
+    const invoker = new TaskInvoker(task[meta.method], meta.options, this.logger);
+
+    invoker.init();
   }
 }

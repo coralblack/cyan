@@ -21,3 +21,11 @@ export function time(base?: Date): string {
 
   return `${hour < 10 ? "0" : ""}${hour}:${min < 10 ? "0" : ""}${min}:${sec < 10 ? "0" : ""}${sec}`;
 }
+
+export async function delay(delayMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, delayMs);
+  });
+}

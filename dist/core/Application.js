@@ -10,6 +10,8 @@ const Injector_1 = require("./Injector");
 const Logger_1 = require("./Logger");
 const Server_1 = require("./Server");
 const router_1 = require("../router");
+const Task_invoker_1 = require("../task/Task.invoker");
+const Task_types_1 = require("../task/Task.types");
 var Stage;
 (function (Stage) {
     Stage["Local"] = "local";
@@ -43,6 +45,7 @@ class Cyan {
         this.server.afterInitRoutes();
         this.server.use(this.server.onPageNotFound);
         this.server.use(this.server.onError);
+        this.initTasks();
         return this.server;
     }
     listen() {
@@ -96,6 +99,27 @@ class Cyan {
             handlers.push([middleware.options.priority || (router_1.MIDDLEWARE_PRIORITY_ACTION_HANDLER - 100), middleware.handler]);
         });
         this.server[route.action.toLowerCase()](path, controller.beforeMiddleware(this), ...handlers.sort((a, b) => a[0] - b[0]).map(e => e[1]), controller.afterMiddleware(this), controller.render(this), Handler_1.Handler.errorHandler(controller), Handler_1.Handler.httpErrorHandler(controller));
+    }
+    initTasks() {
+        if (!this.settings.tasks) {
+            this.logger.info("[task] No task registered");
+            return;
+        }
+        Decorator_1.Metadata.getStorage().tasks.filter(task => this.settings.tasks.includes(task.target)).forEach(task => {
+            this.initTask(task);
+        });
+    }
+    initTask(meta) {
+        const readableType = `${meta.type.slice(0, 1)}${meta.type.slice(1).toLowerCase()}`;
+        const taskOptions = (() => {
+            if (meta.type === Task_types_1.TaskType.Repeat)
+                return `(${meta.options.nextInvokeDelay})`;
+            return "";
+        })();
+        this.logger.info(`[task] ${readableType}${taskOptions} - ${meta.target.name}.${meta.method}`);
+        const task = Injector_1.Injector.resolve(meta.target);
+        const invoker = new Task_invoker_1.TaskInvoker(task[meta.method], meta.options, this.logger);
+        invoker.init();
     }
 }
 exports.Cyan = Cyan;

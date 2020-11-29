@@ -1,3 +1,4 @@
+import { RelationEntityColumnOptions, RelationEntityColumnType } from "src/model/Model.relation.entity";
 import { TaskOptions, TaskType } from "src/task/Task.types";
 import { HandlerFunction } from "./Handler";
 import { HttpMethod } from "../http/Http.method";
@@ -47,6 +48,15 @@ export interface EntityColumnMetadataArgs {
   
   type: EntityColumnType;
   options: EntityColumnOptions;
+}
+
+export interface RelationEntityColumnMetadataArgs {
+  target: Function;
+  propertyKey: string;
+  
+  type: RelationEntityColumnType;
+  table: Function;
+  options: RelationEntityColumnOptions;
 }
 
 export interface TaskMetadataArgs<T = any> {

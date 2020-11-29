@@ -2,11 +2,23 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { assert } from "console";
-import { Column, Entity, PrimaryColumn } from "cyan/dist/model";
+import { Column, Entity, OneToOne, PrimaryColumn } from "cyan/dist/model";
 import { BaseModel } from "./Base.model";
 
 class Hello {
 
+}
+
+@Entity({ name: "WORLD" })
+class WorldEntity {
+  @PrimaryColumn({ name: "ID" })
+  id: bigint;
+
+  @Column({ name: "NAME", default: () => "UUID()" })
+  name: string;
+
+  @Column({ name: "CREATED_AT", default: () => "CURRENT_TIMESTAMP()" })
+  createdAt: Date;
 }
 
 @Entity({ name: "HELLO" })
@@ -16,6 +28,12 @@ class HelloEntity {
 
   @Column({ name: "NAME", default: () => "UUID()" })
   name: string;
+
+  @Column({ name: "WORLD_ID" })
+  worldId?: bigint;
+
+  @OneToOne({ name: "WORLD_ID", referencedColumnName: "ID" })
+  world?: WorldEntity;
 
   @Column({ name: "CREATED_AT", default: () => "CURRENT_TIMESTAMP()" })
   createdAt: Date;
@@ -39,22 +57,51 @@ export class HelloModel extends BaseModel {
       await scope.execute(`
         CREATE TABLE IF NOT EXISTS HELLO (
             ID BIGINT(20) NOT NULL AUTO_INCREMENT,
+            WORLD_ID BIGINT(20) DEFAULT NULL,
             NAME VARCHAR(128) DEFAULT NULL,
             CREATED_AT DATETIME DEFAULT NULL,
             PRIMARY KEY (ID)
         )
       `);
 
+      await scope.execute(`
+        CREATE TABLE IF NOT EXISTS WORLD (
+            ID BIGINT(20) NOT NULL AUTO_INCREMENT,
+            NAME VARCHAR(128) DEFAULT NULL,
+            CREATED_AT DATETIME DEFAULT NULL,
+            PRIMARY KEY (ID)
+        )
+      `);
+
+      const worldRepo = scope.getRepository(WorldEntity);
+      const worldId = await worldRepo.save({
+        id: (() => "UUID_SHORT()") as any,
+        name: "world",
+        createdAt: null,
+      });
+
       const repo = scope.getRepository(HelloEntity);
 
       const save1Name = `${new Date().getTime()}`;
       const save1 = await repo.save({
         id: (() => "UUID_SHORT()") as any,
+        worldId: BigInt(worldId),
         name: save1Name,
         createdAt: null,
       });
 
       assert(save1 > 100000000);
+
+      const found1 = await repo.findOne({ where: { id: save1 as bigint } });
+
+      assert(found1.id === BigInt(save1));
+      assert(found1.worldId === BigInt(worldId));
+      assert(found1.name === save1Name);
+      assert(found1.createdAt === null);
+      assert(found1.world && typeof found1.world === "object");
+      assert(found1.world.id === BigInt(worldId));
+      assert(found1.world.name === "world");
+      assert(found1.world.createdAt === null);
 
       const save2Id = BigInt(new Date().getTime());
       const save2Name = `${new Date().getTime()}`;

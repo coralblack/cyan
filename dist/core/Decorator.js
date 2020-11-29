@@ -8,6 +8,7 @@ class MetadataStorage {
         this.middlewares = [];
         this.entities = [];
         this.entityColumns = [];
+        this.relationEntityColumns = [];
         this.tasks = [];
     }
 }

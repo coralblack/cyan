@@ -190,16 +190,16 @@ class Repository {
     }
     join(kx) {
         const kxx = kx;
-        this.entityInfo.relationColumns.forEach(relationColmn => {
+        this.entityInfo.relationColumns.forEach(relationColumn => {
             const tableName = this.entityInfo.tableName;
-            const relationType = this.entityInfo.relationColumnType[relationColmn];
-            const relationColumnOptions = this.entityInfo.relationColumnOptions[relationColmn];
-            const joinTable = this.entityInfo.relationColumnTable[relationColmn];
+            const relationType = this.entityInfo.relationColumnType[relationColumn];
+            const relationColumnOptions = this.entityInfo.relationColumnOptions[relationColumn];
+            const joinTable = this.entityInfo.relationColumnTable[relationColumn];
             if (relationType === _1.RelationEntityColumnType.OneToOne) {
-                const relationColmnName = relationColumnOptions.name;
+                const relationColumnName = relationColumnOptions.name;
                 const referencedColumnName = relationColumnOptions.referencedColumnName || relationColumnOptions.name;
-                const joinTableColumns = joinTable.columns.map(joinTableColmn => `${joinTable.name}.${joinTable.fields[joinTableColmn].name} as ${relationColmn}_${joinTableColmn}`);
-                kxx.leftOuterJoin(joinTable.name, `${tableName}.${relationColmnName}`, `${joinTable.name}.${referencedColumnName}`);
+                const joinTableColumns = joinTable.columns.map(joinTableColumn => `${joinTable.name}.${joinTable.fields[joinTableColumn].name} as ${relationColumn}_${joinTableColumn}`);
+                kxx.leftOuterJoin(joinTable.name, `${tableName}.${relationColumnName}`, `${joinTable.name}.${referencedColumnName}`);
                 kxx.select(joinTableColumns);
             }
         });

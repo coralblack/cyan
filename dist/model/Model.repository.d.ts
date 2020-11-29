@@ -2,10 +2,28 @@ import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions } from "./Model.entity";
 import { DeleteOptions, FindOneOptions, FindOptions, InsertId, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
 import { ClassType } from "../types";
+import { RelationEntityColumnOptions, RelationEntityColumnType } from ".";
+export interface RelationEntity {
+    name: string;
+    columns: Array<string>;
+    fields: {
+        [key: string]: EntityColumnOptions;
+    };
+}
 export interface EntityInfo<T> {
     target: ClassType<T>;
     tableName: string;
     columns: Array<string>;
+    relationColumns: Array<string>;
+    relationColumnTable: {
+        [key: string]: RelationEntity;
+    };
+    relationColumnOptions: {
+        [key: string]: RelationEntityColumnOptions;
+    };
+    relationColumnType: {
+        [key: string]: RelationEntityColumnType;
+    };
     fields: {
         [key: string]: EntityColumnOptions;
     };
@@ -26,6 +44,7 @@ export declare class Repository<T> {
     find(options?: FindOptions<T>): Promise<T[]>;
     pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>>;
     private select;
+    private join;
     private where;
     private order;
     private mapping;

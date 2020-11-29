@@ -8,11 +8,22 @@ import { DeleteOptions, FindConditions, FindOneOptions, FindOptions, InsertId, O
 import { Metadata } from "../core/Decorator";
 import { TraceableError } from "../core/Error";
 import { ClassType } from "../types";
+import { RelationEntityColumnOptions, RelationEntityColumnType } from ".";
+
+export interface RelationEntity {
+  name: string;
+  columns: Array<string>;
+  fields: { [key: string]: EntityColumnOptions };
+}
 
 export interface EntityInfo<T> {
   target: ClassType<T>;
   tableName: string;
   columns: Array<string>;
+  relationColumns: Array<string>;
+  relationColumnTable: { [key: string]: RelationEntity };
+  relationColumnOptions: { [key: string]: RelationEntityColumnOptions };
+  relationColumnType: { [key: string]: RelationEntityColumnType };
   fields: { [key: string]: EntityColumnOptions };
   primaryColumns: Array<string>;
   criteriaColumns: Array<string>;
@@ -38,11 +49,31 @@ export class Repository<T> {
     } else if (!columns.length) {
       throw new Error(`Invalid Repository: No Decorated Columns (${entity.name})`);
     }
+    
+    const relationColumns = Metadata.getStorage().relationEntityColumns.filter(e => e.target === entity);
+    const relationColumnTable = relationColumns.reduce((p, col) => {
+      const table = Metadata.getStorage().entities.find(e => col.table === e.target);
+      const columns = Metadata.getStorage().entityColumns.filter(e => col.table === e.target);
+
+      const relationEntity: RelationEntity = {
+        name: table.options.name,
+        columns: columns.map(e => e.propertyKey),
+        fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
+      };
+
+      p[col.propertyKey] = relationEntity;
+
+      return p;
+    }, {});
 
     const info = {
       target: metadata.target,
       tableName: metadata.options.name,
       columns: columns.map(e => e.propertyKey),
+      relationColumns: relationColumns.map(e => e.propertyKey),
+      relationColumnTable: relationColumnTable,
+      relationColumnType: relationColumns.reduce((p, e) => { p[e.propertyKey] = e.type; return p; }, {}),
+      relationColumnOptions: relationColumns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
       fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
       primaryColumns: columns.filter(e => e.type === EntityColumnType.Primary).map(e => e.propertyKey),
       criteriaColumns: columns.filter(e => e.type === EntityColumnType.Primary).map(e => e.propertyKey),
@@ -186,9 +217,11 @@ export class Repository<T> {
   private async select(options?: FindOptions<T>): Promise<T[]> {
     try {
       const selectColumns: any[] = options.select || this.entityInfo.columns;
-      const select = selectColumns.map(e => this.entityInfo.fields[e].name);
+      const select = selectColumns.map(column => `${this.entityInfo.tableName}.${this.entityInfo.fields[column].name} as ${column}`);
 
       let kx = this.scope.kx.select(select).from(this.entityInfo.tableName);
+
+      kx = this.join(kx);
 
       // Query
       if (options.where) {
@@ -216,17 +249,40 @@ export class Repository<T> {
       if (!rows || !rows.length)
         return [];
 
-      return rows.map((e: any) => this.mapping(selectColumns, e));
+      return rows.map((row: any) => this.mapping(row));
     } catch (err) {
       throw TraceableError(err);
     }
+  }
+
+  private join(kx: any): any {
+    const kxx = kx;
+
+    this.entityInfo.relationColumns.forEach(relationColumn => {
+
+      const tableName = this.entityInfo.tableName;
+      const relationType = this.entityInfo.relationColumnType[relationColumn];
+      const relationColumnOptions = this.entityInfo.relationColumnOptions[relationColumn];
+      const joinTable = this.entityInfo.relationColumnTable[relationColumn];
+
+      if (relationType === RelationEntityColumnType.OneToOne) {
+        const relationColumnName = relationColumnOptions.name;
+        const referencedColumnName = relationColumnOptions.referencedColumnName || relationColumnOptions.name;
+        const joinTableColumns = joinTable.columns.map(joinTableColumn => `${joinTable.name}.${joinTable.fields[joinTableColumn].name} as ${relationColumn}_${joinTableColumn}`);
+
+        kxx.leftOuterJoin(joinTable.name, `${tableName}.${relationColumnName}`, `${joinTable.name}.${referencedColumnName}`);
+        kxx.select(joinTableColumns);
+      }
+    });
+
+    return kxx;
   }
 
   private where(kx: any, where?: FindConditions<T>): any {
     let kxx = kx;
 
     Object.keys(where).forEach(ke => {
-      const k = this.entityInfo.fields[ke].name;
+      const k = `${this.entityInfo.tableName}.${this.entityInfo.fields[ke].name}`;
       const v = where[ke];
 
       if (Array.isArray(v)) kxx = kxx.whereIn(k, v);
@@ -259,7 +315,7 @@ export class Repository<T> {
     let kxx = kx;
 
     Object.keys(order).forEach(ke => {
-      const k = this.entityInfo.fields[ke].name;
+      const k = `${this.entityInfo.tableName}.${this.entityInfo.fields[ke].name}`;
       const v = order[ke];
 
       if (typeof v === "function") {
@@ -272,9 +328,21 @@ export class Repository<T> {
     return kxx;
   }
 
-  private mapping(select: string[], row: any): T {
-    const x = plainToClass(this.entityInfo.target, select.reduce((p, e) => {
-      p[e] = row[this.entityInfo.fields[e].name];
+  private mapping(row: any): T {
+    const x = plainToClass(this.entityInfo.target, Object.keys(row).reduce((p, col) => {
+      const arr = col.split("_");
+
+      if (arr.length === 1) {
+        p[col] = row[col];
+      } else if (arr.length === 2) {
+        p[arr[0]] = p[arr[0]] || {};
+        p[arr[0]][arr[1]] = row[col];
+      } else if (arr.length === 3) {
+        p[arr[0]] = p[arr[0]] || {};
+        p[arr[0]][arr[1]] = p[arr[0]][arr[1]] || {};
+        p[arr[0]][arr[1]][arr[2]] = row[col];
+      }
+
       return p;
     }, {}));
 

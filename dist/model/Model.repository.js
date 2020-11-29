@@ -5,6 +5,7 @@ const class_transformer_1 = require("class-transformer");
 const Model_entity_1 = require("./Model.entity");
 const Decorator_1 = require("../core/Decorator");
 const Error_1 = require("../core/Error");
+const _1 = require(".");
 exports.symEntityInfo = Symbol();
 class Repository {
     constructor(scope, entity) {
@@ -23,10 +24,26 @@ class Repository {
         else if (!columns.length) {
             throw new Error(`Invalid Repository: No Decorated Columns (${entity.name})`);
         }
+        const relationColumns = Decorator_1.Metadata.getStorage().relationEntityColumns.filter(e => e.target === entity);
+        const relationColumnTable = relationColumns.reduce((p, col) => {
+            const table = Decorator_1.Metadata.getStorage().entities.find(e => col.table === e.target);
+            const columns = Decorator_1.Metadata.getStorage().entityColumns.filter(e => col.table === e.target);
+            const relationEntity = {
+                name: table.options.name,
+                columns: columns.map(e => e.propertyKey),
+                fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
+            };
+            p[col.propertyKey] = relationEntity;
+            return p;
+        }, {});
         const info = {
             target: metadata.target,
             tableName: metadata.options.name,
             columns: columns.map(e => e.propertyKey),
+            relationColumns: relationColumns.map(e => e.propertyKey),
+            relationColumnTable: relationColumnTable,
+            relationColumnType: relationColumns.reduce((p, e) => { p[e.propertyKey] = e.type; return p; }, {}),
+            relationColumnOptions: relationColumns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
             fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
             primaryColumns: columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
             criteriaColumns: columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
@@ -146,8 +163,9 @@ class Repository {
     async select(options) {
         try {
             const selectColumns = options.select || this.entityInfo.columns;
-            const select = selectColumns.map(e => this.entityInfo.fields[e].name);
+            const select = selectColumns.map(column => `${this.entityInfo.tableName}.${this.entityInfo.fields[column].name} as ${column}`);
             let kx = this.scope.kx.select(select).from(this.entityInfo.tableName);
+            kx = this.join(kx);
             if (options.where) {
                 kx = this.where(kx, options.where);
             }
@@ -164,16 +182,33 @@ class Repository {
             const rows = await kx;
             if (!rows || !rows.length)
                 return [];
-            return rows.map((e) => this.mapping(selectColumns, e));
+            return rows.map((row) => this.mapping(row));
         }
         catch (err) {
             throw Error_1.TraceableError(err);
         }
     }
+    join(kx) {
+        const kxx = kx;
+        this.entityInfo.relationColumns.forEach(relationColumn => {
+            const tableName = this.entityInfo.tableName;
+            const relationType = this.entityInfo.relationColumnType[relationColumn];
+            const relationColumnOptions = this.entityInfo.relationColumnOptions[relationColumn];
+            const joinTable = this.entityInfo.relationColumnTable[relationColumn];
+            if (relationType === _1.RelationEntityColumnType.OneToOne) {
+                const relationColumnName = relationColumnOptions.name;
+                const referencedColumnName = relationColumnOptions.referencedColumnName || relationColumnOptions.name;
+                const joinTableColumns = joinTable.columns.map(joinTableColumn => `${joinTable.name}.${joinTable.fields[joinTableColumn].name} as ${relationColumn}_${joinTableColumn}`);
+                kxx.leftOuterJoin(joinTable.name, `${tableName}.${relationColumnName}`, `${joinTable.name}.${referencedColumnName}`);
+                kxx.select(joinTableColumns);
+            }
+        });
+        return kxx;
+    }
     where(kx, where) {
         let kxx = kx;
         Object.keys(where).forEach(ke => {
-            const k = this.entityInfo.fields[ke].name;
+            const k = `${this.entityInfo.tableName}.${this.entityInfo.fields[ke].name}`;
             const v = where[ke];
             if (Array.isArray(v))
                 kxx = kxx.whereIn(k, v);
@@ -207,7 +242,7 @@ class Repository {
     order(kx, order) {
         let kxx = kx;
         Object.keys(order).forEach(ke => {
-            const k = this.entityInfo.fields[ke].name;
+            const k = `${this.entityInfo.tableName}.${this.entityInfo.fields[ke].name}`;
             const v = order[ke];
             if (typeof v === "function") {
                 kxx = kx.orderByRaw(v(k));
@@ -218,9 +253,21 @@ class Repository {
         });
         return kxx;
     }
-    mapping(select, row) {
-        const x = class_transformer_1.plainToClass(this.entityInfo.target, select.reduce((p, e) => {
-            p[e] = row[this.entityInfo.fields[e].name];
+    mapping(row) {
+        const x = class_transformer_1.plainToClass(this.entityInfo.target, Object.keys(row).reduce((p, col) => {
+            const arr = col.split("_");
+            if (arr.length === 1) {
+                p[col] = row[col];
+            }
+            else if (arr.length === 2) {
+                p[arr[0]] = p[arr[0]] || {};
+                p[arr[0]][arr[1]] = row[col];
+            }
+            else if (arr.length === 3) {
+                p[arr[0]] = p[arr[0]] || {};
+                p[arr[0]][arr[1]] = p[arr[0]][arr[1]] || {};
+                p[arr[0]][arr[1]][arr[2]] = row[col];
+            }
             return p;
         }, {}));
         return x;

@@ -3,9 +3,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 import { plainToClass } from "class-transformer";
 import { TransactionScope } from "./Model.connection";
+import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
+import { EntityRelationColumnOptions, EntityRelationType } from "./Model.entity.relation";
 import { DeleteOptions, FindConditions, FindOneOptions, FindOptions, InsertId, OrderCondition, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
-import { RelationEntityColumnOptions, RelationEntityColumnType } from "./Model.relation.entity";
-import { RepositoryColumnOptions, RepositoryColumnType } from "./Model.repository";
 import { Metadata } from "../core/Decorator";
 import { TraceableError } from "../core/Error";
 import { ClassType } from "../types";
@@ -13,7 +13,7 @@ import { ClassType } from "../types";
 export interface RelationEntity {
   name: string;
   columns: Array<string>;
-  fields: { [key: string]: RepositoryColumnOptions };
+  fields: { [key: string]: EntityColumnOptions };
 }
 
 export interface RepositoryInfo<T> {
@@ -22,38 +22,38 @@ export interface RepositoryInfo<T> {
   columns: Array<string>;
   relationColumns: Array<string>;
   relationColumnTable: { [key: string]: RelationEntity };
-  relationColumnOptions: { [key: string]: RelationEntityColumnOptions };
-  relationColumnType: { [key: string]: RelationEntityColumnType };
-  fields: { [key: string]: RepositoryColumnOptions };
+  relationColumnOptions: { [key: string]: EntityRelationColumnOptions<any, T> };
+  relationColumnType: { [key: string]: EntityRelationType };
+  fields: { [key: string]: EntityColumnOptions };
   primaryColumns: Array<string>;
   criteriaColumns: Array<string>;
 }
 
 export const symRepositoryInfo = Symbol();
 
-export class CrudRepository<T> {
+export class Repository<T> {
   private readonly repositoryInfo: RepositoryInfo<T>;
 
   constructor(private readonly scope: TransactionScope, entity: ClassType<T>) {
-    this.repositoryInfo = CrudRepository.getRepositoryInfo(entity);
+    this.repositoryInfo = Repository.getRepositoryInfo(entity);
   }
 
-  static getRepositoryInfo<T>(repository: ClassType<T>): RepositoryInfo<T> {
-    if (repository[symRepositoryInfo]) return repository[symRepositoryInfo];
+  static getRepositoryInfo<T>(entity: ClassType<T>): RepositoryInfo<T> {
+    if (entity[symRepositoryInfo]) return entity[symRepositoryInfo];
 
-    const metadata = Metadata.getStorage().repositories.find(e => e.target === repository);
-    const columns = Metadata.getStorage().repositoryColumns.filter(e => e.target === repository);
+    const metadata = Metadata.getStorage().entities.find(e => e.target === entity);
+    const columns = Metadata.getStorage().entityColumns.filter(e => e.target === entity);
 
     if (!metadata) {
-      throw new Error(`Invalid Repository: No Decorated Repository (${repository.name})`);
+      throw new Error(`Invalid Repository: No Decorated Entity (${entity.name})`);
     } else if (!columns.length) {
-      throw new Error(`Invalid Repository: No Decorated Columns (${repository.name})`);
+      throw new Error(`Invalid Repository: No Decorated Columns (${entity.name})`);
     }
     
-    const relationColumns = Metadata.getStorage().relationEntityColumns.filter(e => e.target === repository);
+    const relationColumns = Metadata.getStorage().entityRelations.filter(e => e.target === entity);
     const relationColumnTable = relationColumns.reduce((p, col) => {
-      const table = Metadata.getStorage().repositories.find(e => col.table === e.target);
-      const columns = Metadata.getStorage().repositoryColumns.filter(e => col.table === e.target);
+      const table = Metadata.getStorage().entities.find(e => col.table === e.target);
+      const columns = Metadata.getStorage().entityColumns.filter(e => col.table === e.target);
 
       const relationEntity: RelationEntity = {
         name: table.options.name,
@@ -75,15 +75,15 @@ export class CrudRepository<T> {
       relationColumnType: relationColumns.reduce((p, e) => { p[e.propertyKey] = e.type; return p; }, {}),
       relationColumnOptions: relationColumns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
       fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
-      primaryColumns: columns.filter(e => e.type === RepositoryColumnType.Primary).map(e => e.propertyKey),
-      criteriaColumns: columns.filter(e => e.type === RepositoryColumnType.Primary).map(e => e.propertyKey),
+      primaryColumns: columns.filter(e => e.type === EntityColumnType.Primary).map(e => e.propertyKey),
+      criteriaColumns: columns.filter(e => e.type === EntityColumnType.Primary).map(e => e.propertyKey),
     };
 
-    repository[symRepositoryInfo] = info;
+    entity[symRepositoryInfo] = info;
     return info;
   }
 
-  async save(repository: T): Promise<InsertId> {
+  async save(entity: T): Promise<InsertId> {
     try {
       const [res] = await this.scope.kx.insert(this.repositoryInfo.columns.reduce((p, e) => {
         const key = this.repositoryInfo.fields[e].name;
@@ -93,17 +93,17 @@ export class CrudRepository<T> {
             return this.scope.kx.raw(this.repositoryInfo.fields[e].default(key));
           }
           else return v;
-        })(repository[e]);
+        })(entity[e]);
 
         p[key] = val;
         return p;
       }, {})).into(this.repositoryInfo.tableName);
 
       if (this.repositoryInfo.primaryColumns.length === 1) {
-        const id = repository[this.repositoryInfo.primaryColumns[0]];
+        const id = entity[this.repositoryInfo.primaryColumns[0]];
 
         if (id && typeof id !== "function") {
-          return repository[this.repositoryInfo.primaryColumns[0]];
+          return entity[this.repositoryInfo.primaryColumns[0]];
         }
       }
 
@@ -115,19 +115,19 @@ export class CrudRepository<T> {
     }
   }
 
-  async update(repository: T, options?: UpdateOptions<T>): Promise<number> {
+  async update(entity: T, options?: UpdateOptions<T>): Promise<number> {
     try {
       let kx = this.scope.kx.from(this.repositoryInfo.tableName);
 
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
       this.repositoryInfo.primaryColumns.forEach(e => {
-        conditions[e] = repository[e];
+        conditions[e] = entity[e];
       });
 
       kx = this.where(kx, conditions);
       kx = kx.update(((options?.update || this.repositoryInfo.columns) as any).reduce((p, e) => {
-        p[this.repositoryInfo.fields[e].name] = repository[e];
+        p[this.repositoryInfo.fields[e].name] = entity[e];
         return p;
       }, {}));
 
@@ -144,14 +144,14 @@ export class CrudRepository<T> {
     }
   }
 
-  async delete(repository: T, options?: DeleteOptions<T>): Promise<number> {
+  async delete(entity: T, options?: DeleteOptions<T>): Promise<number> {
     try {
       let kx = this.scope.kx.from(this.repositoryInfo.tableName);
 
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
       this.repositoryInfo.primaryColumns.forEach(e => {
-        conditions[e] = repository[e];
+        conditions[e] = entity[e];
       });
 
       kx = this.where(kx, conditions);
@@ -265,12 +265,12 @@ export class CrudRepository<T> {
       const relationColumnOptions = this.repositoryInfo.relationColumnOptions[relationColumn];
       const joinTable = this.repositoryInfo.relationColumnTable[relationColumn];
 
-      if (relationType === RelationEntityColumnType.OneToOne) {
+      if (relationType === EntityRelationType.OneToOne) {
         const relationColumnName = relationColumnOptions.name;
         const referencedColumnName = relationColumnOptions.referencedColumnName || relationColumnOptions.name;
         const joinTableColumns = joinTable.columns.map(joinTableColumn => `${joinTable.name}.${joinTable.fields[joinTableColumn].name} as ${relationColumn}_${joinTableColumn}`);
 
-        kxx.leftOuterJoin(joinTable.name, `${tableName}.${relationColumnName}`, `${joinTable.name}.${referencedColumnName}`);
+        kxx.leftOuterJoin(joinTable.name, `${tableName}.${relationColumnName}`, `${joinTable.name}.${referencedColumnName as string}`);
         kxx.select(joinTableColumns);
       }
     });

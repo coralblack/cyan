@@ -12,8 +12,8 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Model"), exports);
 __exportStar(require("./Model.connection"), exports);
+__exportStar(require("./Model.entity.relation"), exports);
 __exportStar(require("./Model.query"), exports);
-__exportStar(require("./Model.repository.crud"), exports);
-__exportStar(require("./Model.repository"), exports);
-__exportStar(require("./Model.relation.entity"), exports);
+__exportStar(require("./Model.entity"), exports);
+__exportStar(require("./Model.entity.repository"), exports);
 //# sourceMappingURL=index.js.map

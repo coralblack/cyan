@@ -1,8 +1,8 @@
 import { 
+  EntityColumnMetadataArgs,
+  EntityMetadataArgs,
+  EntityRelationMetadataArgs,
   MiddlewareMetadataArgs,
-  RelationEntityColumnMetadataArgs,
-  RepositoryColumnMetadataArgs,
-  RepositoryMetadataArgs,
   RouteMetadataArgs,
   RouteParamMetadataArgs,
   TaskMetadataArgs
@@ -12,9 +12,9 @@ class MetadataStorage {
   public readonly routes: RouteMetadataArgs[] = [];
   public readonly routeParams: RouteParamMetadataArgs[] = [];
   public readonly middlewares: MiddlewareMetadataArgs[] = [];
-  public readonly repositories: RepositoryMetadataArgs[] = [];
-  public readonly repositoryColumns: RepositoryColumnMetadataArgs[] = [];
-  public readonly relationEntityColumns: RelationEntityColumnMetadataArgs[] = [];
+  public readonly entities: EntityMetadataArgs[] = [];
+  public readonly entityColumns: EntityColumnMetadataArgs[] = [];
+  public readonly entityRelations: EntityRelationMetadataArgs<any, any>[] = [];
   public readonly tasks: TaskMetadataArgs[] = [];
 }
 

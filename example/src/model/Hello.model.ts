@@ -2,14 +2,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { assert } from "console";
-import { Column, OneToOne, PrimaryColumn, Repository } from "cyan/dist/model";
+import { Column, Entity, OneToOne, PrimaryColumn } from "cyan/dist/model";
 import { BaseModel } from "./Base.model";
 
-class Hello {
-
-}
-
-@Repository({ name: "WORLD" })
+@Entity({ name: "WORLD" })
 class WorldEntity {
   @PrimaryColumn({ name: "ID" })
   id: bigint;
@@ -21,7 +17,7 @@ class WorldEntity {
   createdAt: Date;
 }
 
-@Repository({ name: "HELLO" })
+@Entity({ name: "HELLO" })
 class HelloEntity {
   @PrimaryColumn({ name: "ID" })
   id: bigint;
@@ -39,7 +35,7 @@ class HelloEntity {
   createdAt: Date;
 }
 
-@Repository({ name: "DUMMY" })
+@Entity({ name: "DUMMY" })
 class DummyEntity {
   @PrimaryColumn({ name: "ID" })
   id: bigint;
@@ -53,7 +49,7 @@ class DummyEntity {
 
 export class HelloModel extends BaseModel {
   async test(): Promise<void> {
-    await this.transactionWith<Hello>(async (scope) => {
+    await this.transactionWith<HelloEntity>(async (scope) => {
       await scope.execute(`
         CREATE TABLE IF NOT EXISTS HELLO (
             ID BIGINT(20) NOT NULL AUTO_INCREMENT,

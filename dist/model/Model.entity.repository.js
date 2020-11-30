@@ -1,32 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CrudRepository = exports.symRepositoryInfo = void 0;
+exports.Repository = exports.symRepositoryInfo = void 0;
 const class_transformer_1 = require("class-transformer");
-const Model_relation_entity_1 = require("./Model.relation.entity");
-const Model_repository_1 = require("./Model.repository");
+const Model_entity_1 = require("./Model.entity");
+const Model_entity_relation_1 = require("./Model.entity.relation");
 const Decorator_1 = require("../core/Decorator");
 const Error_1 = require("../core/Error");
 exports.symRepositoryInfo = Symbol();
-class CrudRepository {
+class Repository {
     constructor(scope, entity) {
         this.scope = scope;
-        this.repositoryInfo = CrudRepository.getRepositoryInfo(entity);
+        this.repositoryInfo = Repository.getRepositoryInfo(entity);
     }
-    static getRepositoryInfo(repository) {
-        if (repository[exports.symRepositoryInfo])
-            return repository[exports.symRepositoryInfo];
-        const metadata = Decorator_1.Metadata.getStorage().repositories.find(e => e.target === repository);
-        const columns = Decorator_1.Metadata.getStorage().repositoryColumns.filter(e => e.target === repository);
+    static getRepositoryInfo(entity) {
+        if (entity[exports.symRepositoryInfo])
+            return entity[exports.symRepositoryInfo];
+        const metadata = Decorator_1.Metadata.getStorage().entities.find(e => e.target === entity);
+        const columns = Decorator_1.Metadata.getStorage().entityColumns.filter(e => e.target === entity);
         if (!metadata) {
-            throw new Error(`Invalid Repository: No Decorated Repository (${repository.name})`);
+            throw new Error(`Invalid Repository: No Decorated Entity (${entity.name})`);
         }
         else if (!columns.length) {
-            throw new Error(`Invalid Repository: No Decorated Columns (${repository.name})`);
+            throw new Error(`Invalid Repository: No Decorated Columns (${entity.name})`);
         }
-        const relationColumns = Decorator_1.Metadata.getStorage().relationEntityColumns.filter(e => e.target === repository);
+        const relationColumns = Decorator_1.Metadata.getStorage().entityRelations.filter(e => e.target === entity);
         const relationColumnTable = relationColumns.reduce((p, col) => {
-            const table = Decorator_1.Metadata.getStorage().repositories.find(e => col.table === e.target);
-            const columns = Decorator_1.Metadata.getStorage().repositoryColumns.filter(e => col.table === e.target);
+            const table = Decorator_1.Metadata.getStorage().entities.find(e => col.table === e.target);
+            const columns = Decorator_1.Metadata.getStorage().entityColumns.filter(e => col.table === e.target);
             const relationEntity = {
                 name: table.options.name,
                 columns: columns.map(e => e.propertyKey),
@@ -44,13 +44,13 @@ class CrudRepository {
             relationColumnType: relationColumns.reduce((p, e) => { p[e.propertyKey] = e.type; return p; }, {}),
             relationColumnOptions: relationColumns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
             fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
-            primaryColumns: columns.filter(e => e.type === Model_repository_1.RepositoryColumnType.Primary).map(e => e.propertyKey),
-            criteriaColumns: columns.filter(e => e.type === Model_repository_1.RepositoryColumnType.Primary).map(e => e.propertyKey),
+            primaryColumns: columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
+            criteriaColumns: columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
         };
-        repository[exports.symRepositoryInfo] = info;
+        entity[exports.symRepositoryInfo] = info;
         return info;
     }
-    async save(repository) {
+    async save(entity) {
         try {
             const [res] = await this.scope.kx.insert(this.repositoryInfo.columns.reduce((p, e) => {
                 const key = this.repositoryInfo.fields[e].name;
@@ -62,14 +62,14 @@ class CrudRepository {
                     }
                     else
                         return v;
-                })(repository[e]);
+                })(entity[e]);
                 p[key] = val;
                 return p;
             }, {})).into(this.repositoryInfo.tableName);
             if (this.repositoryInfo.primaryColumns.length === 1) {
-                const id = repository[this.repositoryInfo.primaryColumns[0]];
+                const id = entity[this.repositoryInfo.primaryColumns[0]];
                 if (id && typeof id !== "function") {
-                    return repository[this.repositoryInfo.primaryColumns[0]];
+                    return entity[this.repositoryInfo.primaryColumns[0]];
                 }
             }
             const [[lid]] = await this.scope.kx.raw("SELECT LAST_INSERT_ID() AS seq");
@@ -79,16 +79,16 @@ class CrudRepository {
             throw Error_1.TraceableError(err);
         }
     }
-    async update(repository, options) {
+    async update(entity, options) {
         try {
             let kx = this.scope.kx.from(this.repositoryInfo.tableName);
             const conditions = Object.assign({}, (options === null || options === void 0 ? void 0 : options.where) || {});
             this.repositoryInfo.primaryColumns.forEach(e => {
-                conditions[e] = repository[e];
+                conditions[e] = entity[e];
             });
             kx = this.where(kx, conditions);
             kx = kx.update(((options === null || options === void 0 ? void 0 : options.update) || this.repositoryInfo.columns).reduce((p, e) => {
-                p[this.repositoryInfo.fields[e].name] = repository[e];
+                p[this.repositoryInfo.fields[e].name] = entity[e];
                 return p;
             }, {}));
             if (options === null || options === void 0 ? void 0 : options.debug) {
@@ -101,12 +101,12 @@ class CrudRepository {
             throw Error_1.TraceableError(err);
         }
     }
-    async delete(repository, options) {
+    async delete(entity, options) {
         try {
             let kx = this.scope.kx.from(this.repositoryInfo.tableName);
             const conditions = Object.assign({}, (options === null || options === void 0 ? void 0 : options.where) || {});
             this.repositoryInfo.primaryColumns.forEach(e => {
-                conditions[e] = repository[e];
+                conditions[e] = entity[e];
             });
             kx = this.where(kx, conditions);
             kx = kx.del();
@@ -194,7 +194,7 @@ class CrudRepository {
             const relationType = this.repositoryInfo.relationColumnType[relationColumn];
             const relationColumnOptions = this.repositoryInfo.relationColumnOptions[relationColumn];
             const joinTable = this.repositoryInfo.relationColumnTable[relationColumn];
-            if (relationType === Model_relation_entity_1.RelationEntityColumnType.OneToOne) {
+            if (relationType === Model_entity_relation_1.EntityRelationType.OneToOne) {
                 const relationColumnName = relationColumnOptions.name;
                 const referencedColumnName = relationColumnOptions.referencedColumnName || relationColumnOptions.name;
                 const joinTableColumns = joinTable.columns.map(joinTableColumn => `${joinTable.name}.${joinTable.fields[joinTableColumn].name} as ${relationColumn}_${joinTableColumn}`);
@@ -272,5 +272,5 @@ class CrudRepository {
         return x;
     }
 }
-exports.CrudRepository = CrudRepository;
-//# sourceMappingURL=Model.repository.crud.js.map
+exports.Repository = Repository;
+//# sourceMappingURL=Model.entity.repository.js.map

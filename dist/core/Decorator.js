@@ -6,8 +6,8 @@ class MetadataStorage {
         this.routes = [];
         this.routeParams = [];
         this.middlewares = [];
-        this.entities = [];
-        this.entityColumns = [];
+        this.repositories = [];
+        this.repositoryColumns = [];
         this.relationEntityColumns = [];
         this.tasks = [];
     }

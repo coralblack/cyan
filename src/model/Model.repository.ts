@@ -17,7 +17,7 @@ export interface RepositoryColumnOptions {
 
 export function Repository(options?: RepositoryOptions): ClassDecorator {
   return function RouteInner(target: any) {
-    Metadata.getStorage().entities.push({
+    Metadata.getStorage().repositories.push({
       target,
       options,
     });
@@ -26,7 +26,7 @@ export function Repository(options?: RepositoryOptions): ClassDecorator {
 
 function RepositoryColumn(type: RepositoryColumnType, options: RepositoryColumnOptions): PropertyDecorator {
   return function RouteInner(target: any, propertyKey: string) {
-    Metadata.getStorage().entityColumns.push({
+    Metadata.getStorage().repositoryColumns.push({
       target: target.constructor,
       propertyKey,
       type,

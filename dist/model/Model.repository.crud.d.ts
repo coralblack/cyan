@@ -1,8 +1,8 @@
 import { TransactionScope } from "./Model.connection";
 import { DeleteOptions, FindOneOptions, FindOptions, InsertId, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
+import { RelationEntityColumnOptions, RelationEntityColumnType } from "./Model.relation.entity";
 import { RepositoryColumnOptions } from "./Model.repository";
 import { ClassType } from "../types";
-import { RelationEntityColumnOptions, RelationEntityColumnType } from ".";
 export interface RelationEntity {
     name: string;
     columns: Array<string>;
@@ -10,7 +10,7 @@ export interface RelationEntity {
         [key: string]: RepositoryColumnOptions;
     };
 }
-export interface EntityInfo<T> {
+export interface RepositoryInfo<T> {
     target: ClassType<T>;
     tableName: string;
     columns: Array<string>;
@@ -30,16 +30,15 @@ export interface EntityInfo<T> {
     primaryColumns: Array<string>;
     criteriaColumns: Array<string>;
 }
-export declare const symEntityInfo: unique symbol;
+export declare const symRepositoryInfo: unique symbol;
 export declare class CrudRepository<T> {
     private readonly scope;
-    private readonly entity;
-    private readonly entityInfo;
+    private readonly repositoryInfo;
     constructor(scope: TransactionScope, entity: ClassType<T>);
-    static getEntityInfo<T>(entity: ClassType<T>): EntityInfo<T>;
-    save(entity: T): Promise<InsertId>;
-    update(entity: T, options?: UpdateOptions<T>): Promise<number>;
-    delete(entity: T, options?: DeleteOptions<T>): Promise<number>;
+    static getRepositoryInfo<T>(repository: ClassType<T>): RepositoryInfo<T>;
+    save(repository: T): Promise<InsertId>;
+    update(repository: T, options?: UpdateOptions<T>): Promise<number>;
+    delete(repository: T, options?: DeleteOptions<T>): Promise<number>;
     findOne(options?: FindOneOptions<T>): Promise<T>;
     find(options?: FindOptions<T>): Promise<T[]>;
     pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>>;

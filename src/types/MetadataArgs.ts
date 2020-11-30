@@ -36,13 +36,13 @@ export interface MiddlewareMetadataArgs {
   options: MiddlewareOptions;
 }
 
-export interface EntityMetadataArgs<T = any> {
+export interface RepositoryMetadataArgs<T = any> {
   target: ClassType<T>;
   
   options: RepositoryOptions;
 }
 
-export interface EntityColumnMetadataArgs {
+export interface RepositoryColumnMetadataArgs {
   target: Function;
   propertyKey: string;
   

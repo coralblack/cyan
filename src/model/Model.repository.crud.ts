@@ -4,11 +4,11 @@
 import { plainToClass } from "class-transformer";
 import { TransactionScope } from "./Model.connection";
 import { DeleteOptions, FindConditions, FindOneOptions, FindOptions, InsertId, OrderCondition, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
+import { RelationEntityColumnOptions, RelationEntityColumnType } from "./Model.relation.entity";
 import { RepositoryColumnOptions, RepositoryColumnType } from "./Model.repository";
 import { Metadata } from "../core/Decorator";
 import { TraceableError } from "../core/Error";
 import { ClassType } from "../types";
-import { RelationEntityColumnOptions, RelationEntityColumnType } from ".";
 
 export interface RelationEntity {
   name: string;
@@ -16,7 +16,7 @@ export interface RelationEntity {
   fields: { [key: string]: RepositoryColumnOptions };
 }
 
-export interface EntityInfo<T> {
+export interface RepositoryInfo<T> {
   target: ClassType<T>;
   tableName: string;
   columns: Array<string>;
@@ -29,31 +29,31 @@ export interface EntityInfo<T> {
   criteriaColumns: Array<string>;
 }
 
-export const symEntityInfo = Symbol();
+export const symRepositoryInfo = Symbol();
 
 export class CrudRepository<T> {
-  private readonly entityInfo: EntityInfo<T>;
+  private readonly repositoryInfo: RepositoryInfo<T>;
 
-  constructor(private readonly scope: TransactionScope, private readonly entity: ClassType<T>) {
-    this.entityInfo = CrudRepository.getEntityInfo(entity);
+  constructor(private readonly scope: TransactionScope, entity: ClassType<T>) {
+    this.repositoryInfo = CrudRepository.getRepositoryInfo(entity);
   }
 
-  static getEntityInfo<T>(entity: ClassType<T>): EntityInfo<T> {
-    if (entity[symEntityInfo]) return entity[symEntityInfo];
+  static getRepositoryInfo<T>(repository: ClassType<T>): RepositoryInfo<T> {
+    if (repository[symRepositoryInfo]) return repository[symRepositoryInfo];
 
-    const metadata = Metadata.getStorage().entities.find(e => e.target === entity);
-    const columns = Metadata.getStorage().entityColumns.filter(e => e.target === entity);
+    const metadata = Metadata.getStorage().repositories.find(e => e.target === repository);
+    const columns = Metadata.getStorage().repositoryColumns.filter(e => e.target === repository);
 
     if (!metadata) {
-      throw new Error(`Invalid Repository: No Decorated Entity (${entity.name})`);
+      throw new Error(`Invalid Repository: No Decorated Repository (${repository.name})`);
     } else if (!columns.length) {
-      throw new Error(`Invalid Repository: No Decorated Columns (${entity.name})`);
+      throw new Error(`Invalid Repository: No Decorated Columns (${repository.name})`);
     }
     
-    const relationColumns = Metadata.getStorage().relationEntityColumns.filter(e => e.target === entity);
+    const relationColumns = Metadata.getStorage().relationEntityColumns.filter(e => e.target === repository);
     const relationColumnTable = relationColumns.reduce((p, col) => {
-      const table = Metadata.getStorage().entities.find(e => col.table === e.target);
-      const columns = Metadata.getStorage().entityColumns.filter(e => col.table === e.target);
+      const table = Metadata.getStorage().repositories.find(e => col.table === e.target);
+      const columns = Metadata.getStorage().repositoryColumns.filter(e => col.table === e.target);
 
       const relationEntity: RelationEntity = {
         name: table.options.name,
@@ -79,31 +79,31 @@ export class CrudRepository<T> {
       criteriaColumns: columns.filter(e => e.type === RepositoryColumnType.Primary).map(e => e.propertyKey),
     };
 
-    entity[symEntityInfo] = info;
+    repository[symRepositoryInfo] = info;
     return info;
   }
 
-  async save(entity: T): Promise<InsertId> {
+  async save(repository: T): Promise<InsertId> {
     try {
-      const [res] = await this.scope.kx.insert(this.entityInfo.columns.reduce((p, e) => {
-        const key = this.entityInfo.fields[e].name;
+      const [res] = await this.scope.kx.insert(this.repositoryInfo.columns.reduce((p, e) => {
+        const key = this.repositoryInfo.fields[e].name;
         const val = ((v): any => {
           if (typeof v === "function") return this.scope.kx.raw(v(key));
-          else if (v === undefined && this.entityInfo.fields[e].default) {
-            return this.scope.kx.raw(this.entityInfo.fields[e].default(key));
+          else if (v === undefined && this.repositoryInfo.fields[e].default) {
+            return this.scope.kx.raw(this.repositoryInfo.fields[e].default(key));
           }
           else return v;
-        })(entity[e]);
+        })(repository[e]);
 
         p[key] = val;
         return p;
-      }, {})).into(this.entityInfo.tableName);
+      }, {})).into(this.repositoryInfo.tableName);
 
-      if (this.entityInfo.primaryColumns.length === 1) {
-        const id = entity[this.entityInfo.primaryColumns[0]];
+      if (this.repositoryInfo.primaryColumns.length === 1) {
+        const id = repository[this.repositoryInfo.primaryColumns[0]];
 
         if (id && typeof id !== "function") {
-          return entity[this.entityInfo.primaryColumns[0]];
+          return repository[this.repositoryInfo.primaryColumns[0]];
         }
       }
 
@@ -115,19 +115,19 @@ export class CrudRepository<T> {
     }
   }
 
-  async update(entity: T, options?: UpdateOptions<T>): Promise<number> {
+  async update(repository: T, options?: UpdateOptions<T>): Promise<number> {
     try {
-      let kx = this.scope.kx.from(this.entityInfo.tableName);
+      let kx = this.scope.kx.from(this.repositoryInfo.tableName);
 
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
-      this.entityInfo.primaryColumns.forEach(e => {
-        conditions[e] = entity[e];
+      this.repositoryInfo.primaryColumns.forEach(e => {
+        conditions[e] = repository[e];
       });
 
       kx = this.where(kx, conditions);
-      kx = kx.update(((options?.update || this.entityInfo.columns) as any).reduce((p, e) => {
-        p[this.entityInfo.fields[e].name] = entity[e];
+      kx = kx.update(((options?.update || this.repositoryInfo.columns) as any).reduce((p, e) => {
+        p[this.repositoryInfo.fields[e].name] = repository[e];
         return p;
       }, {}));
 
@@ -144,14 +144,14 @@ export class CrudRepository<T> {
     }
   }
 
-  async delete(entity: T, options?: DeleteOptions<T>): Promise<number> {
+  async delete(repository: T, options?: DeleteOptions<T>): Promise<number> {
     try {
-      let kx = this.scope.kx.from(this.entityInfo.tableName);
+      let kx = this.scope.kx.from(this.repositoryInfo.tableName);
 
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
-      this.entityInfo.primaryColumns.forEach(e => {
-        conditions[e] = entity[e];
+      this.repositoryInfo.primaryColumns.forEach(e => {
+        conditions[e] = repository[e];
       });
 
       kx = this.where(kx, conditions);
@@ -198,7 +198,7 @@ export class CrudRepository<T> {
       const offset: bigint = (BigInt(page) - BigInt(1)) * limit;
       
       const count = (await this
-        .where(this.scope.kx.from(this.entityInfo.tableName), options.where || {})
+        .where(this.scope.kx.from(this.repositoryInfo.tableName), options.where || {})
         .count("* as cnt"))[0].cnt;
 
       const items = await this.find({ ...options, limit, offset });
@@ -216,10 +216,10 @@ export class CrudRepository<T> {
 
   private async select(options?: FindOptions<T>): Promise<T[]> {
     try {
-      const selectColumns: any[] = options.select || this.entityInfo.columns;
-      const select = selectColumns.map(column => `${this.entityInfo.tableName}.${this.entityInfo.fields[column].name} as ${column}`);
+      const selectColumns: any[] = options.select || this.repositoryInfo.columns;
+      const select = selectColumns.map(column => `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[column].name} as ${column}`);
 
-      let kx = this.scope.kx.select(select).from(this.entityInfo.tableName);
+      let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
 
       kx = this.join(kx);
 
@@ -258,12 +258,12 @@ export class CrudRepository<T> {
   private join(kx: any): any {
     const kxx = kx;
 
-    this.entityInfo.relationColumns.forEach(relationColumn => {
+    this.repositoryInfo.relationColumns.forEach(relationColumn => {
 
-      const tableName = this.entityInfo.tableName;
-      const relationType = this.entityInfo.relationColumnType[relationColumn];
-      const relationColumnOptions = this.entityInfo.relationColumnOptions[relationColumn];
-      const joinTable = this.entityInfo.relationColumnTable[relationColumn];
+      const tableName = this.repositoryInfo.tableName;
+      const relationType = this.repositoryInfo.relationColumnType[relationColumn];
+      const relationColumnOptions = this.repositoryInfo.relationColumnOptions[relationColumn];
+      const joinTable = this.repositoryInfo.relationColumnTable[relationColumn];
 
       if (relationType === RelationEntityColumnType.OneToOne) {
         const relationColumnName = relationColumnOptions.name;
@@ -282,7 +282,7 @@ export class CrudRepository<T> {
     let kxx = kx;
 
     Object.keys(where).forEach(ke => {
-      const k = `${this.entityInfo.tableName}.${this.entityInfo.fields[ke].name}`;
+      const k = `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[ke].name}`;
       const v = where[ke];
 
       if (Array.isArray(v)) kxx = kxx.whereIn(k, v);
@@ -315,7 +315,7 @@ export class CrudRepository<T> {
     let kxx = kx;
 
     Object.keys(order).forEach(ke => {
-      const k = `${this.entityInfo.tableName}.${this.entityInfo.fields[ke].name}`;
+      const k = `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[ke].name}`;
       const v = order[ke];
 
       if (typeof v === "function") {
@@ -329,7 +329,7 @@ export class CrudRepository<T> {
   }
 
   private mapping(row: any): T {
-    const x = plainToClass(this.entityInfo.target, Object.keys(row).reduce((p, col) => {
+    const x = plainToClass(this.repositoryInfo.target, Object.keys(row).reduce((p, col) => {
       const arr = col.split("_");
 
       if (arr.length === 1) {

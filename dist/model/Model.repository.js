@@ -9,7 +9,7 @@ var RepositoryColumnType;
 })(RepositoryColumnType = exports.RepositoryColumnType || (exports.RepositoryColumnType = {}));
 function Repository(options) {
     return function RouteInner(target) {
-        Decorator_1.Metadata.getStorage().entities.push({
+        Decorator_1.Metadata.getStorage().repositories.push({
             target,
             options,
         });
@@ -18,7 +18,7 @@ function Repository(options) {
 exports.Repository = Repository;
 function RepositoryColumn(type, options) {
     return function RouteInner(target, propertyKey) {
-        Decorator_1.Metadata.getStorage().entityColumns.push({
+        Decorator_1.Metadata.getStorage().repositoryColumns.push({
             target: target.constructor,
             propertyKey,
             type,

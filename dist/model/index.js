@@ -13,7 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Model"), exports);
 __exportStar(require("./Model.connection"), exports);
 __exportStar(require("./Model.query"), exports);
+__exportStar(require("./Model.repository.crud"), exports);
 __exportStar(require("./Model.repository"), exports);
-__exportStar(require("./Model.entity"), exports);
 __exportStar(require("./Model.relation.entity"), exports);
 //# sourceMappingURL=index.js.map

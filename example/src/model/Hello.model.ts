@@ -2,14 +2,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { assert } from "console";
-import { Column, Entity, OneToOne, PrimaryColumn } from "cyan/dist/model";
+import { Column, OneToOne, PrimaryColumn, Repository } from "cyan/dist/model";
 import { BaseModel } from "./Base.model";
 
 class Hello {
 
 }
 
-@Entity({ name: "WORLD" })
+@Repository({ name: "WORLD" })
 class WorldEntity {
   @PrimaryColumn({ name: "ID" })
   id: bigint;
@@ -21,7 +21,7 @@ class WorldEntity {
   createdAt: Date;
 }
 
-@Entity({ name: "HELLO" })
+@Repository({ name: "HELLO" })
 class HelloEntity {
   @PrimaryColumn({ name: "ID" })
   id: bigint;
@@ -39,7 +39,7 @@ class HelloEntity {
   createdAt: Date;
 }
 
-@Entity({ name: "DUMMY" })
+@Repository({ name: "DUMMY" })
 class DummyEntity {
   @PrimaryColumn({ name: "ID" })
   id: bigint;

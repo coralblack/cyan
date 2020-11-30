@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ConnectionManager = exports.TransactionScope = void 0;
 const knex_1 = __importDefault(require("knex"));
 const Model_1 = require("./Model");
-const Model_repository_1 = require("./Model.repository");
+const Model_repository_crud_1 = require("./Model.repository.crud");
 const managers = {};
 class TransactionScope {
     constructor(kx) {
@@ -16,8 +16,8 @@ class TransactionScope {
         const [res] = await this.kx.raw(query, params);
         return res;
     }
-    getRepository(entity) {
-        return new Model_repository_1.Repository(this, entity);
+    getRepository(repository) {
+        return new Model_repository_crud_1.CrudRepository(this, repository);
     }
 }
 exports.TransactionScope = TransactionScope;

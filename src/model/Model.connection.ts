@@ -1,6 +1,6 @@
 import knex from "knex";
 import { ModelConnectivitySettings, ModelConnectivitySettingsDriver } from "./Model";
-import { CrudRepository } from "./Model.repository.crud";
+import { Repository } from "./Model.entity.repository";
 import { ClassType } from "../types";
 
 const managers: { [key: string]: ConnectionManager } = {};
@@ -28,8 +28,8 @@ export class TransactionScope {
     return res;
   }
 
-  getRepository<T>(repository: ClassType<T>): CrudRepository<T> {
-    return new CrudRepository<T>(this, repository);
+  getRepository<T>(repository: ClassType<T>): Repository<T> {
+    return new Repository<T>(this, repository);
   }
 }
 

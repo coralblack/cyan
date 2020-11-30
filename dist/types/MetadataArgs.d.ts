@@ -1,8 +1,8 @@
-import { RelationEntityColumnOptions, RelationEntityColumnType } from "src/model/Model.relation.entity";
 import { TaskOptions, TaskType } from "src/task/Task.types";
 import { HandlerFunction } from "./Handler";
 import { HttpMethod } from "../http/Http.method";
-import { RepositoryColumnOptions, RepositoryColumnType, RepositoryOptions } from "../model/Model.repository";
+import { EntityColumnOptions, EntityColumnType, EntityOptions } from "../model/Model.entity";
+import { EntityRelationColumnOptions, EntityRelationType } from "../model/Model.entity.relation";
 import { MiddlewareOptions } from "../router";
 import { RouteOptions } from "../router/Router.action";
 import { ParamOptions, ParamType } from "../router/Router.param";
@@ -29,22 +29,22 @@ export interface MiddlewareMetadataArgs {
     handler: HandlerFunction;
     options: MiddlewareOptions;
 }
-export interface RepositoryMetadataArgs<T = any> {
+export interface EntityMetadataArgs<T = any> {
     target: ClassType<T>;
-    options: RepositoryOptions;
+    options: EntityOptions;
 }
-export interface RepositoryColumnMetadataArgs {
+export interface EntityColumnMetadataArgs {
     target: Function;
     propertyKey: string;
-    type: RepositoryColumnType;
-    options: RepositoryColumnOptions;
+    type: EntityColumnType;
+    options: EntityColumnOptions;
 }
-export interface RelationEntityColumnMetadataArgs {
+export interface EntityRelationMetadataArgs<T, F> {
     target: Function;
     propertyKey: string;
-    type: RelationEntityColumnType;
+    type: EntityRelationType;
     table: Function;
-    options: RelationEntityColumnOptions;
+    options: EntityRelationColumnOptions<T, F>;
 }
 export interface TaskMetadataArgs<T = any> {
     target: ClassType<T>;

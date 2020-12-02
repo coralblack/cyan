@@ -22,7 +22,7 @@ function EntityColumn(type, options) {
             target: target.constructor,
             propertyKey,
             type,
-            options: Object.assign({ name: target.name }, options),
+            options,
         });
     };
 }

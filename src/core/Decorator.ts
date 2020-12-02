@@ -14,7 +14,7 @@ class MetadataStorage {
   public readonly middlewares: MiddlewareMetadataArgs[] = [];
   public readonly entities: EntityMetadataArgs[] = [];
   public readonly entityColumns: EntityColumnMetadataArgs[] = [];
-  public readonly entityRelations: EntityRelationMetadataArgs<any, any>[] = [];
+  public readonly entityRelations: EntityRelationMetadataArgs[] = [];
   public readonly tasks: TaskMetadataArgs[] = [];
 }
 

@@ -5,7 +5,7 @@ declare class MetadataStorage {
     readonly middlewares: MiddlewareMetadataArgs[];
     readonly entities: EntityMetadataArgs[];
     readonly entityColumns: EntityColumnMetadataArgs[];
-    readonly entityRelations: EntityRelationMetadataArgs<any, any>[];
+    readonly entityRelations: EntityRelationMetadataArgs[];
     readonly tasks: TaskMetadataArgs[];
 }
 export declare class Metadata {

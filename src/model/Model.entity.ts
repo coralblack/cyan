@@ -30,7 +30,7 @@ function EntityColumn(type: EntityColumnType, options: EntityColumnOptions): Pro
       target: target.constructor,
       propertyKey,
       type,
-      options: Object.assign({ name: target.name }, options),
+      options,
     });
   };
 }

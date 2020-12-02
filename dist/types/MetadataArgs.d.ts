@@ -39,12 +39,12 @@ export interface EntityColumnMetadataArgs {
     type: EntityColumnType;
     options: EntityColumnOptions;
 }
-export interface EntityRelationMetadataArgs<T, F> {
+export interface EntityRelationMetadataArgs {
     target: Function;
     propertyKey: string;
     type: EntityRelationType;
     table: Function;
-    options: EntityRelationColumnOptions<T, F>;
+    options: EntityRelationColumnOptions;
 }
 export interface TaskMetadataArgs<T = any> {
     target: ClassType<T>;

@@ -1,34 +1,25 @@
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions } from "./Model.entity";
-import { EntityRelationColumnOptions, EntityRelationType } from "./Model.entity.relation";
+import { EntityRelationColumnOptions } from "./Model.entity.relation";
 import { DeleteOptions, FindOneOptions, FindOptions, InsertId, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
 import { ClassType } from "../types";
-export interface RelationEntity {
-    name: string;
-    columns: Array<string>;
-    fields: {
-        [key: string]: EntityColumnOptions;
-    };
+interface RelationalRepositoryInfo<T = any> {
+    options: EntityRelationColumnOptions;
+    repository: RepositoryInfo<T>;
 }
-export interface RepositoryInfo<T> {
+export interface RepositoryInfo<T = any> {
     target: ClassType<T>;
     tableName: string;
     columns: Array<string>;
-    relationColumns: Array<string>;
-    relationColumnTable: {
-        [key: string]: RelationEntity;
-    };
-    relationColumnOptions: {
-        [key: string]: EntityRelationColumnOptions<any, T>;
-    };
-    relationColumnType: {
-        [key: string]: EntityRelationType;
-    };
     fields: {
         [key: string]: EntityColumnOptions;
     };
     primaryColumns: Array<string>;
     criteriaColumns: Array<string>;
+    oneToOneRelationColumns: Array<string>;
+    oneToOneRelations: {
+        [key: string]: RelationalRepositoryInfo;
+    };
 }
 export declare const symRepositoryInfo: unique symbol;
 export declare class Repository<T> {
@@ -43,8 +34,10 @@ export declare class Repository<T> {
     find(options?: FindOptions<T>): Promise<T[]>;
     pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>>;
     private select;
+    private joinWith;
     private join;
     private where;
     private order;
     private mapping;
 }
+export {};

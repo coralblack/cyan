@@ -6,6 +6,7 @@ const Model_entity_1 = require("./Model.entity");
 const Model_entity_relation_1 = require("./Model.entity.relation");
 const Decorator_1 = require("../core/Decorator");
 const Error_1 = require("../core/Error");
+const joinSeparator = "_";
 exports.symRepositoryInfo = Symbol();
 class Repository {
     constructor(scope, entity) {
@@ -15,39 +16,33 @@ class Repository {
     static getRepositoryInfo(entity) {
         if (entity[exports.symRepositoryInfo])
             return entity[exports.symRepositoryInfo];
+        const info = {};
+        entity[exports.symRepositoryInfo] = info;
         const metadata = Decorator_1.Metadata.getStorage().entities.find(e => e.target === entity);
         const columns = Decorator_1.Metadata.getStorage().entityColumns.filter(e => e.target === entity);
+        const relations = Decorator_1.Metadata.getStorage().entityRelations.filter(e => e.target === entity);
         if (!metadata) {
             throw new Error(`Invalid Repository: No Decorated Entity (${entity.name})`);
         }
         else if (!columns.length) {
             throw new Error(`Invalid Repository: No Decorated Columns (${entity.name})`);
         }
-        const relationColumns = Decorator_1.Metadata.getStorage().entityRelations.filter(e => e.target === entity);
-        const relationColumnTable = relationColumns.reduce((p, col) => {
-            const table = Decorator_1.Metadata.getStorage().entities.find(e => col.table === e.target);
-            const columns = Decorator_1.Metadata.getStorage().entityColumns.filter(e => col.table === e.target);
-            const relationEntity = {
-                name: table.options.name,
-                columns: columns.map(e => e.propertyKey),
-                fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
-            };
-            p[col.propertyKey] = relationEntity;
-            return p;
-        }, {});
-        const info = {
-            target: metadata.target,
-            tableName: metadata.options.name,
-            columns: columns.map(e => e.propertyKey),
-            relationColumns: relationColumns.map(e => e.propertyKey),
-            relationColumnTable: relationColumnTable,
-            relationColumnType: relationColumns.reduce((p, e) => { p[e.propertyKey] = e.type; return p; }, {}),
-            relationColumnOptions: relationColumns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
-            fields: columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
-            primaryColumns: columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
-            criteriaColumns: columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
-        };
-        entity[exports.symRepositoryInfo] = info;
+        info.target = metadata.target,
+            info.tableName = metadata.options.name,
+            info.columns = columns.map(e => e.propertyKey),
+            info.fields = columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
+            info.primaryColumns = columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
+            info.criteriaColumns = columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
+            info.oneToOneRelationColumns = relations.filter(e => e.type === Model_entity_relation_1.EntityRelationType.OneToOne).map(e => e.propertyKey),
+            info.oneToOneRelations = relations
+                .filter(e => e.type === Model_entity_relation_1.EntityRelationType.OneToOne)
+                .reduce((p, e) => {
+                p[e.propertyKey] = {
+                    options: Object.assign(Object.assign({}, e.options), { name: Array.isArray(e.options.name) ? e.options.name : [e.options.name] }),
+                    repository: Repository.getRepositoryInfo(e.options.target),
+                };
+                return p;
+            }, {});
         return info;
     }
     async save(entity) {
@@ -187,20 +182,31 @@ class Repository {
             throw Error_1.TraceableError(err);
         }
     }
+    joinWith(kx, rec, fromTable, propertyKey, to) {
+        const kxx = kx;
+        const fromColumns = to.options.name;
+        const toColumns = to.repository.primaryColumns;
+        const toTableNameAlias = `${to.repository.tableName}_${rec}`;
+        const toTable = `${to.repository.tableName} AS ${toTableNameAlias}`;
+        const joinTableColumns = to.repository.columns.map(col => `${toTableNameAlias}.${to.repository.fields[col].name} as ${propertyKey}${joinSeparator}${col}`);
+        if (fromColumns.length !== toColumns.length) {
+            throw new Error(`Invalid Relation: Joining columns are not matched (${fromColumns.join(",")} -> ${toColumns.join(",")})`);
+        }
+        if (toColumns.length > 1) {
+            throw new Error("Invalid Relation: Not supported join with multiple columns");
+        }
+        kxx.leftOuterJoin(toTable, `${fromTable}.${fromColumns[0]}`, `${toTableNameAlias}.${toColumns[0]}`);
+        kxx.select(joinTableColumns);
+        to.repository.oneToOneRelationColumns.forEach(relationColumn => {
+            this.joinWith(kxx, rec * 10, toTableNameAlias, `${propertyKey}${joinSeparator}${relationColumn}`, to.repository.oneToOneRelations[relationColumn]);
+        });
+        return kxx;
+    }
     join(kx) {
         const kxx = kx;
-        this.repositoryInfo.relationColumns.forEach(relationColumn => {
-            const tableName = this.repositoryInfo.tableName;
-            const relationType = this.repositoryInfo.relationColumnType[relationColumn];
-            const relationColumnOptions = this.repositoryInfo.relationColumnOptions[relationColumn];
-            const joinTable = this.repositoryInfo.relationColumnTable[relationColumn];
-            if (relationType === Model_entity_relation_1.EntityRelationType.OneToOne) {
-                const relationColumnName = relationColumnOptions.name;
-                const referencedColumnName = relationColumnOptions.referencedColumnName || relationColumnOptions.name;
-                const joinTableColumns = joinTable.columns.map(joinTableColumn => `${joinTable.name}.${joinTable.fields[joinTableColumn].name} as ${relationColumn}_${joinTableColumn}`);
-                kxx.leftOuterJoin(joinTable.name, `${tableName}.${relationColumnName}`, `${joinTable.name}.${referencedColumnName}`);
-                kxx.select(joinTableColumns);
-            }
+        let idx = 0;
+        this.repositoryInfo.oneToOneRelationColumns.forEach(relationColumn => {
+            this.joinWith(kxx, ++idx, this.repositoryInfo.tableName, relationColumn, this.repositoryInfo.oneToOneRelations[relationColumn]);
         });
         return kxx;
     }
@@ -252,20 +258,19 @@ class Repository {
         });
         return kxx;
     }
-    mapping(row) {
-        const x = class_transformer_1.plainToClass(this.repositoryInfo.target, Object.keys(row).reduce((p, col) => {
-            const arr = col.split("_");
-            if (arr.length === 1) {
-                p[col] = row[col];
+    mapping(row, repositoryInfo, prefix) {
+        const x = class_transformer_1.plainToClass((repositoryInfo || this.repositoryInfo).target, Object.keys(row)
+            .filter((e) => !prefix || e.startsWith(`${prefix}${joinSeparator}`))
+            .reduce((p, c) => {
+            const col = !prefix ? c : c.substring(prefix.length + 1);
+            if (!col.includes(joinSeparator)) {
+                p[col] = row[c];
             }
-            else if (arr.length === 2) {
-                p[arr[0]] = p[arr[0]] || {};
-                p[arr[0]][arr[1]] = row[col];
-            }
-            else if (arr.length === 3) {
-                p[arr[0]] = p[arr[0]] || {};
-                p[arr[0]][arr[1]] = p[arr[0]][arr[1]] || {};
-                p[arr[0]][arr[1]][arr[2]] = row[col];
+            else {
+                const [join] = col.split(joinSeparator);
+                if (!p[join]) {
+                    p[join] = this.mapping(row, (repositoryInfo || this.repositoryInfo).oneToOneRelations[join].repository, !prefix ? join : `${prefix}_${join}`);
+                }
             }
             return p;
         }, {}));

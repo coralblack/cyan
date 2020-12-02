@@ -28,7 +28,7 @@ class HelloEntity {
   @Column({ name: "WORLD_ID" })
   worldId?: bigint;
 
-  @OneToOne({ name: "WORLD_ID", referencedColumnName: "ID" })
+  @OneToOne({ name: "WORLD_ID", target: WorldEntity })
   world?: WorldEntity;
 
   @Column({ name: "CREATED_AT", default: () => "CURRENT_TIMESTAMP()" })
@@ -47,6 +47,54 @@ class DummyEntity {
   createdAt: string;
 }
 
+@Entity({ name: "FOZ" })
+class FozEntity {
+  @PrimaryColumn({ name: "ID", default: () => "UUID_SHORT()" })
+  id: bigint;
+
+  @Column({ name: "NAME", default: () => "UUID()" })
+  name: string;
+
+  @Column({ name: "CREATED_AT", default: () => "CURRENT_TIMESTAMP()" })
+  createdAt: Date;
+}
+
+@Entity({ name: "BAZ" })
+class BazEntity {
+  @PrimaryColumn({ name: "ID", default: () => "UUID_SHORT()" })
+  id: bigint;
+
+  @Column({ name: "FOZ_ID" })
+  fozId: bigint;
+
+  @OneToOne({ name: "FOZ_ID", target: FozEntity })
+  foz?: FozEntity;
+}
+
+@Entity({ name: "BAR" })
+class BarEntity {
+  @PrimaryColumn({ name: "ID", default: () => "UUID_SHORT()" })
+  id: bigint;
+
+  @Column({ name: "BAZ_ID" })
+  bazId: bigint;
+
+  @OneToOne({ name: "BAZ_ID", target: BazEntity })
+  baz?: BazEntity;
+}
+
+@Entity({ name: "FOO" })
+class FooEntity {
+  @PrimaryColumn({ name: "ID", default: () => "UUID_SHORT()" })
+  id: bigint;
+
+  @Column({ name: "BAR_ID" })
+  barId: bigint;
+
+  @OneToOne({ name: "BAR_ID", target: BarEntity })
+  bar?: BarEntity;
+}
+
 export class HelloModel extends BaseModel {
   async test(): Promise<void> {
     await this.transactionWith<HelloEntity>(async (scope) => {
@@ -62,6 +110,42 @@ export class HelloModel extends BaseModel {
 
       await scope.execute(`
         CREATE TABLE IF NOT EXISTS WORLD (
+            ID BIGINT(20) NOT NULL AUTO_INCREMENT,
+            NAME VARCHAR(128) DEFAULT NULL,
+            CREATED_AT DATETIME DEFAULT NULL,
+            PRIMARY KEY (ID)
+        )
+      `);
+
+      await scope.execute(`
+        CREATE TABLE IF NOT EXISTS FOO (
+            ID BIGINT(20) NOT NULL AUTO_INCREMENT,
+            BAR_ID BIGINT(20) DEFAULT NULL,
+            CREATED_AT DATETIME DEFAULT NULL,
+            PRIMARY KEY (ID)
+        )
+      `);
+
+      await scope.execute(`
+        CREATE TABLE IF NOT EXISTS BAR (
+            ID BIGINT(20) NOT NULL AUTO_INCREMENT,
+            BAZ_ID BIGINT(20) DEFAULT NULL,
+            CREATED_AT DATETIME DEFAULT NULL,
+            PRIMARY KEY (ID)
+        )
+      `);
+
+      await scope.execute(`
+        CREATE TABLE IF NOT EXISTS BAZ (
+            ID BIGINT(20) NOT NULL AUTO_INCREMENT,
+            FOZ_ID BIGINT(20) DEFAULT NULL,
+            CREATED_AT DATETIME DEFAULT NULL,
+            PRIMARY KEY (ID)
+        )
+      `);
+
+      await scope.execute(`
+        CREATE TABLE IF NOT EXISTS FOZ (
             ID BIGINT(20) NOT NULL AUTO_INCREMENT,
             NAME VARCHAR(128) DEFAULT NULL,
             CREATED_AT DATETIME DEFAULT NULL,
@@ -90,14 +174,14 @@ export class HelloModel extends BaseModel {
 
       const found1 = await repo.findOne({ where: { id: save1 as bigint } });
 
-      assert(found1.id === BigInt(save1));
-      assert(found1.worldId === BigInt(worldId));
-      assert(found1.name === save1Name);
-      assert(found1.createdAt === null);
-      assert(found1.world && typeof found1.world === "object");
-      assert(found1.world.id === BigInt(worldId));
-      assert(found1.world.name === "world");
-      assert(found1.world.createdAt === null);
+      assert(found1.id === BigInt(save1), "found1.id");
+      assert(found1.worldId === BigInt(worldId), "found1.worldId");
+      assert(found1.name === save1Name, "found1.name");
+      assert(found1.createdAt === null, "found1.createdAt");
+      assert(found1.world && typeof found1.world === "object", "found1.world");
+      assert(found1.world.id === BigInt(worldId), "found1.world.id");
+      assert(found1.world.name === "world", "found1.world.name");
+      assert(found1.world.createdAt === null, "found1.world.createdAt");
 
       const save2Id = BigInt(new Date().getTime());
       const save2Name = `${new Date().getTime()}`;
@@ -243,6 +327,56 @@ export class HelloModel extends BaseModel {
       const found7 = await repo.findOne({ where: { id: save2Id } });
 
       assert(found7 === null, "found7 failed");
+
+      // Relations
+
+      const fooRepo = scope.getRepository(FooEntity);
+      const barRepo = scope.getRepository(BarEntity);
+      const bazRepo = scope.getRepository(BazEntity);
+      const fozRepo = scope.getRepository(FozEntity);
+
+      const fozEntity: FozEntity = {
+        id: undefined,
+        name: String(Math.random()),
+        createdAt: undefined,
+      };
+
+      await fozRepo.save(fozEntity);
+
+      const latestFoz = await fozRepo.findOne({ order: { id: "ASC" } });
+
+      const bazEntity: BazEntity = {
+        id: undefined,
+        fozId: latestFoz.id,
+      };
+
+      await bazRepo.save(bazEntity);
+
+      const latestBaz = await bazRepo.findOne({ order: { id: "ASC" } });
+
+      const barEntity: BarEntity = {
+        id: undefined,
+        bazId: latestBaz.id,
+      };
+
+      await barRepo.save(barEntity);
+
+      const latestBar = await barRepo.findOne({ order: { id: "ASC" } });
+
+      const fooEntity: FooEntity = {
+        id: undefined,
+        barId: latestBar.id,
+      };
+
+      await fooRepo.save(fooEntity);
+
+      const latestFoo = await fooRepo.findOne({ order: { id: "ASC" } });
+
+      assert(typeof latestFoo.id === "bigint");
+      assert(latestFoo.bar.id === latestBar.id);
+      assert(latestFoo.bar.baz.id === latestBaz.id);
+      assert(latestFoo.bar.baz.foz.id === latestFoz.id);
+      assert(typeof latestFoo.bar.baz.foz.id === "bigint");
 
       return null;
     });

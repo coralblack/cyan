@@ -14,7 +14,7 @@ function EntityRelationColumn(type, options) {
             propertyKey,
             type,
             table: relationColumnEntity,
-            options: Object.assign({ name: target.name }, options),
+            options,
         });
     };
 }

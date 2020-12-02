@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Metadata } from "../core/Decorator";
+import { ClassType } from "../types";
 
 export enum EntityRelationType {
   OneToOne = "ONE-TO-ONE",
 }
 
-export interface EntityRelationColumnOptions<T, F> {
-  name: keyof F;
-  referencedColumnName?: keyof T;
+export interface EntityRelationColumnOptions {
+  name: string | string[];
+  target: ClassType<any>;
 }
 
-function EntityRelationColumn<T, F>(type: EntityRelationType, options: EntityRelationColumnOptions<T, F>): PropertyDecorator {
+function EntityRelationColumn(type: EntityRelationType, options: EntityRelationColumnOptions): PropertyDecorator {
   return function EntityRelationColumnInner(target: Object, propertyKey: string) {
     const relationColumnEntity = Reflect.getMetadata("design:type", target, propertyKey);
 
@@ -19,11 +20,11 @@ function EntityRelationColumn<T, F>(type: EntityRelationType, options: EntityRel
       propertyKey,
       type,
       table: relationColumnEntity,
-      options: Object.assign({ name: (target as any).name }, options),
+      options,
     });
   };
 }
 
-export function OneToOne<T, F = any>(options: EntityRelationColumnOptions<T, F>): PropertyDecorator {
-  return EntityRelationColumn<T, F>(EntityRelationType.OneToOne, options);
+export function OneToOne(options: EntityRelationColumnOptions): PropertyDecorator {
+  return EntityRelationColumn(EntityRelationType.OneToOne, options);
 }

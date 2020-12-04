@@ -162,7 +162,7 @@ export class HelloModel extends BaseModel {
 
       const repo = scope.getRepository(HelloEntity);
 
-      const save1Name = `${new Date().getTime()}`;
+      const save1Name = `${Math.random()}-${new Date().getTime()}-${Math.random()}`;
       const save1 = await repo.save({
         id: (() => "UUID_SHORT()") as any,
         worldId: BigInt(worldId),
@@ -182,6 +182,22 @@ export class HelloModel extends BaseModel {
       assert(found1.world.id === BigInt(worldId), "found1.world.id");
       assert(found1.world.name === "world", "found1.world.name");
       assert(found1.world.createdAt === null, "found1.world.createdAt");
+
+      const foundLike = await repo.findOne({ where: { name: { LIKE: save1Name } } });
+
+      assert(foundLike.id === BigInt(save1));
+
+      const foundLikeBegin = await repo.findOne({ where: { name: { "LIKE%": save1Name.slice(0, -1) } } });
+
+      assert(foundLikeBegin.id === BigInt(save1));
+
+      const foundLikeEnd = await repo.findOne({ where: { name: { "%LIKE": save1Name.slice(1) } } });
+
+      assert(foundLikeEnd.id === BigInt(save1));
+
+      const foundLikeBetween = await repo.findOne({ where: { name: { "%LIKE%": save1Name.slice(1, -1) } } });
+
+      assert(foundLikeBetween.id === BigInt(save1));
 
       const save2Id = BigInt(new Date().getTime());
       const save2Name = `${new Date().getTime()}`;

@@ -291,24 +291,34 @@ export class Repository<T> {
     let kxx = kx;
 
     Object.keys(where).forEach(ke => {
+      /* eslint-disable no-prototype-builtins */
       const k = `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[ke].name}`;
       const v = where[ke];
 
       if (Array.isArray(v)) kxx = kxx.whereIn(k, v);
-      else if (typeof v === "object" && (v[">="] || v[">"] || v["<="] || v["<"] || typeof v["IS_NULL"] === "boolean" || typeof v["IS_NOT_NULL"] === "boolean")) {
+      else if (typeof v === "object" && (
+        v.hasOwnProperty(">=") || v.hasOwnProperty(">") || v.hasOwnProperty("<=") || v.hasOwnProperty("<") || 
+        v.hasOwnProperty("LIKE") || v.hasOwnProperty("LIKE%") || v.hasOwnProperty("%LIKE") || v.hasOwnProperty("%LIKE%") || 
+        typeof v["IS_NULL"] === "boolean" || 
+        typeof v["IS_NOT_NULL"] === "boolean"
+      )) {
         kxx.andWhere(function() {
-          Object.keys(v).forEach((condition) => {
-            if (condition === "IS_NULL" || condition === "IS_NOT_NULL") {
+          Object.keys(v).forEach((cond) => {
+            if (cond === "IS_NULL" || cond === "IS_NOT_NULL") {
               if (v["IS_NULL"] === true || v["IS_NOT_NULL"] === false) {
                 this.whereNull(k);
               } else if (v["IS_NULL"] === false || v["IS_NOT_NULL"] === true) {
                 this.whereNotNull(k);
               }
-            }
-            else if (typeof v[condition] === "function") {
-              this.whereRaw(`${k} ${condition} ${v[condition](k)}`);
+            } else if (cond === "LIKE" || cond === "%LIKE" || cond === "LIKE%" || cond === "%LIKE%") {
+              if (cond === "LIKE") this.where(k, "LIKE", v[cond]);
+              else if (cond === "%LIKE") this.where(k, "LIKE", `%${v[cond]}`);
+              else if (cond === "LIKE%") this.where(k, "LIKE", `${v[cond]}%`);
+              else if (cond === "%LIKE%") this.where(k, "LIKE", `%${v[cond]}%`);
+            } else if (typeof v[cond] === "function") {
+              this.whereRaw(`${k} ${cond} ${v[cond](k)}`);
             } else {
-              this.where(k, condition, v[condition]);
+              this.where(k, cond, v[cond]);
             }
           });
         });

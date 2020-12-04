@@ -5,6 +5,10 @@ declare type FindOperatorComp<T> = {
     ">": T | RawQuery;
     "<=": T | RawQuery;
     "<": T | RawQuery;
+    "LIKE": T | RawQuery;
+    "LIKE%": T;
+    "%LIKE": T;
+    "%LIKE%": T;
     "IS_NULL": boolean;
     "IS_NOT_NULL": boolean;
 };

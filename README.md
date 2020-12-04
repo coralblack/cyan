@@ -1,6 +1,6 @@
 ![cyan](./cyan.png)
 
-# cyan
+# cyan [ ˈsaɪən ]
 
 Node.js, Faster, cheaper, better web framework written in Typescript
 

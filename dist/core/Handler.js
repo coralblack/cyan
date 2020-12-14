@@ -63,10 +63,10 @@ class Handler {
         else if (Boolean.prototype === type.prototype) {
             value = type(value === "0" ||
                 value === "-0" ||
-                value.toLowerCase() === "nan" ||
-                value.toLowerCase() === "null" ||
-                value.toLowerCase() === "undefined" ||
-                value.toLowerCase() === "false" ? false : value);
+                String(value).toLowerCase() === "nan" ||
+                String(value).toLowerCase() === "null" ||
+                String(value).toLowerCase() === "undefined" ||
+                String(value).toLowerCase() === "false" ? false : value);
         }
         else if (Date.prototype === type.prototype) {
             value = new type(value);
@@ -91,7 +91,7 @@ class Handler {
                     return lodash_1.get(req.body, name);
             })(actionParam.type, actionParam.name);
             try {
-                if (value) {
+                if (value || typeof value === "boolean") {
                     if (actionParam.options.type === "ENUM") {
                         const em = actionParam.options.enum;
                         const emKey = Object.keys(em).find(e => em[e] === value);
@@ -120,7 +120,7 @@ class Handler {
             catch (err) {
                 throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
             }
-            if (actionParam.options.required && !value) {
+            if (actionParam.options.required && (!value && value !== false)) {
                 throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.missing || `BadRequest (Missing ${actionParam.type.toString()}: ${actionParam.name})`)();
             }
             return value;

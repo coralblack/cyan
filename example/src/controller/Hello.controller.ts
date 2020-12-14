@@ -42,6 +42,7 @@ export class HelloController extends BaseController {
     @PathParam("foo", { required: true }) foo: string,
     @QueryParam("bar", { required: true }) bar: number,
     @BodyParam("foo.bar.baz", { required: true }) baz: number,
+    @BodyParam("bool", { required: true }) bool: boolean,
     @HeaderParam("content-type", { required: true }) foz: string,
     @BodyParam("enum.num", { type: "ENUM", enum: FooBarNum }) fooBarNum: FooBarNum,
     @BodyParam("enum.str", { type: "ENUM", enum: FooBarStr }) fooBarStr: FooBarStr,
@@ -52,7 +53,7 @@ export class HelloController extends BaseController {
       url: "http://127.0.0.1:9090/hello/string/DO-NOT-RECUR",
       params: { bar: 1234 },
       data: {
-        foo: { bar: { baz: 1234 } },
+        foo: { bar: { baz: 1234, bool: bool } },
         enum: {
           num: FooBarNum.Bar,
           str: "FOO",

@@ -1,4 +1,4 @@
-import { Inject } from "cyan/dist/core";
+import { Inject } from "@coralblack/cyan/dist/core";
 import { HelloModel } from "../model/Hello.model";
 
 export class HelloService {

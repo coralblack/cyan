@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { JsonController as BaseJsonController, HttpResponder, HttpResponse, Status as HttpStatus } from "cyan/dist/http";
-import { Get, Middleware, MIDDLEWARE_PRIORITY_ACTION_HANDLER, QueryParam } from "cyan/dist/router";
+import { JsonController as BaseJsonController, HttpResponder, HttpResponse, Status as HttpStatus } from "@coralblack/cyan/dist/http";
+import { Get, Middleware, MIDDLEWARE_PRIORITY_ACTION_HANDLER, QueryParam } from "@coralblack/cyan/dist/router";
 
 export class JsonController extends BaseJsonController {
   @Get("/json/string")

@@ -1,5 +1,5 @@
-import { HttpResponder, HttpResponse, Status as HttpStatus } from "cyan/dist/http";
-import { Get, QueryParam } from "cyan/dist/router";
+import { HttpResponder, HttpResponse, Status as HttpStatus } from "@coralblack/cyan/dist/http";
+import { Get, QueryParam } from "@coralblack/cyan/dist/router";
 import { BaseController } from "./Base.controller";
 
 export class WorldController extends BaseController {

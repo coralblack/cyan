@@ -1,4 +1,4 @@
-import { Cyan } from "cyan/dist/core";
+import { Cyan } from "@coralblack/cyan/dist/core";
 import { ApiController } from "./controller/Api.controller";
 import { HelloController } from "./controller/Hello.controller";
 import { JsonController } from "./controller/Json.controller";

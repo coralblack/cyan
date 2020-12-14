@@ -1,14 +1,24 @@
 import { Metadata } from "../core/Decorator";
 import { ClassType } from "../types";
 
-export interface ParamOptions {
+export interface ParamBaseOptions {
   required?: boolean;
   default?: any;
   invalid?: string;
   missing?: string;
-  type?: ClassType<any> | BigIntConstructor;
   delimiter?: string;
 }
+
+export interface ParamClassOptions extends ParamBaseOptions {
+  type?: ClassType<any> | BigIntConstructor;
+}
+
+export interface ParamEnumOptions<T extends {[key: string]: string | number}> extends ParamBaseOptions {
+  type: "ENUM";
+  enum: T;
+}
+
+export type ParamOptions<T extends {[key: string]: string | number} = any> = ParamClassOptions | ParamEnumOptions<T>;
 
 export enum ParamType {
   Query = "QUERY",

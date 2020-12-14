@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { assert } from "console";
-import { Column, Entity, OneToOne, PrimaryColumn } from "cyan/dist/model";
+import { Column, Entity, OneToOne, PrimaryColumn } from "@coralblack/cyan/dist/model";
 import { BaseModel } from "./Base.model";
 
 @Entity({ name: "WORLD" })

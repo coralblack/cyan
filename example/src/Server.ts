@@ -1,3 +1,3 @@
-import { Server } from "cyan/dist/core";
+import { Server } from "@coralblack/cyan/dist/core";
 
 export class AppServer extends Server { }

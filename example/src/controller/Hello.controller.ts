@@ -1,8 +1,8 @@
 import { assert } from "console";
-import { Inject } from "cyan/dist/core";
-import { HttpHelper } from "cyan/dist/helper";
-import { HttpMethod } from "cyan/dist/http";
-import { BodyParam, Get, HeaderParam, PathParam, QueryParam } from "cyan/dist/router";
+import { Inject } from "@coralblack/cyan/dist/core";
+import { HttpHelper } from "@coralblack/cyan/dist/helper";
+import { HttpMethod } from "@coralblack/cyan/dist/http";
+import { BodyParam, Get, HeaderParam, PathParam, QueryParam } from "@coralblack/cyan/dist/router";
 import { BaseController } from "./Base.controller";
 import { HelloService } from "../service/Hello.service";
 
@@ -14,6 +14,21 @@ interface HttpEchoPost {
   };
 }
 
+enum FooBarNum {
+  Foo = 1,
+  Bar = 2
+}
+
+enum FooBarStr {
+  Foo = "FOO",
+  Bar = "BAR"
+}
+
+enum FooBarMix {
+  Foo = 1,
+  Bar = "BAR"
+}
+
 export class HelloController extends BaseController {
   constructor(
     @Inject() private readonly helloService: HelloService,
@@ -23,13 +38,41 @@ export class HelloController extends BaseController {
   }
 
   @Get("/hello/string/:foo?")
-  helloString(
+  async helloString(
     @PathParam("foo", { required: true }) foo: string,
     @QueryParam("bar", { required: true }) bar: number,
     @BodyParam("foo.bar.baz", { required: true }) baz: number,
-    @HeaderParam("content-type", { required: true }) foz: string
-  ): string {
-    return `HiHi : ${foo || "path-foo-none"} : ${bar || "query-bar-none"}: ${baz || "query-baz-none"} : ${foz} : ${this.helloService.calc(bar, baz)}`;
+    @HeaderParam("content-type", { required: true }) foz: string,
+    @BodyParam("enum.num", { type: "ENUM", enum: FooBarNum }) fooBarNum: FooBarNum,
+    @BodyParam("enum.str", { type: "ENUM", enum: FooBarStr }) fooBarStr: FooBarStr,
+    @BodyParam("enum.mix", { type: "ENUM", enum: FooBarMix }) fooBarMix: FooBarMix
+  ): Promise<string> {
+    const payload = {
+      method: HttpMethod.Get,
+      url: "http://127.0.0.1:9090/hello/string/DO-NOT-RECUR",
+      params: { bar: 1234 },
+      data: {
+        foo: { bar: { baz: 1234 } },
+        enum: {
+          num: FooBarNum.Bar,
+          str: "FOO",
+          mix: FooBarMix.Foo,
+        }, 
+      },
+    };
+
+    if (foo !== "DO-NOT-RECUR") {
+      assert((await this.httpHelper.request(payload)).status === 200);
+
+      // Enum
+      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, num: "FOO" } } })).body as string).includes("Invalid BODY: enum.num"), "Assert enum 1");
+      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, str: 1 } } })).body as string).includes("Invalid BODY: enum.str"), "Assert enum 2");
+      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, mix: "FOO" } } })).body as string).includes("Invalid BODY: enum.mix"), "Assert enum 3");
+    } else {
+      await this.helloService.model();
+    }
+
+    return `HiHi : ${foo || "path-foo-none"} : ${bar || "query-bar-none"}: ${baz || "query-baz-none"} : ${foz} : ${this.helloService.calc(bar, baz)} : ${fooBarNum}:${fooBarStr}:${fooBarMix}`;
   }
 
   @Get("/hello/json")

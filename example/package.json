@@ -13,7 +13,7 @@
   "author": "Gonzo",
   "license": "MIT",
   "dependencies": {
-    "cyan": "file:.."
+    "@coralblack/cyan": "file:.."
   },
   "devDependencies": {
     "@types/node": "^14.11.2",

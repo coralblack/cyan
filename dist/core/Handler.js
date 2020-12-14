@@ -92,7 +92,14 @@ class Handler {
             })(actionParam.type, actionParam.name);
             try {
                 if (value) {
-                    if (Array.prototype === e.prototype) {
+                    if (actionParam.options.type === "ENUM") {
+                        const em = actionParam.options.enum;
+                        const emKey = Object.keys(em).find(e => em[e] === value);
+                        if (!emKey) {
+                            throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
+                        }
+                    }
+                    else if (Array.prototype === e.prototype) {
                         if (typeof value === "string") {
                             if (actionParam.options.delimiter) {
                                 value = value.split(actionParam.options.delimiter);

@@ -1,6 +1,6 @@
-import { Repeat } from "cyan/dist/task";
-import { HelloService } from "src/service/Hello.service";
+import { Repeat } from "@coralblack/cyan/dist/task";
 import { Inject } from "../../../dist/core";
+import { HelloService } from "../service/Hello.service";
 
 export class RepeatTask {
   constructor(@Inject() private readonly helloService: HelloService) {

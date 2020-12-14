@@ -120,7 +120,7 @@ class Handler {
             catch (err) {
                 throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
             }
-            if (actionParam.options.required && (!value && value !== false)) {
+            if (actionParam.options.required && (value === null || typeof value === "undefined" || (typeof value === "string" && value === ""))) {
                 throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.missing || `BadRequest (Missing ${actionParam.type.toString()}: ${actionParam.name})`)();
             }
             return value;

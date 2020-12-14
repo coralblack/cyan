@@ -1,12 +1,12 @@
 import { Metadata } from "../core/Decorator";
-import { ClassType } from "../types";
+import { ClassType, EnumType } from "../types";
 
 export interface ParamOptions {
   required?: boolean;
   default?: any;
   invalid?: string;
   missing?: string;
-  type?: ClassType<any> | BigIntConstructor;
+  type?: ClassType<any> | EnumType | BigIntConstructor;
   delimiter?: string;
 }
 

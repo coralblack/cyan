@@ -269,8 +269,9 @@ export class Repository<T> {
     kxx.leftOuterJoin(toTable, `${fromTable}.${fromColumns[0]}`, `${toTableNameAlias}.${toColumns[0]}`);
     kxx.select(joinTableColumns);
 
+    let idx = 0;
     to.repository.oneToOneRelationColumns.forEach(relationColumn => {
-      this.joinWith(kxx, rec * 10, toTableNameAlias, `${propertyKey}${joinSeparator}${relationColumn}`, to.repository.oneToOneRelations[relationColumn]);
+      this.joinWith(kxx, rec * 10 + (idx ++), toTableNameAlias, `${propertyKey}${joinSeparator}${relationColumn}`, to.repository.oneToOneRelations[relationColumn]);
     });
       
     return kxx;

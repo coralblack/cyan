@@ -81,6 +81,12 @@ class BarEntity {
 
   @OneToOne({ name: "BAZ_ID", target: BazEntity })
   baz?: BazEntity;
+
+  @Column({ name: "BAZ2_ID" })
+  baz2Id: bigint;
+
+  @OneToOne({ name: "BAZ2_ID", target: BazEntity })
+  baz2?: BazEntity;
 }
 
 @Entity({ name: "FOO" })
@@ -130,6 +136,7 @@ export class HelloModel extends BaseModel {
         CREATE TABLE IF NOT EXISTS BAR (
             ID BIGINT(20) NOT NULL AUTO_INCREMENT,
             BAZ_ID BIGINT(20) DEFAULT NULL,
+            BAZ2_ID BIGINT(20) DEFAULT NULL,
             CREATED_AT DATETIME DEFAULT NULL,
             PRIMARY KEY (ID)
         )
@@ -373,6 +380,7 @@ export class HelloModel extends BaseModel {
       const barEntity: BarEntity = {
         id: undefined,
         bazId: latestBaz.id,
+        baz2Id: latestBaz.id,
       };
 
       await barRepo.save(barEntity);

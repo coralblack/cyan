@@ -177,7 +177,7 @@ export class HelloModel extends BaseModel {
         createdAt: null,
       });
 
-      assert(save1 > 100000000);
+      assert(save1 > 100000000, "save1 > 100000000");
 
       const found1 = await repo.findOne({ where: { id: save1 as bigint } });
 
@@ -192,19 +192,19 @@ export class HelloModel extends BaseModel {
 
       const foundLike = await repo.findOne({ where: { name: { LIKE: save1Name } } });
 
-      assert(foundLike.id === BigInt(save1));
+      assert(foundLike.id === BigInt(save1), "foundLike.id");
 
       const foundLikeBegin = await repo.findOne({ where: { name: { "LIKE%": save1Name.slice(0, -1) } } });
 
-      assert(foundLikeBegin.id === BigInt(save1));
+      assert(foundLikeBegin.id === BigInt(save1), "foundLikeBegin.id");
 
       const foundLikeEnd = await repo.findOne({ where: { name: { "%LIKE": save1Name.slice(1) } } });
 
-      assert(foundLikeEnd.id === BigInt(save1));
+      assert(foundLikeEnd.id === BigInt(save1), "foundLikeEnd.id");
 
       const foundLikeBetween = await repo.findOne({ where: { name: { "%LIKE%": save1Name.slice(1, -1) } } });
 
-      assert(foundLikeBetween.id === BigInt(save1));
+      assert(foundLikeBetween.id === BigInt(save1), "foundLikeBetween.id");
 
       const save2Id = BigInt(new Date().getTime());
       const save2Name = `${new Date().getTime()}`;
@@ -214,14 +214,14 @@ export class HelloModel extends BaseModel {
         createdAt: new Date(),
       });
 
-      assert(save2Id === save2);
+      assert(save2Id === save2, "save2Id === save2");
 
       const save3Id = BigInt(new Date().getTime() + 1234);
       const save3 = await repo.save({ id: save3Id } as any);
       const found3 = await repo.findOne({ where: { id: save3 as bigint } });
 
-      assert(found3.name.length === "2ca4d1cc-010c-11eb-8052-51e99d56d62f".length);
-      assert(found3.createdAt.getTime() > 1000000);
+      assert(found3.name.length === "2ca4d1cc-010c-11eb-8052-51e99d56d62f".length, "found3.name.length");
+      assert(found3.createdAt.getTime() > 1000000, "found3.createdAt.getTime");
 
       const found = await repo.findOne({
         select: ["name"],
@@ -233,8 +233,8 @@ export class HelloModel extends BaseModel {
 
       const founds = await repo.find({ limit: 3 });
 
-      assert(!!found);
-      assert(founds.length > 0);
+      assert(!!found, "!!found");
+      assert(founds.length > 0, "founds.length");
 
       const updateName = "xxx";
       const updateCreatedAt = new Date("2020-01-01");
@@ -266,22 +266,22 @@ export class HelloModel extends BaseModel {
 
       assert(queryOrder1.id && queryOrder2.id && String(queryOrder1.id) !== String(queryOrder2.id), "failed order by");
 
-      const queryPagination1 = await repo.pagination({ page: 1, rpp: 2, order: { createdAt: "DESC" } });
-      const queryPagination2 = await repo.pagination({ page: 1, rpp: 1, order: { createdAt: "DESC" } });
-      const queryPagination3 = await repo.pagination({ page: 2, rpp: 1, order: { createdAt: "DESC" } });
+      const queryPagination1 = await repo.pagination({ page: 1, rpp: 2, order: { id: "DESC" } });
+      const queryPagination2 = await repo.pagination({ page: 1, rpp: 1, order: { id: "DESC" } });
+      const queryPagination3 = await repo.pagination({ page: 2, rpp: 1, order: { id: "DESC" } });
 
-      assert(queryPagination1.items[0].id === queryPagination2.items[0].id);
-      assert(queryPagination1.items[1].id === queryPagination3.items[0].id);
+      assert(queryPagination1.items[0].id === queryPagination2.items[0].id, "queryPagination1.items[0].id === queryPagination2.items[0].id");
+      assert(queryPagination1.items[1].id === queryPagination3.items[0].id, "queryPagination1.items[1].id === queryPagination3.items[0].id");
 
       const queryRaw = await scope.execute("SELECT ID FROM HELLO WHERE ID = ?", [queryPagination1.items[0].id]);
 
-      assert(queryPagination1.items[0].id === queryRaw[0].ID);
+      assert(queryPagination1.items[0].id === queryRaw[0].ID, "queryPagination1.items[0].id === queryRaw[0].ID");
 
       await this.transactionWith(async (innerScope) => {
         const repoX = innerScope.getRepository(HelloEntity);
         const foundX = await repoX.findOne({ where: { id: queryPagination1.items[0].id } });
 
-        assert(foundX.id === queryPagination1.items[0].id);
+        assert(foundX.id === queryPagination1.items[0].id, "foundX.id");
       }, scope);
 
       const query1 = await repo.findOne({
@@ -293,31 +293,31 @@ export class HelloModel extends BaseModel {
         },
       });
 
-      assert(!!query1);
+      assert(!!query1, "!!query1");
 
       const query2 = await repo.findOne({ where: { createdAt: { IS_NULL: true } } });
 
-      assert(!!query2);
+      assert(!!query2, "!!query2");
 
       const query3 = await repo.findOne({ where: { createdAt: { IS_NULL: false } } });
 
-      assert(!!query3);
+      assert(!!query3, "!!query3");
 
       const query4 = await repo.findOne({ where: { createdAt: { IS_NOT_NULL: true } } });
 
-      assert(!!query4);
+      assert(!!query4, "!!query4");
 
       const query5 = await repo.findOne({ where: { createdAt: { IS_NOT_NULL: false } } });
 
-      assert(!!query5);
+      assert(!!query5, "!!query5");
 
       const updated1 = await repo.update(entity, { update: ["name"], where: { name: updateName } });
 
-      assert(updated1 === 0);
+      assert(updated1 === 0, "updated1");
 
       const updated2 = await repo.update(entity, { update: ["name"] });
 
-      assert(updated2 === 1);
+      assert(updated2 === 1, "updated2");
 
       const updated3 = await repo.update(entity, { update: ["name"], where: { name: updateName } });
 
@@ -397,10 +397,10 @@ export class HelloModel extends BaseModel {
       const latestFoo = await fooRepo.findOne({ order: { id: "ASC" } });
 
       assert(typeof latestFoo.id === "bigint");
-      assert(latestFoo.bar.id === latestBar.id);
-      assert(latestFoo.bar.baz.id === latestBaz.id);
-      assert(latestFoo.bar.baz.foz.id === latestFoz.id);
-      assert(typeof latestFoo.bar.baz.foz.id === "bigint");
+      assert(latestFoo.bar.id === latestBar.id, "latestFoo.bar.id");
+      assert(latestFoo.bar.baz.id === latestBaz.id, "latestFoo.bar.baz.id");
+      assert(latestFoo.bar.baz.foz.id === latestFoz.id, "latestFoo.bar.baz.foz.id");
+      assert(typeof latestFoo.bar.baz.foz.id === "bigint", "typeof latestFoo.bar.baz.foz.id");
 
       return null;
     });

@@ -1,10 +1,12 @@
+import { HttpError } from "src/http/Http.error";
 import { ClassType } from "../types";
-export interface ParamBaseOptions {
+export interface ParamBaseOptions<T = string | number | boolean | object> {
     required?: boolean;
     default?: any;
-    invalid?: string;
-    missing?: string;
+    invalid?: string | ((v: T) => HttpError);
+    missing?: string | (() => HttpError);
     delimiter?: string;
+    validate?: (v: T) => boolean | void;
 }
 export interface ParamClassOptions extends ParamBaseOptions {
     type?: ClassType<any> | BigIntConstructor;

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+
 import { HttpResponder, HttpResponse, Status as HttpStatus } from "@coralblack/cyan/dist/http";
 import { Get, QueryParam } from "@coralblack/cyan/dist/router";
 import { BaseController } from "./Base.controller";

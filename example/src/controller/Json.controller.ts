@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { JsonController as BaseJsonController, HttpResponder, HttpResponse, Status as HttpStatus } from "@coralblack/cyan/dist/http";

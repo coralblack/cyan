@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
-
-import { type } from "os";
 import * as bodyParser from "body-parser";
 import cors, { CorsOptions, CorsOptionsDelegate } from "cors";
 import { NextFunction } from "express";

@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
-
 import * as bodyParser from "body-parser";
 import cors, { CorsOptions, CorsOptionsDelegate } from "cors";
 import { NextFunction } from "express";
@@ -47,13 +45,25 @@ export class Handler {
       value = type(value);
     }
     else if (Boolean.prototype === type.prototype) {
-      value = type(
-        value === "0" || 
-        value === "-0" || 
-        String(value).toLowerCase() === "nan" || 
-        String(value).toLowerCase() === "null" || 
-        String(value).toLowerCase() === "undefined" || 
-        String(value).toLowerCase() === "false" ? false : value);
+      if (typeof value !== "boolean" && typeof value !== "string" && typeof value !== "number") {
+        throw new Error("..");
+      } else if (typeof value === "number") {
+        if (value === 1) {
+          value = true;
+        } else if (value === 0) {
+          value = false;
+        } else {
+          throw new Error("..");
+        }
+      } else if (typeof value === "string") {
+        if (["true", "1"].includes(value.toLowerCase())) {
+          value = true;
+        } else if (["false", "0"].includes(value.toLowerCase())) {
+          value = false;
+        } else {
+          throw new Error("..");
+        }
+      }
     }
     else if (Date.prototype === type.prototype) {
       value = new type(value);
@@ -77,14 +87,18 @@ export class Handler {
       })(actionParam.type, actionParam.name);
 
       try {
-        if (value || typeof value === "boolean") {
+        if (value || typeof value === "boolean" || typeof value === "number") {
           if (actionParam.options.type === "ENUM") {
             const em = actionParam.options.enum;
             const emKey = Object.keys(em).find(e => em[e] === value);
 
             if (!emKey) {
-              throw HttpResponder.badRequest.message(
-                actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
+              if (typeof actionParam.options.invalid === "function") {
+                throw actionParam.options.invalid(value);
+              } else {
+                throw HttpResponder.badRequest.message(
+                  actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
+              }
             }
           } else if (Array.prototype === e.prototype) {
             if (typeof value === "string") {
@@ -101,15 +115,31 @@ export class Handler {
           } else {
             value = this.paramTransformer(value, e);
           }
+
+          if (actionParam.options.validate) {
+            if (actionParam.options.validate(value) === false) {
+              throw new Error("Validation Failed.");
+            }
+          }
         }
       } catch (err) {
-        throw HttpResponder.badRequest.message(
-          actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
+        if (err instanceof HttpError) {
+          throw err;
+        } else if (typeof actionParam.options.invalid === "function") {
+          throw actionParam.options.invalid(value);
+        } else {
+          throw HttpResponder.badRequest.message(
+            actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
+        }
       }
 
       if (actionParam.options.required && (value === null || typeof value === "undefined" || (typeof value === "string" && value === ""))) {
-        throw HttpResponder.badRequest.message(
-          actionParam.options.missing || `BadRequest (Missing ${actionParam.type.toString()}: ${actionParam.name})`)();
+        if (typeof actionParam.options.missing === "function") {
+          throw actionParam.options.missing();
+        } else {
+          throw HttpResponder.badRequest.message(
+            actionParam.options.missing || `BadRequest (Missing ${actionParam.type.toString()}: ${actionParam.name})`)();
+        }
       }
 
       return value;

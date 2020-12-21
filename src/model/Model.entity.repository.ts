@@ -270,6 +270,7 @@ export class Repository<T> {
     kxx.select(joinTableColumns);
 
     let idx = 0;
+
     to.repository.oneToOneRelationColumns.forEach(relationColumn => {
       this.joinWith(kxx, rec * 10 + (idx ++), toTableNameAlias, `${propertyKey}${joinSeparator}${relationColumn}`, to.repository.oneToOneRelations[relationColumn]);
     });

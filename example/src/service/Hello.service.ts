@@ -8,7 +8,9 @@ export class HelloService {
     return a + b;
   }
 
-  async model(): Promise<void> {
+  async model(skip?: boolean): Promise<void> {
+    if (skip) return;
+
     return this.helloModel.test();
   }
 }

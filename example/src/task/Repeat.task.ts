@@ -11,7 +11,7 @@ export class RepeatTask {
     // eslint-disable-next-line no-console
     // console.log(`RepeatTask::run(), ${new Date().getSeconds()}`);
 
-    await this.helloService.model();
+    await this.helloService.model(true);
 
     if (new Date().getSeconds() % 5 === 0) {
       // throw new Error("xxx");

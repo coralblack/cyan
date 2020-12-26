@@ -5,7 +5,7 @@ import { plainToClass } from "class-transformer";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
 import { EntityRelationColumnOptions, EntityRelationType } from "./Model.entity.relation";
-import { DeleteOptions, FindConditions, FindOneOptions, FindOptions, InsertId, OrderCondition, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
+import { DeleteOptions, FindChainingConditions, FindConditions, FindOneOptions, FindOptions, InsertId, OrderCondition, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
 import { Metadata } from "../core/Decorator";
 import { TraceableError } from "../core/Error";
 import { ClassType } from "../types";
@@ -289,44 +289,67 @@ export class Repository<T> {
     return kxx;
   }
 
-  private where(kx: any, where?: FindConditions<T>): any {
+  private where(kx: any, where?: FindConditions<T> | FindChainingConditions<T>, orWhere?: boolean): any {
+    /* eslint-disable no-prototype-builtins, @typescript-eslint/no-this-alias */
     let kxx = kx;
 
     Object.keys(where).forEach(ke => {
-      /* eslint-disable no-prototype-builtins */
-      const k = `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[ke].name}`;
-      const v = where[ke];
+      if (ke === "$AND" || ke === "$OR") {
+        const that = this;
 
-      if (Array.isArray(v)) kxx = kxx.whereIn(k, v);
-      else if (typeof v === "object" && (
-        v.hasOwnProperty(">=") || v.hasOwnProperty(">") || v.hasOwnProperty("<=") || v.hasOwnProperty("<") || 
-        v.hasOwnProperty("LIKE") || v.hasOwnProperty("LIKE%") || v.hasOwnProperty("%LIKE") || v.hasOwnProperty("%LIKE%") || 
-        typeof v["IS_NULL"] === "boolean" || 
-        typeof v["IS_NOT_NULL"] === "boolean"
-      )) {
-        kxx.andWhere(function() {
-          Object.keys(v).forEach((cond) => {
-            if (cond === "IS_NULL" || cond === "IS_NOT_NULL") {
-              if (v["IS_NULL"] === true || v["IS_NOT_NULL"] === false) {
-                this.whereNull(k);
-              } else if (v["IS_NULL"] === false || v["IS_NOT_NULL"] === true) {
-                this.whereNotNull(k);
-              }
-            } else if (cond === "LIKE" || cond === "%LIKE" || cond === "LIKE%" || cond === "%LIKE%") {
-              if (cond === "LIKE") this.where(k, "LIKE", v[cond]);
-              else if (cond === "%LIKE") this.where(k, "LIKE", `%${v[cond]}`);
-              else if (cond === "LIKE%") this.where(k, "LIKE", `${v[cond]}%`);
-              else if (cond === "%LIKE%") this.where(k, "LIKE", `%${v[cond]}%`);
-            } else if (typeof v[cond] === "function") {
-              this.whereRaw(`${k} ${cond} ${v[cond](k)}`);
-            } else {
-              this.where(k, cond, v[cond]);
-            }
+        if (ke === "$AND") {
+          kx.andWhere(function() {
+            that.where(this, where[ke], false);
           });
-        });
+        } else if (ke === "$OR") {
+          kx.orWhere(function() {
+            that.where(this, where[ke], true);
+          });
+        }
+      } else {
+        const k = `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[ke].name}`;
+        const v = where[ke];
+
+        if (Array.isArray(v)) kxx = kxx.whereIn(k, v);
+        else if (typeof v === "object" && (
+          v.hasOwnProperty(">=") || v.hasOwnProperty(">") || v.hasOwnProperty("<=") || v.hasOwnProperty("<") || 
+          v.hasOwnProperty("LIKE") || v.hasOwnProperty("LIKE%") || v.hasOwnProperty("%LIKE") || v.hasOwnProperty("%LIKE%") ||
+          v["$AND"] || v["$OR"] ||
+          typeof v["IS_NULL"] === "boolean" || 
+          typeof v["IS_NOT_NULL"] === "boolean"
+        )) {
+          const that = this;
+
+          kxx[orWhere ? "orWhere" : "andWhere"](function() {
+            Object.keys(v).forEach((cond) => {
+              if (cond === "$AND" || cond === "$OR") {                
+                this[cond === "$OR" ? "orWhere" : "andWhere"](function() {
+                  v[cond].forEach((vv: any) => {
+                    that.where(this, { [ke]: vv }, cond === "$OR");
+                  });
+                });
+              } else if (cond === "IS_NULL" || cond === "IS_NOT_NULL") {
+                if (v["IS_NULL"] === true || v["IS_NOT_NULL"] === false) {
+                  this[orWhere ? "orWhereNull" : "whereNull"](k);
+                } else if (v["IS_NULL"] === false || v["IS_NOT_NULL"] === true) {
+                  this[orWhere ? "orWhereNotNull" : "whereNotNull"](k);
+                }
+              } else if (cond === "LIKE" || cond === "%LIKE" || cond === "LIKE%" || cond === "%LIKE%") {
+                if (cond === "LIKE") this[orWhere ? "orWhere" : "where"](k, "LIKE", v[cond]);
+                else if (cond === "%LIKE") this[orWhere ? "orWhere" : "where"](k, "LIKE", `%${v[cond]}`);
+                else if (cond === "LIKE%") this[orWhere ? "orWhere" : "where"](k, "LIKE", `${v[cond]}%`);
+                else if (cond === "%LIKE%") this[orWhere ? "orWhere" : "where"](k, "LIKE", `%${v[cond]}%`);
+              } else if (typeof v[cond] === "function") {
+                this.whereRaw(`${k} ${cond} ${v[cond](k)}`);
+              } else {
+                this[orWhere ? "orWhere" : "where"](k, cond, v[cond]);
+              }
+            });
+          });
+        }
+        else if (typeof v === "function") kxx = kxx[orWhere ? "orWhere" : "where"](this.scope.kx.raw(v(k)));
+        else kxx = kxx[orWhere ? "orWhere" : "where"](k, v);
       }
-      else if (typeof v === "function") kxx = kxx.where(this.scope.kx.raw(v(k)));
-      else kxx = kxx.where(k, v);
     });
 
     return kxx;

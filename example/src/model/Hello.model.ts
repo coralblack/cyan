@@ -402,6 +402,19 @@ export class HelloModel extends BaseModel {
       assert(latestFoo.bar.baz.foz.id === latestFoz.id, "latestFoo.bar.baz.foz.id");
       assert(typeof latestFoo.bar.baz.foz.id === "bigint", "typeof latestFoo.bar.baz.foz.id");
 
+      const helloEntities = await repo.find({ limit: 2 });
+      const orWhere1 = await repo.find({ where: { $OR: { id: helloEntities[0].id, name: helloEntities[1].name } } });
+      const orWhere2 = await repo.find({ where: { name: { $OR: [{ LIKE: helloEntities[0].name }, { LIKE: helloEntities[1].name }] } } });
+      const andWhere1 = await repo.find({ where: { $AND: { id: helloEntities[0].id, name: helloEntities[0].name } } });
+      const andWhere2 = await repo.find({ where: { $AND: { id: helloEntities[0].id, name: helloEntities[1].name } } });
+      const andWhere3 = await repo.find({ where: { name: { $AND: [{ LIKE: helloEntities[0].name }, { LIKE: helloEntities[1].name }] } } });
+
+      assert(orWhere1.length === 2, "orWhere.length === 2");
+      assert(orWhere2.length === 2, "orWhere2.length === 2");
+      assert(andWhere1.length === 1, "andWhere1.length === 1");
+      assert(andWhere2.length === 0, "andWhere2.length");
+      assert(andWhere3.length === 0, "andWhere3.length === 0");
+
       return null;
     });
 

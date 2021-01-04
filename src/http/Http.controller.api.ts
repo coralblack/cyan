@@ -28,11 +28,7 @@ export class ApiController extends Controller {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async onHttpError(request: HttpRequest, error: HttpError): Promise<HttpError> {
-    error.content = Object.assign(
-      { result: false },
-      error.additional || {},
-      { data: error.content || undefined }
-    );
+    error.content = Object.assign({ result: false }, error.additional || {}, { data: error.content || undefined });
 
     return error;
   }

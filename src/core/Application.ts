@@ -24,7 +24,7 @@ export enum Stage {
   Local = "local",
   Development = "development",
   Staging = "staging",
-  Production = "production"
+  Production = "production",
 }
 
 export interface CyanSettings {
@@ -112,39 +112,35 @@ export class Cyan {
 
     if (this.settings.options?.cors) {
       this.logger.info("[handler] CorsHandler registered");
-      this.server.use(Handler.corsHandler(
-        typeof this.settings.options?.cors === "boolean" ?
-          undefined :
-          this.settings.options?.cors)
-      );
+      this.server.use(Handler.corsHandler(typeof this.settings.options?.cors === "boolean" ? undefined : this.settings.options?.cors));
     }
 
     if (this.settings.options?.jsonBodyParser || this.settings.options?.bodyParser) {
       this.logger.info("[handler] JsonBodyParser registered");
-      this.server.use(Handler.jsonBodyParser(
-        typeof this.settings.options?.jsonBodyParser === "boolean" ?
-          undefined :
-          this.settings.options?.jsonBodyParser)
+      this.server.use(
+        Handler.jsonBodyParser(
+          typeof this.settings.options?.jsonBodyParser === "boolean" ? undefined : this.settings.options?.jsonBodyParser
+        )
       );
     }
 
     if (this.settings.options?.urlEncodedBodyParser || this.settings.options?.bodyParser) {
       this.logger.info("[handler] UrlEncodedBodyParser registered");
-      this.server.use(Handler.urlEncodedBodyParser(
-        typeof this.settings.options?.urlEncodedBodyParser === "boolean" ?
-          undefined :
-          this.settings.options?.urlEncodedBodyParser)
+      this.server.use(
+        Handler.urlEncodedBodyParser(
+          typeof this.settings.options?.urlEncodedBodyParser === "boolean" ? undefined : this.settings.options?.urlEncodedBodyParser
+        )
       );
     }
   }
 
   private initRoutes(): void {
-    this.settings.routes.map((router) => {
+    this.settings.routes.map(router => {
       const controller = Injector.resolve(router);
 
       Metadata.getStorage()
-        .routes.filter((route) => route.target === router)
-        .map((route) => this.initHandler(controller, route));
+        .routes.filter(route => route.target === router)
+        .map(route => this.initHandler(controller, route));
     });
   }
 
@@ -161,10 +157,10 @@ export class Cyan {
     ];
 
     // Custom attached middlewares
-    Metadata.getStorage().middlewares
-      .filter(middleware => middleware.target === route.target && middleware.method === route.method)
+    Metadata.getStorage()
+      .middlewares.filter(middleware => middleware.target === route.target && middleware.method === route.method)
       .forEach(middleware => {
-        handlers.push([middleware.options.priority || (MIDDLEWARE_PRIORITY_ACTION_HANDLER - 100), middleware.handler]);
+        handlers.push([middleware.options.priority || MIDDLEWARE_PRIORITY_ACTION_HANDLER - 100, middleware.handler]);
       });
 
     this.server[route.action.toLowerCase()](
@@ -183,10 +179,12 @@ export class Cyan {
       this.logger.info("[task] No task registered");
       return;
     }
-    
-    Metadata.getStorage().tasks.filter(task => this.settings.tasks.includes(task.target)).forEach(task => {
-      this.initTask(task);
-    });
+
+    Metadata.getStorage()
+      .tasks.filter(task => this.settings.tasks.includes(task.target))
+      .forEach(task => {
+        this.initTask(task);
+      });
   }
 
   private initTask(meta: TaskMetadataArgs) {
@@ -195,7 +193,7 @@ export class Cyan {
       if (meta.type === TaskType.Repeat) return `(${meta.options.nextInvokeDelay})`;
       return "";
     })();
-   
+
     this.logger.info(`[task] ${readableType}${taskOptions} - ${meta.target.name}.${meta.method}`);
 
     const task = Injector.resolve(meta.target);

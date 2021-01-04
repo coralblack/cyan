@@ -1,11 +1,11 @@
-import { 
+import {
   EntityColumnMetadataArgs,
   EntityMetadataArgs,
   EntityRelationMetadataArgs,
   MiddlewareMetadataArgs,
   RouteMetadataArgs,
   RouteParamMetadataArgs,
-  TaskMetadataArgs
+  TaskMetadataArgs,
 } from "../types/MetadataArgs";
 
 class MetadataStorage {

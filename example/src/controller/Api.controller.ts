@@ -16,9 +16,7 @@ export class ApiController extends BaseApiController {
   }
 
   @Get("/api/req")
-  helloReq(
-    @QueryParam("foo", { required: true }) foo: string
-  ): any {
+  helloReq(@QueryParam("foo", { required: true }) foo: string): any {
     return { foo };
   }
 
@@ -56,9 +54,15 @@ export class ApiController extends BaseApiController {
   }
 
   @Get("/api/middleware2")
-  @Middleware((req, res, next) => {
-    res.status(200).send({ ...res.preparedResponse, world: "hello" }).end();
-  }, { priority: MIDDLEWARE_PRIORITY_ACTION_HANDLER + 1 })
+  @Middleware(
+    (req, res, next) => {
+      res
+        .status(200)
+        .send({ ...res.preparedResponse, world: "hello" })
+        .end();
+    },
+    { priority: MIDDLEWARE_PRIORITY_ACTION_HANDLER + 1 }
+  )
   helloMiddlewareAfter(): any {
     return { hello: "world" };
   }

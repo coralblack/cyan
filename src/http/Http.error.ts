@@ -2,7 +2,7 @@ import { Status as HttpStatus } from "./Http.status";
 import { Headers as HttpHeaders } from "../types/Http";
 
 export class HttpError {
-  public readonly additional: {[key: string]: any} = {};
+  public readonly additional: { [key: string]: any } = {};
   public readonly default: string;
 
   constructor(public status: HttpStatus, public content?: string | object, public headers?: HttpHeaders) {

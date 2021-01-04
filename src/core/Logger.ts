@@ -7,7 +7,7 @@ export class Logger {
   public appName = "App";
 
   public static _instance: Logger = null;
-  
+
   static getInstance(): Logger {
     if (Logger._instance) return Logger._instance;
 

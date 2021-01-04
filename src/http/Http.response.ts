@@ -3,7 +3,7 @@ import { Status as HttpStatus } from "./Http.status";
 import { Headers as HttpHeaders } from "../types/Http";
 
 export class HttpResponse {
-  public readonly additional: {[key: string]: any} = {};
+  public readonly additional: { [key: string]: any } = {};
 
   constructor(public status: HttpStatus, public content?: string | object, public headers?: HttpHeaders) {}
 
@@ -54,13 +54,13 @@ const responder = (statusCode: HttpStatus): Responder => {
     return new HttpError(statusCode, content, headers);
   }
 
-  ResponderInner.code = function(code: number | string) {
+  ResponderInner.code = function (code: number | string) {
     function withCode(content?: string | object, headers?: HttpHeaders): HttpError {
       return new HttpError(statusCode, content, headers).code(code);
     }
-  
-    withCode.message = function(message: string) {
-      return function(content?: string | object, headers?: HttpHeaders): HttpError {
+
+    withCode.message = function (message: string) {
+      return function (content?: string | object, headers?: HttpHeaders): HttpError {
         return new HttpError(statusCode, content, headers).code(code).message(message);
       };
     };
@@ -68,8 +68,8 @@ const responder = (statusCode: HttpStatus): Responder => {
     return withCode;
   };
 
-  ResponderInner.message = function(message: string) {
-    return function(content?: string | object, headers?: HttpHeaders): HttpError {
+  ResponderInner.message = function (message: string) {
+    return function (content?: string | object, headers?: HttpHeaders): HttpError {
       return new HttpError(statusCode, content, headers).message(message);
     };
   };

@@ -6,17 +6,17 @@ export class TaskInvoker {
   private invokeEnabled = true;
 
   constructor(
-    private readonly target: Function, 
-    private readonly method: string, 
-    private readonly options: TaskOptions, 
+    private readonly target: Function,
+    private readonly method: string,
+    private readonly options: TaskOptions,
     private readonly logger: Logger
   ) {}
 
   public init(): void {
     this.run()
       .then(() => {})
-      .catch((err) => {
-      // eslint-disable-next-line no-console
+      .catch(err => {
+        // eslint-disable-next-line no-console
         console.error("Never be here!", err);
       });
   }
@@ -29,7 +29,7 @@ export class TaskInvoker {
         await delay(this.options.nextInvokeDelay);
       } catch (err) {
         this.logger.error(err);
-        await delay(this.options.nextErrorDelay || (10 * 1000));
+        await delay(this.options.nextErrorDelay || 10 * 1000);
       }
     }
   }

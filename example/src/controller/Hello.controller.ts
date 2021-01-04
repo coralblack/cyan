@@ -18,24 +18,21 @@ interface HttpEchoPost {
 
 enum FooBarNum {
   Foo = 1,
-  Bar = 2
+  Bar = 2,
 }
 
 enum FooBarStr {
   Foo = "FOO",
-  Bar = "BAR"
+  Bar = "BAR",
 }
 
 enum FooBarMix {
   Foo = 1,
-  Bar = "BAR"
+  Bar = "BAR",
 }
 
 export class HelloController extends BaseController {
-  constructor(
-    @Inject() private readonly helloService: HelloService,
-    @Inject() private readonly httpHelper: HttpHelper
-  ) {
+  constructor(@Inject() private readonly helloService: HelloService, @Inject() private readonly httpHelper: HttpHelper) {
     super();
   }
 
@@ -52,8 +49,18 @@ export class HelloController extends BaseController {
     @BodyParam("invalidMsg", { invalid: "INVALID!" }) _invalidMsg: FooBarNum,
     @BodyParam("invalidFun", { invalid: (v: string) => `INVALID(${v})` }) _invalidFun: FooBarNum,
     @BodyParam("validateStr", { validate: (e: string) => e === "vvs" }) _validateStr: string,
-    @BodyParam("validateErr", { validate: (e: string) => {if (e !== "vvs") throw new Error("General Error"); } }) _validateErr: string,
-    @BodyParam("validateBad", { validate: (e: string) => {if (e !== "vvs") throw HttpResponder.badRequest({ code: "VVS", message: "VvS" }); } }) _validateBad: string
+    @BodyParam("validateErr", {
+      validate: (e: string) => {
+        if (e !== "vvs") throw new Error("General Error");
+      },
+    })
+    _validateErr: string,
+    @BodyParam("validateBad", {
+      validate: (e: string) => {
+        if (e !== "vvs") throw HttpResponder.badRequest({ code: "VVS", message: "VvS" });
+      },
+    })
+    _validateBad: string
   ): Promise<string> {
     const payload = {
       method: HttpMethod.Get,
@@ -72,40 +79,121 @@ export class HelloController extends BaseController {
 
     if (foo !== "DO-NOT-RECUR") {
       assert((await this.httpHelper.request(payload)).status === 200, "Assert 200");
-      
+
       // Bool
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: true } })).body as string).includes("{B-T}"), "Assert bool 1");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: false } })).body as string).includes("{B-F}"), "Assert bool 2");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "true" } })).body as string).includes("{B-T}"), "Assert bool 3");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "False" } })).body as string).includes("{B-F}"), "Assert bool 4");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "1" } })).body as string).includes("{B-T}"), "Assert bool 5");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "0" } })).body as string).includes("{B-F}"), "Assert bool 6");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: 1 } })).body as string).includes("{B-T}"), "Assert bool 7");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: 0 } })).body as string).includes("{B-F}"), "Assert bool 8");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "xx" } })).body as string).includes("Invalid BODY: bool"), "Assert bool 9");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "12" } })).body as string).includes("Invalid BODY: bool"), "Assert bool 10");
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: true } })).body as string).includes("{B-T}"),
+        "Assert bool 1"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: false } })).body as string).includes("{B-F}"),
+        "Assert bool 2"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "true" } })).body as string).includes("{B-T}"),
+        "Assert bool 3"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "False" } })).body as string).includes("{B-F}"),
+        "Assert bool 4"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "1" } })).body as string).includes("{B-T}"),
+        "Assert bool 5"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "0" } })).body as string).includes("{B-F}"),
+        "Assert bool 6"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: 1 } })).body as string).includes("{B-T}"),
+        "Assert bool 7"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: 0 } })).body as string).includes("{B-F}"),
+        "Assert bool 8"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "xx" } })).body as string).includes(
+          "Invalid BODY: bool"
+        ),
+        "Assert bool 9"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bool: "12" } })).body as string).includes(
+          "Invalid BODY: bool"
+        ),
+        "Assert bool 10"
+      );
 
       // Invalid Message
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, invalidMsg: "VVS" } })).body as string) === "INVALID!", "Assert invalid 1");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, invalidFun: "VVS" } })).body as string) === "INVALID(VVS)", "Assert invalid 2");
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, invalidMsg: "VVS" } })).body as string) === "INVALID!",
+        "Assert invalid 1"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, invalidFun: "VVS" } })).body as string) === "INVALID(VVS)",
+        "Assert invalid 2"
+      );
 
       // Validate
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateStr: "vvs" } })).body as string).includes("HiHi"), "Assert validate 1");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateStr: "vvs!" } })).body as string).includes("Invalid BODY: validateStr"), "Assert validate 2");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateErr: "vvs" } })).body as string).includes("HiHi"), "Assert validate 3");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateErr: "vvs!" } })).body as string).includes("Invalid BODY: validateErr"), "Assert validate 4");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateBad: "vvs" } })).body as string).includes("HiHi"), "Assert validate 5");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateBad: "vvs!" } })).body as {code: string; message: string}).message === "VvS", "Assert validate 6");
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateStr: "vvs" } })).body as string).includes("HiHi"),
+        "Assert validate 1"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateStr: "vvs!" } })).body as string).includes(
+          "Invalid BODY: validateStr"
+        ),
+        "Assert validate 2"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateErr: "vvs" } })).body as string).includes("HiHi"),
+        "Assert validate 3"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateErr: "vvs!" } })).body as string).includes(
+          "Invalid BODY: validateErr"
+        ),
+        "Assert validate 4"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateBad: "vvs" } })).body as string).includes("HiHi"),
+        "Assert validate 5"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateBad: "vvs!" } })).body as {
+          code: string;
+          message: string;
+        }).message === "VvS",
+        "Assert validate 6"
+      );
 
       // Enum
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, num: "FOO" } } })).body as string).includes("Invalid BODY: enum.num"), "Assert enum 1");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, str: 1 } } })).body as string).includes("Invalid BODY: enum.str"), "Assert enum 2");
-      assert(((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, mix: "FOO" } } })).body as string).includes("Invalid BODY: enum.mix"), "Assert enum 3");
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, num: "FOO" } } }))
+          .body as string).includes("Invalid BODY: enum.num"),
+        "Assert enum 1"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, str: 1 } } }))
+          .body as string).includes("Invalid BODY: enum.str"),
+        "Assert enum 2"
+      );
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, mix: "FOO" } } }))
+          .body as string).includes("Invalid BODY: enum.mix"),
+        "Assert enum 3"
+      );
     } else {
       await this.helloService.model();
     }
 
-    return `HiHi : ${bool === true ? "{B-T}" : (bool === false ? "{B-F}" : "{B-N}")} : ${foo || "path-foo-none"} : ${bar || "query-bar-none"}: ${baz || "query-baz-none"} : ${foz} : ${this.helloService.calc(bar, baz)} : ${fooBarNum || ""}:${fooBarStr || ""}:${fooBarMix || ""}`;
+    return `HiHi : ${bool === true ? "{B-T}" : bool === false ? "{B-F}" : "{B-N}"} : ${foo || "path-foo-none"} : ${
+      bar || "query-bar-none"
+    }: ${baz || "query-baz-none"} : ${foz} : ${this.helloService.calc(bar, baz)} : ${fooBarNum || ""}:${fooBarStr || ""}:${
+      fooBarMix || ""
+    }`;
   }
 
   @Get("/hello/json")

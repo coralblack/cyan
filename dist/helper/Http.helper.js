@@ -10,7 +10,7 @@ class HttpHelper {
     async request(payload) {
         try {
             if (payload.data && typeof payload.data === "object" && payload.rawData !== true) {
-                payload.data = JSON.parse(JSON.stringify(payload.data, (_k, v) => typeof v === "bigint" ? v.toString() : v));
+                payload.data = JSON.parse(JSON.stringify(payload.data, (_k, v) => (typeof v === "bigint" ? v.toString() : v)));
             }
             if (payload.debug === true) {
                 console.debug("> HttpHelper.request, Request", payload);

@@ -25,7 +25,11 @@ class Server {
     }
     onError(error, request, response, next) {
         if (error instanceof Http_error_1.HttpError) {
-            response.status(error.status).send(error.content || error.default).set(error.headers).end();
+            response
+                .status(error.status)
+                .send(error.content || error.default)
+                .set(error.headers)
+                .end();
         }
         else if (error instanceof Http_response_1.HttpResponse) {
             response.status(error.status).send(error.content).set(error.headers).end();

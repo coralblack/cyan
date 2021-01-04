@@ -52,7 +52,7 @@ class ConnectionManager {
             opts.options = { bindObjectAsString: true };
             if (settings.timezone) {
                 opts.pool.afterCreate = function (connection, callback) {
-                    connection.query(`SET time_zone = '${settings.timezone.replace(/'/g, "\\'")}';`, function (err) {
+                    connection.query(`SET time_zone = '${settings.timezone.replace(/'/g, "\\'")}';`, err => {
                         callback(err, connection);
                     });
                 };

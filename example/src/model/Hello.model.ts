@@ -103,7 +103,7 @@ class FooEntity {
 
 export class HelloModel extends BaseModel {
   async test(): Promise<void> {
-    await this.transactionWith<HelloEntity>(async (scope) => {
+    await this.transactionWith<HelloEntity>(async scope => {
       await scope.execute(`
         CREATE TABLE IF NOT EXISTS HELLO (
             ID BIGINT(20) NOT NULL AUTO_INCREMENT,
@@ -270,14 +270,20 @@ export class HelloModel extends BaseModel {
       const queryPagination2 = await repo.pagination({ page: 1, rpp: 1, order: { id: "DESC" } });
       const queryPagination3 = await repo.pagination({ page: 2, rpp: 1, order: { id: "DESC" } });
 
-      assert(queryPagination1.items[0].id === queryPagination2.items[0].id, "queryPagination1.items[0].id === queryPagination2.items[0].id");
-      assert(queryPagination1.items[1].id === queryPagination3.items[0].id, "queryPagination1.items[1].id === queryPagination3.items[0].id");
+      assert(
+        queryPagination1.items[0].id === queryPagination2.items[0].id,
+        "queryPagination1.items[0].id === queryPagination2.items[0].id"
+      );
+      assert(
+        queryPagination1.items[1].id === queryPagination3.items[0].id,
+        "queryPagination1.items[1].id === queryPagination3.items[0].id"
+      );
 
       const queryRaw = await scope.execute("SELECT ID FROM HELLO WHERE ID = ?", [queryPagination1.items[0].id]);
 
       assert(queryPagination1.items[0].id === queryRaw[0].ID, "queryPagination1.items[0].id === queryRaw[0].ID");
 
-      await this.transactionWith(async (innerScope) => {
+      await this.transactionWith(async innerScope => {
         const repoX = innerScope.getRepository(HelloEntity);
         const foundX = await repoX.findOne({ where: { id: queryPagination1.items[0].id } });
 

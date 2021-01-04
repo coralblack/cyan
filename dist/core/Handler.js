@@ -203,16 +203,16 @@ class Handler {
         return (req, res, next) => {
             controller
                 .afterHandle(req.httpRequestContext, res.preparedResponse)
-                .then((resp) => {
+                .then(resp => {
                 if (resp instanceof Http_error_1.HttpError) {
                     next(resp);
                 }
                 else {
                     if (resp instanceof Http_response_1.HttpResponse) {
                         const headers = resp.headers || {};
-                        const response = ((r) => {
+                        const response = (r => {
                             if (typeof r === "object") {
-                                return JSON.stringify(r, (_, v) => typeof v === "bigint" ? v.toString() : v);
+                                return JSON.stringify(r, (_, v) => (typeof v === "bigint" ? v.toString() : v));
                             }
                             else if (r)
                                 return r;
@@ -252,7 +252,7 @@ class Handler {
             res.finalized = true;
             controller
                 .onError(err)
-                .then((errResp) => {
+                .then(errResp => {
                 next(errResp);
             })
                 .catch((err) => {
@@ -268,7 +268,7 @@ class Handler {
             }
             controller
                 .onHttpError(req.httpRequestContext, err)
-                .then((resp) => {
+                .then(resp => {
                 next(resp);
             })
                 .catch((err) => {
@@ -292,7 +292,7 @@ class Handler {
     static jsonBodyParser(options) {
         const jsonParser = bodyParser.json(options);
         return (req, res, next) => {
-            jsonParser(req, res, (err) => {
+            jsonParser(req, res, err => {
                 if (err) {
                     const respErr = new Http_error_1.HttpError(Http_status_1.Status.BadRequest, "The specified json body is invalid.");
                     next(respErr);

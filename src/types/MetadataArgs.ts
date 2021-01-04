@@ -22,7 +22,7 @@ export interface RouteParamMetadataArgs {
   target: Function;
   method: string;
   index: number;
-  
+
   type: ParamType;
   name: string;
   options: ParamOptions;
@@ -31,21 +31,21 @@ export interface RouteParamMetadataArgs {
 export interface MiddlewareMetadataArgs {
   target: Function;
   method: string;
-  
+
   handler: HandlerFunction;
   options: MiddlewareOptions;
 }
 
 export interface EntityMetadataArgs<T = any> {
   target: ClassType<T>;
-  
+
   options: EntityOptions;
 }
 
 export interface EntityColumnMetadataArgs {
   target: Function;
   propertyKey: string;
-  
+
   type: EntityColumnType;
   options: EntityColumnOptions;
 }
@@ -53,7 +53,7 @@ export interface EntityColumnMetadataArgs {
 export interface EntityRelationMetadataArgs {
   target: Function;
   propertyKey: string;
-  
+
   type: EntityRelationType;
   table: Function;
   options: EntityRelationColumnOptions;

@@ -63,26 +63,23 @@ class Cyan {
         }
         if ((_b = this.settings.options) === null || _b === void 0 ? void 0 : _b.cors) {
             this.logger.info("[handler] CorsHandler registered");
-            this.server.use(Handler_1.Handler.corsHandler(typeof ((_c = this.settings.options) === null || _c === void 0 ? void 0 : _c.cors) === "boolean" ?
-                undefined : (_d = this.settings.options) === null || _d === void 0 ? void 0 : _d.cors));
+            this.server.use(Handler_1.Handler.corsHandler(typeof ((_c = this.settings.options) === null || _c === void 0 ? void 0 : _c.cors) === "boolean" ? undefined : (_d = this.settings.options) === null || _d === void 0 ? void 0 : _d.cors));
         }
         if (((_e = this.settings.options) === null || _e === void 0 ? void 0 : _e.jsonBodyParser) || ((_f = this.settings.options) === null || _f === void 0 ? void 0 : _f.bodyParser)) {
             this.logger.info("[handler] JsonBodyParser registered");
-            this.server.use(Handler_1.Handler.jsonBodyParser(typeof ((_g = this.settings.options) === null || _g === void 0 ? void 0 : _g.jsonBodyParser) === "boolean" ?
-                undefined : (_h = this.settings.options) === null || _h === void 0 ? void 0 : _h.jsonBodyParser));
+            this.server.use(Handler_1.Handler.jsonBodyParser(typeof ((_g = this.settings.options) === null || _g === void 0 ? void 0 : _g.jsonBodyParser) === "boolean" ? undefined : (_h = this.settings.options) === null || _h === void 0 ? void 0 : _h.jsonBodyParser));
         }
         if (((_j = this.settings.options) === null || _j === void 0 ? void 0 : _j.urlEncodedBodyParser) || ((_k = this.settings.options) === null || _k === void 0 ? void 0 : _k.bodyParser)) {
             this.logger.info("[handler] UrlEncodedBodyParser registered");
-            this.server.use(Handler_1.Handler.urlEncodedBodyParser(typeof ((_l = this.settings.options) === null || _l === void 0 ? void 0 : _l.urlEncodedBodyParser) === "boolean" ?
-                undefined : (_m = this.settings.options) === null || _m === void 0 ? void 0 : _m.urlEncodedBodyParser));
+            this.server.use(Handler_1.Handler.urlEncodedBodyParser(typeof ((_l = this.settings.options) === null || _l === void 0 ? void 0 : _l.urlEncodedBodyParser) === "boolean" ? undefined : (_m = this.settings.options) === null || _m === void 0 ? void 0 : _m.urlEncodedBodyParser));
         }
     }
     initRoutes() {
-        this.settings.routes.map((router) => {
+        this.settings.routes.map(router => {
             const controller = Injector_1.Injector.resolve(router);
             Decorator_1.Metadata.getStorage()
-                .routes.filter((route) => route.target === router)
-                .map((route) => this.initHandler(controller, route));
+                .routes.filter(route => route.target === router)
+                .map(route => this.initHandler(controller, route));
         });
     }
     initHandler(controller, route) {
@@ -93,10 +90,10 @@ class Cyan {
             [router_1.MIDDLEWARE_PRIORITY_ACTION_HANDLER, Handler_1.Handler.actionHandler(controller, route)],
             [router_1.MIDDLEWARE_PRIORITY_AFTER_HANDLER, Handler_1.Handler.afterHandler(controller)],
         ];
-        Decorator_1.Metadata.getStorage().middlewares
-            .filter(middleware => middleware.target === route.target && middleware.method === route.method)
+        Decorator_1.Metadata.getStorage()
+            .middlewares.filter(middleware => middleware.target === route.target && middleware.method === route.method)
             .forEach(middleware => {
-            handlers.push([middleware.options.priority || (router_1.MIDDLEWARE_PRIORITY_ACTION_HANDLER - 100), middleware.handler]);
+            handlers.push([middleware.options.priority || router_1.MIDDLEWARE_PRIORITY_ACTION_HANDLER - 100, middleware.handler]);
         });
         this.server[route.action.toLowerCase()](path, controller.beforeMiddleware(this), ...handlers.sort((a, b) => a[0] - b[0]).map(e => e[1]), controller.afterMiddleware(this), controller.render(this), Handler_1.Handler.errorHandler(controller), Handler_1.Handler.httpErrorHandler(controller));
     }
@@ -105,7 +102,9 @@ class Cyan {
             this.logger.info("[task] No task registered");
             return;
         }
-        Decorator_1.Metadata.getStorage().tasks.filter(task => this.settings.tasks.includes(task.target)).forEach(task => {
+        Decorator_1.Metadata.getStorage()
+            .tasks.filter(task => this.settings.tasks.includes(task.target))
+            .forEach(task => {
             this.initTask(task);
         });
     }

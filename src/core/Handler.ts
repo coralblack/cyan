@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
+import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArgs";
 import * as bodyParser from "body-parser";
 import cors, { CorsOptions, CorsOptionsDelegate } from "cors";
 import { NextFunction } from "express";
 import { get } from "lodash";
 import morgan from "morgan";
-import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArgs";
 import { Metadata } from "./Decorator";
 import { Controller as HttpController, ProcessedExpressResponse } from "../http/Http.controller";
 import { HttpError } from "../http/Http.error";
@@ -36,15 +36,12 @@ export class Handler {
   private static paramTransformer(value: any, type: any): any {
     if (String.prototype === type.prototype) {
       value = type(value);
-    }
-    else if (Number.prototype === type.prototype) {
+    } else if (Number.prototype === type.prototype) {
       value = type(value);
       if (isNaN(value)) throw new Error("..");
-    }
-    else if (BigInt.prototype === type.prototype) {
+    } else if (BigInt.prototype === type.prototype) {
       value = type(value);
-    }
-    else if (Boolean.prototype === type.prototype) {
+    } else if (Boolean.prototype === type.prototype) {
       if (typeof value !== "boolean" && typeof value !== "string" && typeof value !== "number") {
         throw new Error("..");
       } else if (typeof value === "number") {
@@ -64,8 +61,7 @@ export class Handler {
           throw new Error("..");
         }
       }
-    }
-    else if (Date.prototype === type.prototype) {
+    } else if (Date.prototype === type.prototype) {
       value = new type(value);
       if (isNaN(value.getTime())) throw new Error("..");
     }
@@ -97,7 +93,8 @@ export class Handler {
                 throw actionParam.options.invalid(value);
               } else {
                 throw HttpResponder.badRequest.message(
-                  actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
+                  actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`
+                )();
               }
             }
           } else if (Array.prototype === e.prototype) {
@@ -129,7 +126,8 @@ export class Handler {
           throw actionParam.options.invalid(value);
         } else {
           throw HttpResponder.badRequest.message(
-            actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
+            actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`
+          )();
         }
       }
 
@@ -138,7 +136,8 @@ export class Handler {
           throw actionParam.options.missing();
         } else {
           throw HttpResponder.badRequest.message(
-            actionParam.options.missing || `BadRequest (Missing ${actionParam.type.toString()}: ${actionParam.name})`)();
+            actionParam.options.missing || `BadRequest (Missing ${actionParam.type.toString()}: ${actionParam.name})`
+          )();
         }
       }
 
@@ -168,7 +167,6 @@ export class Handler {
         const params = this.getActionParams(req, route, actionParams);
 
         resp = await controller[route.method](...params);
-
       } catch (err) {
         resp = err;
       }
@@ -190,17 +188,16 @@ export class Handler {
     return (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       controller
         .afterHandle(req.httpRequestContext, res.preparedResponse)
-        .then((resp) => {
+        .then(resp => {
           if (resp instanceof HttpError) {
             next(resp);
           } else {
             if (resp instanceof HttpResponse) {
               const headers = resp.headers || {};
-              const response = ((r) => {
+              const response = (r => {
                 if (typeof r === "object") {
-                  return JSON.stringify(r, (_, v) => typeof v === "bigint" ? v.toString() : v);
-                }
-                else if (r) return r;
+                  return JSON.stringify(r, (_, v) => (typeof v === "bigint" ? v.toString() : v));
+                } else if (r) return r;
                 else return "No Content";
               })(resp.content);
 
@@ -208,7 +205,7 @@ export class Handler {
                 headers["content-type"] = headers["content-type"] || "application/json";
               }
 
-              (res as unknown as ProcessedExpressResponse).processedResponse = {
+              ((res as unknown) as ProcessedExpressResponse).processedResponse = {
                 status: resp.status,
                 headers,
                 content: response,
@@ -217,7 +214,7 @@ export class Handler {
               return;
             }
 
-            (res as unknown as ProcessedExpressResponse).processedResponse = {
+            ((res as unknown) as ProcessedExpressResponse).processedResponse = {
               status: 200,
               headers: {},
               content: resp,
@@ -242,7 +239,7 @@ export class Handler {
 
       controller
         .onError(err)
-        .then((errResp) => {
+        .then(errResp => {
           next(errResp);
         })
         .catch((err: Error) => {
@@ -260,7 +257,7 @@ export class Handler {
 
       controller
         .onHttpError(req.httpRequestContext, err)
-        .then((resp) => {
+        .then(resp => {
           next(resp);
         })
         .catch((err: Error) => {
@@ -270,7 +267,7 @@ export class Handler {
   }
 
   public static accessLogger(name: string): HandlerFunction {
-    return morgan((tokens, req, res): any =>
+    return (morgan((tokens, req, res): any =>
       [
         `${datetime(",")}`,
         `${name},`,
@@ -282,14 +279,15 @@ export class Handler {
         tokens["response-time"](req, res),
         "ms",
       ].join(" ")
-    ) as unknown as HandlerFunction;
+    ) as unknown) as HandlerFunction;
   }
 
   public static jsonBodyParser(options?: bodyParser.OptionsJson): HandlerFunction {
     const jsonParser = bodyParser.json(options);
 
     return (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
-      jsonParser(req as any, res as any, (err) => { // eslint-disable-line consistent-return
+      jsonParser(req as any, res as any, err => {
+        // eslint-disable-line consistent-return
         if (err) {
           const respErr = new HttpError(HttpStatus.BadRequest, "The specified json body is invalid.");
 
@@ -303,10 +301,10 @@ export class Handler {
   }
 
   public static urlEncodedBodyParser(options?: bodyParser.OptionsUrlencoded): HandlerFunction {
-    return bodyParser.urlencoded(options || { extended: true }) as unknown as HandlerFunction;
+    return (bodyParser.urlencoded(options || { extended: true }) as unknown) as HandlerFunction;
   }
 
   public static corsHandler(options?: CorsOptions | CorsOptionsDelegate): HandlerFunction {
-    return cors(options) as unknown as HandlerFunction;
+    return (cors(options) as unknown) as HandlerFunction;
   }
 }

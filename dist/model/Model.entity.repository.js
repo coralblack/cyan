@@ -27,14 +27,17 @@ class Repository {
         else if (!columns.length) {
             throw new Error(`Invalid Repository: No Decorated Columns (${entity.name})`);
         }
-        info.target = metadata.target,
-            info.tableName = metadata.options.name,
-            info.columns = columns.map(e => e.propertyKey),
-            info.fields = columns.reduce((p, e) => { p[e.propertyKey] = e.options; return p; }, {}),
-            info.primaryColumns = columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
-            info.criteriaColumns = columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey),
-            info.oneToOneRelationColumns = relations.filter(e => e.type === Model_entity_relation_1.EntityRelationType.OneToOne).map(e => e.propertyKey),
-            info.oneToOneRelations = relations
+        (info.target = metadata.target),
+            (info.tableName = metadata.options.name),
+            (info.columns = columns.map(e => e.propertyKey)),
+            (info.fields = columns.reduce((p, e) => {
+                p[e.propertyKey] = e.options;
+                return p;
+            }, {})),
+            (info.primaryColumns = columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey)),
+            (info.criteriaColumns = columns.filter(e => e.type === Model_entity_1.EntityColumnType.Primary).map(e => e.propertyKey)),
+            (info.oneToOneRelationColumns = relations.filter(e => e.type === Model_entity_relation_1.EntityRelationType.OneToOne).map(e => e.propertyKey)),
+            (info.oneToOneRelations = relations
                 .filter(e => e.type === Model_entity_relation_1.EntityRelationType.OneToOne)
                 .reduce((p, e) => {
                 p[e.propertyKey] = {
@@ -42,12 +45,13 @@ class Repository {
                     repository: Repository.getRepositoryInfo(e.options.target),
                 };
                 return p;
-            }, {});
+            }, {}));
         return info;
     }
     async save(entity) {
         try {
-            const [res] = await this.scope.kx.insert(this.repositoryInfo.columns.reduce((p, e) => {
+            const [res] = await this.scope.kx
+                .insert(this.repositoryInfo.columns.reduce((p, e) => {
                 const key = this.repositoryInfo.fields[e].name;
                 const val = ((v) => {
                     if (typeof v === "function")
@@ -60,7 +64,8 @@ class Repository {
                 })(entity[e]);
                 p[key] = val;
                 return p;
-            }, {})).into(this.repositoryInfo.tableName);
+            }, {}))
+                .into(this.repositoryInfo.tableName);
             if (this.repositoryInfo.primaryColumns.length === 1) {
                 const id = entity[this.repositoryInfo.primaryColumns[0]];
                 if (id && typeof id !== "function") {
@@ -139,9 +144,7 @@ class Repository {
             const rpp = Math.max(1, options && options.rpp ? options.rpp : 30);
             const limit = BigInt(rpp);
             const offset = (BigInt(page) - BigInt(1)) * limit;
-            const count = (await this
-                .where(this.scope.kx.from(this.repositoryInfo.tableName), options.where || {})
-                .count("* as cnt"))[0].cnt;
+            const count = (await this.where(this.scope.kx.from(this.repositoryInfo.tableName), options.where || {}).count("* as cnt"))[0].cnt;
             const items = await this.find(Object.assign(Object.assign({}, options), { limit, offset }));
             return {
                 page,
@@ -199,7 +202,7 @@ class Repository {
         kxx.select(joinTableColumns);
         let idx = 0;
         to.repository.oneToOneRelationColumns.forEach(relationColumn => {
-            this.joinWith(kxx, rec * 10 + (idx++), toTableNameAlias, `${propertyKey}${joinSeparator}${relationColumn}`, to.repository.oneToOneRelations[relationColumn]);
+            this.joinWith(kxx, rec * 10 + idx++, toTableNameAlias, `${propertyKey}${joinSeparator}${relationColumn}`, to.repository.oneToOneRelations[relationColumn]);
         });
         return kxx;
     }
@@ -232,14 +235,22 @@ class Repository {
                 const v = where[ke];
                 if (Array.isArray(v))
                     kxx = kxx.whereIn(k, v);
-                else if (typeof v === "object" && (v.hasOwnProperty(">=") || v.hasOwnProperty(">") || v.hasOwnProperty("<=") || v.hasOwnProperty("<") ||
-                    v.hasOwnProperty("LIKE") || v.hasOwnProperty("LIKE%") || v.hasOwnProperty("%LIKE") || v.hasOwnProperty("%LIKE%") ||
-                    v["$AND"] || v["$OR"] ||
-                    typeof v["IS_NULL"] === "boolean" ||
-                    typeof v["IS_NOT_NULL"] === "boolean")) {
+                else if (typeof v === "object" &&
+                    (v.hasOwnProperty(">=") ||
+                        v.hasOwnProperty(">") ||
+                        v.hasOwnProperty("<=") ||
+                        v.hasOwnProperty("<") ||
+                        v.hasOwnProperty("LIKE") ||
+                        v.hasOwnProperty("LIKE%") ||
+                        v.hasOwnProperty("%LIKE") ||
+                        v.hasOwnProperty("%LIKE%") ||
+                        v["$AND"] ||
+                        v["$OR"] ||
+                        typeof v["IS_NULL"] === "boolean" ||
+                        typeof v["IS_NOT_NULL"] === "boolean")) {
                     const that = this;
                     kxx[orWhere ? "orWhere" : "andWhere"](function () {
-                        Object.keys(v).forEach((cond) => {
+                        Object.keys(v).forEach(cond => {
                             if (cond === "$AND" || cond === "$OR") {
                                 this[cond === "$OR" ? "orWhere" : "andWhere"](function () {
                                     v[cond].forEach((vv) => {
@@ -298,7 +309,7 @@ class Repository {
     }
     mapping(row, repositoryInfo, prefix) {
         const x = class_transformer_1.plainToClass((repositoryInfo || this.repositoryInfo).target, Object.keys(row)
-            .filter((e) => !prefix || e.startsWith(`${prefix}${joinSeparator}`))
+            .filter(e => !prefix || e.startsWith(`${prefix}${joinSeparator}`))
             .reduce((p, c) => {
             const col = !prefix ? c : c.substring(prefix.length + 1);
             if (!col.includes(joinSeparator)) {

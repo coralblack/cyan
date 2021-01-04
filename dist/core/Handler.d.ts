@@ -1,6 +1,6 @@
+import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArgs";
 import * as bodyParser from "body-parser";
 import { CorsOptions, CorsOptionsDelegate } from "cors";
-import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArgs";
 import { Controller as HttpController } from "../http/Http.controller";
 import { CyanRequest, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";
 export declare class Handler {

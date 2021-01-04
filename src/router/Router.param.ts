@@ -15,18 +15,18 @@ export interface ParamClassOptions extends ParamBaseOptions {
   type?: ClassType<any> | BigIntConstructor;
 }
 
-export interface ParamEnumOptions<T extends {[key: string]: string | number}> extends ParamBaseOptions {
+export interface ParamEnumOptions<T extends { [key: string]: string | number }> extends ParamBaseOptions {
   type: "ENUM";
   enum: T;
 }
 
-export type ParamOptions<T extends {[key: string]: string | number} = any> = ParamClassOptions | ParamEnumOptions<T>;
+export type ParamOptions<T extends { [key: string]: string | number } = any> = ParamClassOptions | ParamEnumOptions<T>;
 
 export enum ParamType {
   Query = "QUERY",
   Header = "HEADER",
   Body = "BODY",
-  Path = "PATH"
+  Path = "PATH",
 }
 
 function Param(type: ParamType, name: string, options: ParamOptions): ParameterDecorator {

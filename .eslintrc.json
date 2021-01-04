@@ -1,28 +1,31 @@
 {
-  "root": true,
-  "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint", "eslint-plugin-import"],
+  "extends": "./node_modules/gts/",
   "parserOptions": {
     "project": "./tsconfig.eslint.json"
   },
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:@typescript-eslint/recommended-requiring-type-checking"
-  ],
+  "plugins": ["eslint-plugin-import"],
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true
+      }
+    }
+  },
   "rules": {
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
     "@typescript-eslint/no-unsafe-assignment": "off",
     "@typescript-eslint/no-unsafe-member-access": "off",
     "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/quotes": ["error"],
     "@typescript-eslint/semi": ["error"],
-    "@typescript-eslint/no-unused-vars-experimental": "warn",
+    "@typescript-eslint/type-annotation-spacing": "error",
     "@typescript-eslint/member-delimiter-style": [
       "error",
       {
@@ -36,9 +39,9 @@
         }
       }
     ],
+    "import/no-unresolved": "error",
     "import/no-duplicates": "error",
     "import/no-unused-modules": "error",
-    "import/no-cycle": "error",
     "import/no-absolute-path": "error",
     "import/no-self-import": "error",
     "import/order": [
@@ -98,13 +101,6 @@
         "memberSyntaxSortOrder": ["none", "all", "multiple", "single"]
       }
     ],
-    "object-curly-newline": [
-      "error",
-      {
-        "multiline": true
-      }
-    ],
-    "indent": ["error", 2],
     "semi-spacing": [
       "error",
       {
@@ -114,14 +110,6 @@
     ],
     "space-infix-ops": ["error"],
     "keyword-spacing": "error",
-    "space-before-function-paren": [
-      "error",
-      {
-        "anonymous": "never",
-        "named": "never",
-        "asyncArrow": "always"
-      }
-    ],
     "no-multi-spaces": "error",
     "space-before-blocks": ["error", "always"],
     "comma-spacing": [
@@ -142,6 +130,7 @@
         "mode": "strict"
       }
     ],
+    "quotes": ["warn", "double", { "avoidEscape": true }],
     "quote-props": ["error", "as-needed"],
     "padding-line-between-statements": [
       "error",
@@ -165,16 +154,6 @@
       }
     ],
     "no-console": ["warn"],
-    "comma-dangle": [
-      "error",
-      {
-        "arrays": "always-multiline",
-        "objects": "always-multiline",
-        "imports": "never",
-        "exports": "never",
-        "functions": "never"
-      }
-    ],
     "spaced-comment": [
       "error",
       "always",

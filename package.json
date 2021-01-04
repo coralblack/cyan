@@ -6,8 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "start:dev": "nodemon --watch ./src --ext ts,js,yaml,yml,json --delay 0.1 --exec 'npm run build && cd example && npm run start:dev'",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint . --fix --ext .js,.jsx,.ts,.tsx",
+    "lint": "gts lint",
+    "lint:fix": "gts fix",
     "postlint": "cd example && npm run lint",
     "postlint:fix": "cd example && npm run lint:fix",
     "prebuild": "rm -rf dist/*",
@@ -15,6 +15,9 @@
     "release:patch": "npm version patch --no-git-tag-version",
     "prerelease": "git diff --exit-code",
     "release": "npm run release:patch && export RELEASE_VER=$(node -e \"console.log(require('./package.json').version)\") && git checkout -b feature/bump-ver_${RELEASE_VER} && npm run build && git add . && git commit -m \"Bump version, v${RELEASE_VER}\" &&git tag -a v${RELEASE_VER} -m \"Release version, v${RELEASE_VER}\" && git push --set-upstream origin feature/bump-ver_${RELEASE_VER} && git push origin v${RELEASE_VER}"
+  },
+  "engines": {
+    "node": ">=10.4"
   },
   "repository": {
     "type": "git",
@@ -49,10 +52,9 @@
     "@types/morgan": "^1.9.2",
     "@types/node": "^14.14.14",
     "@types/source-map-support": "^0.5.3",
-    "@typescript-eslint/eslint-plugin": "^4.11.1",
-    "@typescript-eslint/parser": "^4.11.1",
-    "eslint": "^7.17.0",
+    "eslint-import-resolver-typescript": "^2.3.0",
     "eslint-plugin-import": "^2.22.1",
+    "gts": "^3.0.3",
     "husky": "^4.3.6",
     "lint-staged": "^10.5.3",
     "nodemon": "^2.0.6",
@@ -68,7 +70,7 @@
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
-      "eslint --fix",
+      "gts fix",
       "git add"
     ]
   }

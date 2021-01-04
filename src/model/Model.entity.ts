@@ -7,7 +7,7 @@ export interface EntityOptions {
 
 export enum EntityColumnType {
   Primary = "PRIMARY",
-  Column = "COLUMN"
+  Column = "COLUMN",
 }
 
 export interface EntityColumnOptions {

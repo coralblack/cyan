@@ -6,20 +6,20 @@ type FindOperatorComp<T> = Partial<{
   ">": T | RawQuery;
   "<=": T | RawQuery;
   "<": T | RawQuery;
-  "LIKE": T | RawQuery;
+  LIKE: T | RawQuery;
   "LIKE%": T;
   "%LIKE": T;
   "%LIKE%": T;
-  "IS_NULL": boolean;
-  "IS_NOT_NULL": boolean;
+  IS_NULL: boolean;
+  IS_NOT_NULL: boolean;
   //
-  "$AND": Array<FindOperatorComp<T>>;
-  "$OR": Array<FindOperatorComp<T>>;
+  $AND: Array<FindOperatorComp<T>>;
+  $OR: Array<FindOperatorComp<T>>;
 }>;
 
 export type FindChainingConditions<T> = Partial<{
-  "$AND": FindChainingConditions<T> | FindConditions<T>;
-  "$OR": FindChainingConditions<T> | FindConditions<T>;
+  $AND: FindChainingConditions<T> | FindConditions<T>;
+  $OR: FindChainingConditions<T> | FindConditions<T>;
 }>;
 
 export type FindConditions<T> = {

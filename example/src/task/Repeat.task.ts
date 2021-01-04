@@ -3,8 +3,7 @@ import { Inject } from "../../../dist/core";
 import { HelloService } from "../service/Hello.service";
 
 export class RepeatTask {
-  constructor(@Inject() private readonly helloService: HelloService) {
-  }
+  constructor(@Inject() private readonly helloService: HelloService) {}
 
   @Repeat(2560)
   async run(): Promise<void> {

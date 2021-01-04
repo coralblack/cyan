@@ -13,7 +13,7 @@ class TaskInvoker {
     init() {
         this.run()
             .then(() => { })
-            .catch((err) => {
+            .catch(err => {
             console.error("Never be here!", err);
         });
     }
@@ -25,7 +25,7 @@ class TaskInvoker {
             }
             catch (err) {
                 this.logger.error(err);
-                await util_1.delay(this.options.nextErrorDelay || (10 * 1000));
+                await util_1.delay(this.options.nextErrorDelay || 10 * 1000);
             }
         }
     }

@@ -28,9 +28,17 @@ export class WorldController extends BaseController {
     @QueryParam("bab", { invalid: "Invalid bab!!" }) bab: bigint,
     @QueryParam("foz", { invalid: "Invalid foz!!" }) foz: boolean
   ): any {
-    return { 
-      foo, bar, baz, bab: bab ? String(bab) : bab, foz,
-      fooT: typeof foo, barT: typeof bar, bazT: typeof baz, babT: typeof bab, fozT: typeof foz,
+    return {
+      foo,
+      bar,
+      baz,
+      bab: bab ? String(bab) : bab,
+      foz,
+      fooT: typeof foo,
+      barT: typeof bar,
+      bazT: typeof baz,
+      babT: typeof bab,
+      fozT: typeof foz,
     };
   }
 }

@@ -23,7 +23,7 @@ export function time(base?: Date): string {
 }
 
 export async function delay(delayMs: number): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     setTimeout(() => {
       resolve();
     }, delayMs);

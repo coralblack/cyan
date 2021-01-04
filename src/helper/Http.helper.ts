@@ -27,20 +27,20 @@ export interface HttpRequestPayload extends HttpGetRequestPayload {
   method: HttpMethod;
 }
 
-export interface HttpPostRequestPayload extends HttpBodyRequestPayload { }
-export interface HttpPutRequestPayload extends HttpBodyRequestPayload { }
-export interface HttpPatchRequestPayload extends HttpBodyRequestPayload { }
-export interface HttpDeleteRequestPayload extends HttpBodyRequestPayload { }
-export interface HttpHeadRequestPayload extends HttpBodyRequestPayload { }
+export interface HttpPostRequestPayload extends HttpBodyRequestPayload {}
+export interface HttpPutRequestPayload extends HttpBodyRequestPayload {}
+export interface HttpPatchRequestPayload extends HttpBodyRequestPayload {}
+export interface HttpDeleteRequestPayload extends HttpBodyRequestPayload {}
+export interface HttpHeadRequestPayload extends HttpBodyRequestPayload {}
 
-export interface HttpRawRequestPayload extends
-  HttpRequestPayload,
-  HttpGetRequestPayload,
-  HttpPostRequestPayload,
-  HttpPutRequestPayload,
-  HttpPatchRequestPayload,
-  HttpDeleteRequestPayload,
-  HttpHeadRequestPayload { }
+export interface HttpRawRequestPayload
+  extends HttpRequestPayload,
+    HttpGetRequestPayload,
+    HttpPostRequestPayload,
+    HttpPutRequestPayload,
+    HttpPatchRequestPayload,
+    HttpDeleteRequestPayload,
+    HttpHeadRequestPayload {}
 
 export interface HttpRequestedPayload {
   method: HttpMethod;
@@ -66,7 +66,7 @@ export class HttpHelper {
       if (payload.data && typeof payload.data === "object" && payload.rawData !== true) {
         payload.data = JSON.parse(
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-          JSON.stringify(payload.data, (_k, v) => typeof v === "bigint" ? v.toString() : v)
+          JSON.stringify(payload.data, (_k, v) => (typeof v === "bigint" ? v.toString() : v))
         );
       }
 

@@ -43,7 +43,7 @@ export abstract class Controller {
     };
   }
 
-  async beforeHandle(request: HttpRequest): Promise<void> { }
+  async beforeHandle(request: HttpRequest): Promise<void> {}
 
   async afterHandle(request: HttpRequest, response: any): Promise<HttpResponse> {
     return response;

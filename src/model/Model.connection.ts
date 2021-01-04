@@ -19,8 +19,8 @@ export type QueryParameterTypes =
   | Buffer;
 
 export class TransactionScope {
-  constructor(public readonly kx: knex) { }
-  
+  constructor(public readonly kx: knex) {}
+
   async execute(query: string, params?: Array<QueryParameterTypes>): Promise<any> {
     const [res] = await this.kx.raw(query, params as any);
 
@@ -67,14 +67,14 @@ export class ConnectionManager {
       opts.options = { bindObjectAsString: true };
 
       if (settings.timezone) {
-        opts.pool.afterCreate = function(connection: any, callback: any) {
-          connection.query(`SET time_zone = '${settings.timezone.replace(/'/g, "\\'")}';`, function(err) {
+        opts.pool.afterCreate = function (connection: any, callback: any) {
+          connection.query(`SET time_zone = '${settings.timezone.replace(/'/g, "\\'")}';`, err => {
             callback(err, connection);
           });
         };
       }
-      
-      opts.connection.typeCast = function(field: any, next: any): any {
+
+      opts.connection.typeCast = function (field: any, next: any): any {
         /* eslint-disable @typescript-eslint/no-unsafe-return */
         if (["NEWDECIMAL", "DECIMAL", "LONGLONG"].includes(field.type)) {
           const val = field.string();

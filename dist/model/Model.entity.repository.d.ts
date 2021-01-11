@@ -1,7 +1,7 @@
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions } from "./Model.entity";
 import { EntityRelationColumnOptions } from "./Model.entity.relation";
-import { DeleteOptions, FindOneOptions, FindOptions, InsertId, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
+import { CountOptions, DeleteOptions, FindOneOptions, FindOptions, InsertId, Paginatable, PaginationOptions, UpdateOptions } from "./Model.query";
 import { ClassType } from "../types";
 interface RelationalRepositoryInfo<T = any> {
     options: EntityRelationColumnOptions;
@@ -34,6 +34,7 @@ export declare class Repository<T> {
     find(options?: FindOptions<T>): Promise<T[]>;
     pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>>;
     private select;
+    count(options: CountOptions<T>): Promise<bigint>;
     private joinWith;
     private join;
     private where;

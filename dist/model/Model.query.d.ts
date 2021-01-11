@@ -34,6 +34,8 @@ export interface FindOptions<T> extends FindOneOptions<T> {
     offset?: number | bigint;
     limit?: number | bigint;
 }
+export interface CountOptions<T> extends Omit<FindOneOptions<T>, "select" | "order"> {
+}
 export interface PaginationOptions<T> extends FindOneOptions<T> {
     page?: number;
     rpp?: number;

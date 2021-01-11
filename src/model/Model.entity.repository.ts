@@ -6,6 +6,7 @@ import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
 import { EntityRelationColumnOptions, EntityRelationType } from "./Model.entity.relation";
 import {
+  CountOptions,
   DeleteOptions,
   FindChainingConditions,
   FindConditions,
@@ -266,9 +267,36 @@ export class Repository<T> {
     }
   }
 
+  async count(options: CountOptions<T>): Promise<bigint> {
+    try {
+      let kx = this.scope.kx.count("* AS cnt").from(this.repositoryInfo.tableName);
+
+      kx = this.join(kx);
+
+      // Query
+      if (options.where) {
+        kx = this.where(kx, options.where);
+      }
+
+      if (options.debug) {
+        // eslint-disable-next-line no-console
+        console.log(">", kx.toSQL());
+      }
+
+      const res = await kx;
+
+      if (!res || !res.length) return BigInt(0);
+
+      return BigInt(res[0].cnt || 0);
+    } catch (err) {
+      throw TraceableError(err);
+    }
+  }
+
   private joinWith(kx: any, rec: number, fromTable: string, propertyKey: string, to: RelationalRepositoryInfo) {
     const kxx = kx;
     const fromColumns = to.options.name;
+    const toFields = to.repository.fields;
     const toColumns = to.repository.primaryColumns;
     const toTableNameAlias = `${to.repository.tableName}_${rec}`;
     const toTable = `${to.repository.tableName} AS ${toTableNameAlias}`;
@@ -282,11 +310,11 @@ export class Repository<T> {
       );
     }
 
-    if (toColumns.length > 1) {
-      throw new Error("Invalid Relation: Not supported join with multiple columns");
-    }
-
-    kxx.leftOuterJoin(toTable, `${fromTable}.${fromColumns[0]}`, `${toTableNameAlias}.${toColumns[0]}`);
+    kxx.leftOuterJoin(toTable, function () {
+      for (let i = 0; i < fromColumns.length; i++) {
+        this.on(`${fromTable}.${fromColumns[i]}`, `${toTableNameAlias}.${toFields[toColumns[i]].name}`);
+      }
+    });
     kxx.select(joinTableColumns);
 
     let idx = 0;

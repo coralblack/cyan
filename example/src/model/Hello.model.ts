@@ -101,6 +101,39 @@ class FooEntity {
   bar?: BarEntity;
 }
 
+@Entity({ name: "MUL_PRI" })
+class MulPriEntity {
+  @PrimaryColumn({ name: "PRIMARY_ID", default: () => "UUID_SHORT()" })
+  primaryId: bigint;
+
+  @PrimaryColumn({ name: "SECONDARY_ID", default: () => "UUID_SHORT()" })
+  secondaryId: bigint;
+
+  @Column({ name: "FOO" })
+  foo: string;
+
+  @Column({ name: "BAR" })
+  bar: string;
+}
+
+@Entity({ name: "MUL_PRI_JOIN" })
+class MulPriJoinEntity {
+  @PrimaryColumn({ name: "ID", default: () => "UUID_SHORT()" })
+  id: bigint;
+
+  @Column({ name: "FOO" })
+  foo: string;
+
+  @Column({ name: "PRIMARY_ID" })
+  primaryId: bigint;
+
+  @Column({ name: "SECONDARY_ID" })
+  secondaryId: bigint;
+
+  @OneToOne({ name: ["PRIMARY_ID", "SECONDARY_ID"], target: MulPriEntity })
+  mul?: MulPriEntity;
+}
+
 export class HelloModel extends BaseModel {
   async test(): Promise<void> {
     await this.transactionWith<HelloEntity>(async scope => {
@@ -156,6 +189,26 @@ export class HelloModel extends BaseModel {
             ID BIGINT(20) NOT NULL AUTO_INCREMENT,
             NAME VARCHAR(128) DEFAULT NULL,
             CREATED_AT DATETIME DEFAULT NULL,
+            PRIMARY KEY (ID)
+        )
+      `);
+
+      await scope.execute(`
+        CREATE TABLE IF NOT EXISTS MUL_PRI (
+            PRIMARY_ID BIGINT(20) NOT NULL,
+            SECONDARY_ID BIGINT(20) NOT NULL,
+            FOO VARCHAR(128) DEFAULT NULL,
+            BAR VARCHAR(128) DEFAULT NULL,
+            PRIMARY KEY (PRIMARY_ID, SECONDARY_ID)
+        )
+      `);
+
+      await scope.execute(`
+        CREATE TABLE IF NOT EXISTS MUL_PRI_JOIN (
+            ID BIGINT(20) NOT NULL AUTO_INCREMENT,
+            FOO VARCHAR(128) DEFAULT NULL,
+            PRIMARY_ID BIGINT(20) DEFAULT NULL,
+            SECONDARY_ID BIGINT(20) DEFAULT NULL,
             PRIMARY KEY (ID)
         )
       `);
@@ -420,6 +473,59 @@ export class HelloModel extends BaseModel {
       assert(andWhere1.length === 1, "andWhere1.length === 1");
       assert(andWhere2.length === 0, "andWhere2.length");
       assert(andWhere3.length === 0, "andWhere3.length === 0");
+
+      const mulPriRepo = scope.getRepository(MulPriEntity);
+      const mulPriJoinRepo = scope.getRepository(MulPriJoinEntity);
+
+      const primaryId = BigInt(`${new Date().getTime()}${Math.ceil(Math.random() * 1000000)}`);
+      const secondaryId = primaryId + BigInt(1);
+      const mulPriFoo = `${new Date().getTime()}-${Math.random()}-${Math.random()}`;
+
+      await mulPriRepo.save({
+        primaryId: primaryId,
+        secondaryId: secondaryId,
+        foo: mulPriFoo,
+        bar: `${new Date().getTime()}`,
+      });
+
+      await mulPriRepo.save({
+        primaryId: primaryId + BigInt(2),
+        secondaryId: secondaryId + BigInt(3),
+        foo: mulPriFoo,
+        bar: `${new Date().getTime()}`,
+      });
+
+      await mulPriRepo.save({
+        primaryId: primaryId + BigInt(3),
+        secondaryId: secondaryId + BigInt(4),
+        foo: mulPriFoo,
+        bar: `${new Date().getTime()}`,
+      });
+
+      const countMulPri = await mulPriRepo.count({});
+
+      await mulPriRepo.delete({
+        primaryId: primaryId + BigInt(2),
+        secondaryId: secondaryId + BigInt(3),
+        foo: mulPriFoo,
+        bar: `${new Date().getTime()}`,
+      });
+
+      const countMulPriAfter = await mulPriRepo.count({});
+
+      assert(countMulPriAfter + BigInt(1) === countMulPri, "await mulPriRepo.count({}) + BigInt(1) === countMulPri");
+
+      await mulPriJoinRepo.save({
+        id: primaryId,
+        foo: mulPriFoo,
+        primaryId,
+        secondaryId,
+      });
+
+      const mulPriJoinEntity = await mulPriJoinRepo.findOne({ where: { id: primaryId } });
+
+      assert(mulPriJoinEntity.foo === mulPriFoo, "mulPriJoinEntity.foo === mulPriFoo");
+      assert(mulPriJoinEntity.mul?.primaryId === primaryId, "mulPriJoinEntity.mul.primaryId === primaryId");
 
       return null;
     });

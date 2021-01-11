@@ -185,9 +185,29 @@ class Repository {
             throw Error_1.TraceableError(err);
         }
     }
+    async count(options) {
+        try {
+            let kx = this.scope.kx.count("* AS cnt").from(this.repositoryInfo.tableName);
+            kx = this.join(kx);
+            if (options.where) {
+                kx = this.where(kx, options.where);
+            }
+            if (options.debug) {
+                console.log(">", kx.toSQL());
+            }
+            const res = await kx;
+            if (!res || !res.length)
+                return BigInt(0);
+            return BigInt(res[0].cnt || 0);
+        }
+        catch (err) {
+            throw Error_1.TraceableError(err);
+        }
+    }
     joinWith(kx, rec, fromTable, propertyKey, to) {
         const kxx = kx;
         const fromColumns = to.options.name;
+        const toFields = to.repository.fields;
         const toColumns = to.repository.primaryColumns;
         const toTableNameAlias = `${to.repository.tableName}_${rec}`;
         const toTable = `${to.repository.tableName} AS ${toTableNameAlias}`;
@@ -195,10 +215,11 @@ class Repository {
         if (fromColumns.length !== toColumns.length) {
             throw new Error(`Invalid Relation: Joining columns are not matched (${fromColumns.join(",")} -> ${toColumns.join(",")})`);
         }
-        if (toColumns.length > 1) {
-            throw new Error("Invalid Relation: Not supported join with multiple columns");
-        }
-        kxx.leftOuterJoin(toTable, `${fromTable}.${fromColumns[0]}`, `${toTableNameAlias}.${toColumns[0]}`);
+        kxx.leftOuterJoin(toTable, function () {
+            for (let i = 0; i < fromColumns.length; i++) {
+                this.on(`${fromTable}.${fromColumns[i]}`, `${toTableNameAlias}.${toFields[toColumns[i]].name}`);
+            }
+        });
         kxx.select(joinTableColumns);
         let idx = 0;
         to.repository.oneToOneRelationColumns.forEach(relationColumn => {

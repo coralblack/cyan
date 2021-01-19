@@ -243,6 +243,14 @@ export class HelloModel extends BaseModel {
       assert(found1.world.name === "world", "found1.world.name");
       assert(found1.world.createdAt === null, "found1.world.createdAt");
 
+      const foundSpSelect = await repo.findOne({ where: { id: save1 as bigint }, select: ["name"] });
+
+      assert(Object.keys(foundSpSelect).join(",") === "name");
+
+      const foundSpSelectJoin = await repo.findOne({ where: { id: save1 as bigint }, select: ["name", "world"] });
+
+      assert(Object.keys(foundSpSelectJoin).join(",") === "name,world");
+
       const foundLike = await repo.findOne({ where: { name: { LIKE: save1Name } } });
 
       assert(foundLike.id === BigInt(save1), "foundLike.id");

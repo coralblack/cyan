@@ -230,13 +230,13 @@ export class Repository<T> {
   private async select(options: FindOptions<T>): Promise<T[]> {
     try {
       const selectColumns: any[] = options.select || this.repositoryInfo.columns;
-      const select = selectColumns.map(
-        column => `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[column].name} as ${column}`
-      );
+      const select = selectColumns
+        .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
+        .map(column => `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[column].name} as ${column}`);
 
       let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
 
-      kx = this.join(kx);
+      kx = this.join(kx, options.select);
 
       // Query
       if (options.where) {
@@ -271,7 +271,7 @@ export class Repository<T> {
     try {
       let kx = this.scope.kx.count("* AS cnt").from(this.repositoryInfo.tableName);
 
-      kx = this.join(kx);
+      kx = this.join(kx, []);
 
       // Query
       if (options.where) {
@@ -332,12 +332,14 @@ export class Repository<T> {
     return kxx;
   }
 
-  private join(kx: any): any {
+  private join(kx: any, selectColumns: Array<keyof T>): any {
     const kxx = kx;
     let idx = 0;
 
     this.repositoryInfo.oneToOneRelationColumns.forEach(relationColumn => {
-      this.joinWith(kxx, ++idx, this.repositoryInfo.tableName, relationColumn, this.repositoryInfo.oneToOneRelations[relationColumn]);
+      if (!selectColumns || selectColumns.indexOf(relationColumn as keyof T) !== -1) {
+        this.joinWith(kxx, ++idx, this.repositoryInfo.tableName, relationColumn, this.repositoryInfo.oneToOneRelations[relationColumn]);
+      }
     });
 
     return kxx;

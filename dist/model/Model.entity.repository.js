@@ -169,7 +169,14 @@ class Repository {
                 kx = this.where(kx, options.where);
             }
             if (options.order) {
-                kx = this.order(kx, options.order);
+                if (Array.isArray(options.order)) {
+                    for (let i = 0; i < options.order.length; i++) {
+                        kx = this.order(kx, options.order[i]);
+                    }
+                }
+                else {
+                    kx = this.order(kx, options.order);
+                }
             }
             if (options.offset)
                 kx = kx.offset(String(options.offset));

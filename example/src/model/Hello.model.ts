@@ -327,6 +327,30 @@ export class HelloModel extends BaseModel {
 
       assert(queryOrder1.id && queryOrder2.id && String(queryOrder1.id) !== String(queryOrder2.id), "failed order by");
 
+      const queryOrder3 = await repo.findOne({
+        where: {
+          createdAt: {
+            ">=": new Date("2000-01-01 00:00:00"),
+            "<=": () => "CURRENT_TIMESTAMP()",
+          },
+        },
+        order: [{ createdAt: (k: string) => `${k} IS NOT NULL, ${k} DESC` }, { createdAt: "ASC" }],
+      });
+
+      assert(queryOrder1.id && queryOrder3.id && String(queryOrder1.id) !== String(queryOrder3.id), "failed order by");
+
+      const queryOrder4 = await repo.findOne({
+        where: {
+          createdAt: {
+            ">=": new Date("2000-01-01 00:00:00"),
+            "<=": () => "CURRENT_TIMESTAMP()",
+          },
+        },
+        order: [{ createdAt: "ASC" }, { createdAt: (k: string) => `${k} IS NOT NULL, ${k} DESC` }],
+      });
+
+      assert(queryOrder4.id && queryOrder3.id && String(queryOrder4.id) !== String(queryOrder3.id), "failed order by");
+
       const queryPagination1 = await repo.pagination({ page: 1, rpp: 2, order: { id: "DESC" } });
       const queryPagination2 = await repo.pagination({ page: 1, rpp: 1, order: { id: "DESC" } });
       const queryPagination3 = await repo.pagination({ page: 2, rpp: 1, order: { id: "DESC" } });

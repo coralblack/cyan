@@ -24,10 +24,11 @@ export declare type FindConditions<T> = {
 export declare type OrderCondition<T> = {
     [P in keyof T]?: "ASC" | "DESC" | RawQuery;
 };
+export declare type OrderConditions<T> = OrderCondition<T> | Array<OrderCondition<T>>;
 export interface FindOneOptions<T> {
     select?: (keyof T)[];
     where?: FindConditions<T> | FindChainingConditions<T>;
-    order?: OrderCondition<T>;
+    order?: OrderConditions<T>;
     debug?: boolean;
 }
 export interface FindOptions<T> extends FindOneOptions<T> {

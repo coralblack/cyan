@@ -15,8 +15,8 @@ declare type FindOperatorComp<T> = Partial<{
     $OR: Array<FindOperatorComp<T>>;
 }>;
 export declare type FindChainingConditions<T> = Partial<{
-    $AND: FindChainingConditions<T> | FindConditions<T>;
-    $OR: FindChainingConditions<T> | FindConditions<T>;
+    $AND: FindChainingConditions<T> | FindConditions<T> | Array<FindChainingConditions<T>>;
+    $OR: FindChainingConditions<T> | FindConditions<T> | Array<FindChainingConditions<T>>;
 }>;
 export declare type FindConditions<T> = {
     [P in keyof T]?: T[P] | T[P][] | FindOperatorComp<T[P]> | RawQuery;

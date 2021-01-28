@@ -359,14 +359,30 @@ export class Repository<T> {
       if (ke === "$AND" || ke === "$OR") {
         const that = this;
 
-        if (ke === "$AND") {
-          kx.andWhere(function () {
-            that.where(this, where[ke], false);
-          });
-        } else if (ke === "$OR") {
-          kx.orWhere(function () {
-            that.where(this, where[ke], true);
-          });
+        if (Array.isArray(where[ke])) {
+          if (ke === "$AND") {
+            where[ke].forEach(chWhere => {
+              kxx = kx.andWhere(function () {
+                that.where(this, chWhere, false);
+              });
+            });
+          } else if (ke === "$OR") {
+            where[ke].forEach(chWhere => {
+              kxx = kx.orWhere(function () {
+                that.where(this, chWhere, true);
+              });
+            });
+          }
+        } else {
+          if (ke === "$AND") {
+            kx.andWhere(function () {
+              that.where(this, where[ke], false);
+            });
+          } else if (ke === "$OR") {
+            kx.orWhere(function () {
+              that.where(this, where[ke], true);
+            });
+          }
         }
       } else {
         const k = `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[ke].name}`;

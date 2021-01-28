@@ -506,6 +506,31 @@ export class HelloModel extends BaseModel {
       assert(andWhere2.length === 0, "andWhere2.length");
       assert(andWhere3.length === 0, "andWhere3.length === 0");
 
+      const andWhere4 = await repo.find({
+        where: {
+          $OR: [
+            { $AND: { id: helloEntities[0].id, name: helloEntities[0].name } },
+            { $AND: { id: helloEntities[1].id, name: helloEntities[1].name } },
+          ],
+        },
+      });
+
+      assert(
+        andWhere4.length === 2 && andWhere4[0].id === helloEntities[0].id && andWhere4[1].id === helloEntities[1].id,
+        "andWhere4.length === 2"
+      );
+
+      const andWhere5 = await repo.find({
+        where: {
+          $AND: [
+            { $AND: { id: helloEntities[0].id, name: helloEntities[0].name } },
+            { $AND: { id: helloEntities[1].id, name: helloEntities[1].name } },
+          ],
+        },
+      });
+
+      assert(andWhere5.length === 0, "andWhere5.length === 0");
+
       const mulPriRepo = scope.getRepository(MulPriEntity);
       const mulPriJoinRepo = scope.getRepository(MulPriJoinEntity);
 

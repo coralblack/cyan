@@ -18,8 +18,8 @@ type FindOperatorComp<T> = Partial<{
 }>;
 
 export type FindChainingConditions<T> = Partial<{
-  $AND: FindChainingConditions<T> | FindConditions<T>;
-  $OR: FindChainingConditions<T> | FindConditions<T>;
+  $AND: FindChainingConditions<T> | FindConditions<T> | Array<FindChainingConditions<T>>;
+  $OR: FindChainingConditions<T> | FindConditions<T> | Array<FindChainingConditions<T>>;
 }>;
 
 export type FindConditions<T> = {

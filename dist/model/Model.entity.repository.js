@@ -157,13 +157,16 @@ class Repository {
             throw Error_1.TraceableError(err);
         }
     }
-    async select(options) {
+    async select(options, forUpdate = false) {
         try {
             const selectColumns = options.select || this.repositoryInfo.columns;
             const select = selectColumns
                 .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
                 .map(column => `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[column].name} as ${column}`);
             let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
+            if (forUpdate) {
+                kx = kx.forUpdate();
+            }
             kx = this.join(kx, options.select);
             if (options.where) {
                 kx = this.where(kx, options.where);

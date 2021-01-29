@@ -227,7 +227,7 @@ export class Repository<T> {
     }
   }
 
-  private async select(options: FindOptions<T>): Promise<T[]> {
+  private async select(options: FindOptions<T>, forUpdate = false): Promise<T[]> {
     try {
       const selectColumns: any[] = options.select || this.repositoryInfo.columns;
       const select = selectColumns
@@ -235,6 +235,10 @@ export class Repository<T> {
         .map(column => `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[column].name} as ${column}`);
 
       let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
+
+      if (forUpdate) {
+        kx = kx.forUpdate();
+      }
 
       kx = this.join(kx, options.select);
 

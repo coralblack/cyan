@@ -120,9 +120,9 @@ class Repository {
             throw Error_1.TraceableError(err);
         }
     }
-    async findOne(options) {
+    async findOne(options, forUpdate = false) {
         try {
-            const [res] = await this.select(Object.assign(Object.assign({}, options), { limit: 1 }));
+            const [res] = await this.select(Object.assign(Object.assign({}, options), { limit: 1 }), forUpdate);
             return res || null;
         }
         catch (err) {

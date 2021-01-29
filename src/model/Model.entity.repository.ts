@@ -185,9 +185,9 @@ export class Repository<T> {
     }
   }
 
-  async findOne(options?: FindOneOptions<T>): Promise<T> {
+  async findOne(options?: FindOneOptions<T>, forUpdate = false): Promise<T> {
     try {
-      const [res] = await this.select({ ...options, limit: 1 });
+      const [res] = await this.select({ ...options, limit: 1 }, forUpdate);
 
       return res || null;
     } catch (err) {

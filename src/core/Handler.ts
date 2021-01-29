@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
-import { RouteMetadataArgs, RouteParamMetadataArgs } from "src/types/MetadataArgs";
 import * as bodyParser from "body-parser";
 import cors, { CorsOptions, CorsOptionsDelegate } from "cors";
 import { NextFunction } from "express";
 import { get } from "lodash";
 import morgan from "morgan";
 import { Metadata } from "./Decorator";
+import { ExtendedError } from "./Error";
+import { hasOwnProperty } from "..//util/builtin";
 import { Controller as HttpController, ProcessedExpressResponse } from "../http/Http.controller";
 import { HttpError } from "../http/Http.error";
 import { HttpRequest as HttpRequest } from "../http/Http.request";
@@ -14,6 +15,7 @@ import { HttpResponder, HttpResponse } from "../http/Http.response";
 import { Status as HttpStatus } from "../http/Http.status";
 import { ParamType } from "../router";
 import { CyanRequest, CyanResponse, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";
+import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
 import { datetime } from "../util";
 
 export class Handler {
@@ -89,13 +91,15 @@ export class Handler {
             const emKey = Object.keys(em).find(e => em[e] === value);
 
             if (!emKey) {
-              if (typeof actionParam.options.invalid === "function") {
-                throw actionParam.options.invalid(value);
-              } else {
-                throw HttpResponder.badRequest.message(
-                  actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`
-                )();
+              let invalid: any = actionParam.options.invalid;
+
+              if (typeof invalid === "function") {
+                invalid = invalid(value);
               }
+
+              throw invalid instanceof HttpError
+                ? invalid
+                : HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
             }
           } else if (Array.prototype === e.prototype) {
             if (typeof value === "string") {
@@ -123,7 +127,15 @@ export class Handler {
         if (err instanceof HttpError) {
           throw err;
         } else if (typeof actionParam.options.invalid === "function") {
-          throw actionParam.options.invalid(value);
+          let invalid: any = actionParam.options.invalid;
+
+          if (typeof invalid === "function") {
+            invalid = invalid(value);
+          }
+
+          throw invalid instanceof HttpError
+            ? invalid
+            : HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
         } else {
           throw HttpResponder.badRequest.message(
             actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`
@@ -148,6 +160,7 @@ export class Handler {
   public static actionHandler(controller: HttpController, route: RouteMetadataArgs): HandlerFunction {
     return async (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       let resp: any;
+      let thrown = false;
 
       const actionParams: RouteParamMetadataArgs[] = (() => {
         if (controller[this.symActionParams] && controller[this.symActionParams][route.method]) {
@@ -168,15 +181,27 @@ export class Handler {
 
         resp = await controller[route.method](...params);
       } catch (err) {
+        thrown = true;
         resp = err;
       }
 
       if (typeof resp === "function") {
-        resp = resp();
+        try {
+          resp = await resp();
+        } catch (err) {
+          thrown = true;
+          resp = err;
+        }
       }
 
-      if (resp instanceof Error || resp instanceof HttpError) {
-        next(resp);
+      if (resp instanceof Error || resp instanceof HttpError || thrown) {
+        if (resp instanceof Error || resp instanceof HttpError) {
+          next(resp);
+        } else {
+          const name = hasOwnProperty(resp, "name") ? resp.name : "Unknown";
+
+          next(new ExtendedError(hasOwnProperty(resp, "message") ? resp.message : `An error has occurred. (${name})`, resp));
+        }
       } else {
         res.preparedResponse = resp;
         next();

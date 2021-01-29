@@ -28,6 +28,8 @@ const cors_1 = __importDefault(require("cors"));
 const lodash_1 = require("lodash");
 const morgan_1 = __importDefault(require("morgan"));
 const Decorator_1 = require("./Decorator");
+const Error_1 = require("./Error");
+const builtin_1 = require("..//util/builtin");
 const Http_error_1 = require("../http/Http.error");
 const Http_request_1 = require("../http/Http.request");
 const Http_response_1 = require("../http/Http.response");
@@ -115,12 +117,13 @@ class Handler {
                         const em = actionParam.options.enum;
                         const emKey = Object.keys(em).find(e => em[e] === value);
                         if (!emKey) {
-                            if (typeof actionParam.options.invalid === "function") {
-                                throw actionParam.options.invalid(value);
+                            let invalid = actionParam.options.invalid;
+                            if (typeof invalid === "function") {
+                                invalid = invalid(value);
                             }
-                            else {
-                                throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
-                            }
+                            throw invalid instanceof Http_error_1.HttpError
+                                ? invalid
+                                : Http_response_1.HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
                         }
                     }
                     else if (Array.prototype === e.prototype) {
@@ -151,7 +154,13 @@ class Handler {
                     throw err;
                 }
                 else if (typeof actionParam.options.invalid === "function") {
-                    throw actionParam.options.invalid(value);
+                    let invalid = actionParam.options.invalid;
+                    if (typeof invalid === "function") {
+                        invalid = invalid(value);
+                    }
+                    throw invalid instanceof Http_error_1.HttpError
+                        ? invalid
+                        : Http_response_1.HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
                 }
                 else {
                     throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
@@ -171,6 +180,7 @@ class Handler {
     static actionHandler(controller, route) {
         return async (req, res, next) => {
             let resp;
+            let thrown = false;
             const actionParams = (() => {
                 if (controller[this.symActionParams] && controller[this.symActionParams][route.method]) {
                     return controller[this.symActionParams][route.method];
@@ -185,13 +195,26 @@ class Handler {
                 resp = await controller[route.method](...params);
             }
             catch (err) {
+                thrown = true;
                 resp = err;
             }
             if (typeof resp === "function") {
-                resp = resp();
+                try {
+                    resp = await resp();
+                }
+                catch (err) {
+                    thrown = true;
+                    resp = err;
+                }
             }
-            if (resp instanceof Error || resp instanceof Http_error_1.HttpError) {
-                next(resp);
+            if (resp instanceof Error || resp instanceof Http_error_1.HttpError || thrown) {
+                if (resp instanceof Error || resp instanceof Http_error_1.HttpError) {
+                    next(resp);
+                }
+                else {
+                    const name = builtin_1.hasOwnProperty(resp, "name") ? resp.name : "Unknown";
+                    next(new Error_1.ExtendedError(builtin_1.hasOwnProperty(resp, "message") ? resp.message : `An error has occurred. (${name})`, resp));
+                }
             }
             else {
                 res.preparedResponse = resp;

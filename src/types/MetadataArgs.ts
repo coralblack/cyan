@@ -1,4 +1,3 @@
-import { TaskOptions, TaskType } from "src/task/Task.types";
 import { HandlerFunction } from "./Handler";
 import { HttpMethod } from "../http/Http.method";
 import { EntityColumnOptions, EntityColumnType, EntityOptions } from "../model/Model.entity";
@@ -6,6 +5,7 @@ import { EntityRelationColumnOptions, EntityRelationType } from "../model/Model.
 import { MiddlewareOptions } from "../router";
 import { RouteOptions } from "../router/Router.action";
 import { ParamOptions, ParamType } from "../router/Router.param";
+import { TaskOptions, TaskType } from "../task/Task.types";
 import { ClassType } from ".";
 
 export interface RouteMetadataArgs {

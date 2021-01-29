@@ -4,6 +4,7 @@ exports.JsonController = void 0;
 const Http_controller_1 = require("./Http.controller");
 const Http_response_1 = require("./Http.response");
 const Http_status_1 = require("./Http.status");
+const builtin_1 = require("../util/builtin");
 class JsonController extends Http_controller_1.Controller {
     async afterHandle(request, response) {
         if (response instanceof Http_response_1.HttpResponse) {
@@ -18,10 +19,12 @@ class JsonController extends Http_controller_1.Controller {
     }
     async onError(error) {
         const resp = await super.onError(error);
+        const name = builtin_1.hasOwnProperty(error, "originalError") ? builtin_1.getConstructorName(error.originalError) : null;
+        const message = `An error has occurred.${name ? ` (${name})` : ""}`;
         resp.content = {
             result: false,
-            code: error.name || undefined,
-            message: error.message,
+            code: name || error.name || undefined,
+            message: builtin_1.hasOwnProperty(error, "sqlMessage") ? "An error has occurred. (DB Error)" : error.message || message,
         };
         return resp;
     }

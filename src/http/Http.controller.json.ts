@@ -7,6 +7,7 @@ import { HttpError } from "./Http.error";
 import { HttpRequest as HttpRequest } from "./Http.request";
 import { HttpResponse } from "./Http.response";
 import { Status as HttpStatus } from "./Http.status";
+import { getConstructorName, hasOwnProperty } from "../util/builtin";
 
 export class JsonController extends Controller {
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -30,10 +31,13 @@ export class JsonController extends Controller {
   async onError(error: Error): Promise<HttpResponse> {
     const resp = await super.onError(error);
 
+    const name = hasOwnProperty(error, "originalError") ? getConstructorName(error.originalError) : null;
+    const message = `An error has occurred.${name ? ` (${name})` : ""}`;
+
     resp.content = {
       result: false,
-      code: error.name || undefined,
-      message: error.message,
+      code: name || error.name || undefined,
+      message: hasOwnProperty(error, "sqlMessage") ? "An error has occurred. (DB Error)" : error.message || message,
     };
 
     return resp;

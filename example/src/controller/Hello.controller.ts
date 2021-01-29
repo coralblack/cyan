@@ -6,6 +6,7 @@ import { HttpMethod } from "@coralblack/cyan/dist/http";
 import { HttpResponder } from "@coralblack/cyan/dist/http/Http.response";
 import { BodyParam, Get, HeaderParam, PathParam, QueryParam } from "@coralblack/cyan/dist/router";
 import { BaseController } from "./Base.controller";
+import { HttpError } from "../../../dist/http/Http.error";
 import { HelloService } from "../service/Hello.service";
 
 interface HttpEchoPost {
@@ -31,6 +32,10 @@ enum FooBarMix {
   Bar = "BAR",
 }
 
+class CustomClass {
+  constructor(public readonly message: string) {}
+}
+
 export class HelloController extends BaseController {
   constructor(@Inject() private readonly helloService: HelloService, @Inject() private readonly httpHelper: HttpHelper) {
     super();
@@ -48,6 +53,7 @@ export class HelloController extends BaseController {
     @BodyParam("enum.mix", { type: "ENUM", enum: FooBarMix }) fooBarMix: FooBarMix,
     @BodyParam("invalidMsg", { invalid: "INVALID!" }) _invalidMsg: FooBarNum,
     @BodyParam("invalidFun", { invalid: (v: string) => `INVALID(${v})` }) _invalidFun: FooBarNum,
+    @BodyParam("invalidFunTh", { invalid: (v: string) => new HttpError(400, `INVALID(${v})`) }) _invalidFunTh: FooBarNum,
     @BodyParam("validateStr", { validate: (e: string) => e === "vvs" }) _validateStr: string,
     @BodyParam("validateErr", {
       validate: (e: string) => {
@@ -135,7 +141,11 @@ export class HelloController extends BaseController {
         ((await this.httpHelper.request({ ...payload, data: { ...payload.data, invalidFun: "VVS" } })).body as string) === "INVALID(VVS)",
         "Assert invalid 2"
       );
-
+      assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, invalidFunTh: "VVSS" } })).body as string) ===
+          "INVALID(VVSS)",
+        "Assert invalid 3"
+      );
       // Validate
       assert(
         ((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateStr: "vvs" } })).body as string).includes("HiHi"),
@@ -231,5 +241,10 @@ export class HelloController extends BaseController {
   @Get("/hello/error")
   helloError(): never {
     throw new Error("Unknown error");
+  }
+
+  @Get("/hello/error/cls")
+  helloCustomClass(): never {
+    throw new CustomClass("Throw Custom Class");
   }
 }

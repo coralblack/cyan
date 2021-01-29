@@ -1,10 +1,10 @@
-import { HttpError } from "src/http/Http.error";
+import { HttpError } from "../http/Http.error";
 import { ClassType } from "../types";
 export interface ParamBaseOptions<T = string | number | boolean | object> {
     required?: boolean;
     default?: any;
-    invalid?: string | ((v: T) => HttpError);
-    missing?: string | (() => HttpError);
+    invalid?: string | ((v: T) => HttpError | string);
+    missing?: string | (() => HttpError | string);
     delimiter?: string;
     validate?: (v: T) => boolean | void;
 }

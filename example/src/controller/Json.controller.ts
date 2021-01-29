@@ -4,6 +4,10 @@
 import { JsonController as BaseJsonController, HttpResponder, HttpResponse, Status as HttpStatus } from "@coralblack/cyan/dist/http";
 import { Get, Middleware, MIDDLEWARE_PRIORITY_ACTION_HANDLER, QueryParam } from "@coralblack/cyan/dist/router";
 
+class CustomClass {
+  constructor(public readonly message: string) {}
+}
+
 export class JsonController extends BaseJsonController {
   @Get("/json/string")
   helloString(): string {
@@ -65,5 +69,10 @@ export class JsonController extends BaseJsonController {
   )
   helloMiddlewareAfter(): any {
     return { hello: "world" };
+  }
+
+  @Get("/json/error/cls")
+  helloCustomClass(): never {
+    throw new CustomClass("Throw Custom Class");
   }
 }

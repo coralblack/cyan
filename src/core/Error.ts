@@ -3,3 +3,9 @@ export function TraceableError(originalError: Error): Error {
 
   return originalError;
 }
+
+export class ExtendedError extends Error {
+  constructor(message: string, public readonly originalError: any) {
+    super(message);
+  }
+}

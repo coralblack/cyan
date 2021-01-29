@@ -1,3 +1,4 @@
+import { ExtendedError } from "src/core/Error";
 import { Handler as ExpressHandler, Response as ExpressResponse } from "express";
 import { HttpError } from "./Http.error";
 import { HttpRequest as HttpRequest } from "./Http.request";
@@ -17,5 +18,5 @@ export declare abstract class Controller {
     beforeHandle(request: HttpRequest): Promise<void>;
     afterHandle(request: HttpRequest, response: any): Promise<HttpResponse>;
     onHttpError(request: HttpRequest, error: HttpError): Promise<HttpError>;
-    onError(error: Error): Promise<HttpResponse>;
+    onError(error: Error | ExtendedError): Promise<HttpResponse>;
 }

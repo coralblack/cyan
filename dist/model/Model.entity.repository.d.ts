@@ -30,7 +30,7 @@ export declare class Repository<T> {
     save(entity: T): Promise<InsertId>;
     update(entity: T, options?: UpdateOptions<T>): Promise<number>;
     delete(entity: T, options?: DeleteOptions<T>): Promise<number>;
-    findOne(options?: FindOneOptions<T>, forUpdate?: boolean): Promise<T>;
+    findOne(options?: FindOneOptions<T>): Promise<T>;
     find(options?: FindOptions<T>): Promise<T[]>;
     pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>>;
     private select;

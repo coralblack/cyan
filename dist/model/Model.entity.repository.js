@@ -120,9 +120,9 @@ class Repository {
             throw Error_1.TraceableError(err);
         }
     }
-    async findOne(options, forUpdate = false) {
+    async findOne(options) {
         try {
-            const [res] = await this.select(Object.assign(Object.assign({}, options), { limit: 1 }), forUpdate);
+            const [res] = await this.select(Object.assign(Object.assign({}, options), { limit: 1 }));
             return res || null;
         }
         catch (err) {
@@ -157,14 +157,14 @@ class Repository {
             throw Error_1.TraceableError(err);
         }
     }
-    async select(options, forUpdate = false) {
+    async select(options) {
         try {
             const selectColumns = options.select || this.repositoryInfo.columns;
             const select = selectColumns
                 .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
                 .map(column => `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[column].name} as ${column}`);
             let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
-            if (forUpdate) {
+            if (options.forUpdate) {
                 kx = kx.forUpdate();
             }
             kx = this.join(kx, options.select);

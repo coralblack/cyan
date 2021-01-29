@@ -185,9 +185,9 @@ export class Repository<T> {
     }
   }
 
-  async findOne(options?: FindOneOptions<T>, forUpdate = false): Promise<T> {
+  async findOne(options?: FindOneOptions<T>): Promise<T> {
     try {
-      const [res] = await this.select({ ...options, limit: 1 }, forUpdate);
+      const [res] = await this.select({ ...options, limit: 1 });
 
       return res || null;
     } catch (err) {
@@ -227,7 +227,7 @@ export class Repository<T> {
     }
   }
 
-  private async select(options: FindOptions<T>, forUpdate = false): Promise<T[]> {
+  private async select(options: FindOptions<T>): Promise<T[]> {
     try {
       const selectColumns: any[] = options.select || this.repositoryInfo.columns;
       const select = selectColumns
@@ -236,7 +236,7 @@ export class Repository<T> {
 
       let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
 
-      if (forUpdate) {
+      if (options.forUpdate) {
         kx = kx.forUpdate();
       }
 

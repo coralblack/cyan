@@ -236,6 +236,10 @@ export class Repository<T> {
 
       let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
 
+      if (options.forUpdate) {
+        kx = kx.forUpdate();
+      }
+
       kx = this.join(kx, options.select);
 
       // Query

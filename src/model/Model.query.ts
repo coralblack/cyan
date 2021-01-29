@@ -34,6 +34,7 @@ export interface FindOneOptions<T> {
   where?: FindConditions<T> | FindChainingConditions<T>;
   order?: OrderConditions<T>;
   debug?: boolean;
+  forUpdate?: boolean;
 }
 
 export interface FindOptions<T> extends FindOneOptions<T> {

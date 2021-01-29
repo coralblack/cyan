@@ -164,6 +164,9 @@ class Repository {
                 .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
                 .map(column => `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[column].name} as ${column}`);
             let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
+            if (options.forUpdate) {
+                kx = kx.forUpdate();
+            }
             kx = this.join(kx, options.select);
             if (options.where) {
                 kx = this.where(kx, options.where);

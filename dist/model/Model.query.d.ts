@@ -5,6 +5,7 @@ declare type FindOperatorComp<T> = Partial<{
     ">": T | RawQuery;
     "<=": T | RawQuery;
     "<": T | RawQuery;
+    "!=": T | RawQuery;
     LIKE: T | RawQuery;
     "LIKE%": T;
     "%LIKE": T;

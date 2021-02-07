@@ -375,6 +375,17 @@ export class HelloModel extends BaseModel {
         assert(foundX.id === queryPagination1.items[0].id, "foundX.id");
       }, scope);
 
+      const queryNotEq = await repo.pagination({
+        where: {
+          $AND: [
+            { $AND: { id: [queryPagination1.items[0].id, queryPagination1.items[1].id] } },
+            { $AND: { id: { "!=": queryPagination1.items[0].id } } },
+          ],
+        },
+      });
+
+      assert(queryNotEq.count === BigInt(1), "queryNotEq");
+
       const query1 = await repo.findOne({
         where: {
           createdAt: {

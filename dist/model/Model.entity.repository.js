@@ -293,6 +293,7 @@ class Repository {
                         v.hasOwnProperty(">") ||
                         v.hasOwnProperty("<=") ||
                         v.hasOwnProperty("<") ||
+                        v.hasOwnProperty("!=") ||
                         v.hasOwnProperty("LIKE") ||
                         v.hasOwnProperty("LIKE%") ||
                         v.hasOwnProperty("%LIKE") ||

@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Controller = void 0;
 const Http_response_1 = require("./Http.response");
 const Http_status_1 = require("./Http.status");
-const Logger_1 = require("../core/Logger");
 const builtin_1 = require("../util/builtin");
 class Controller {
     beforeMiddleware(cyan) {
@@ -36,8 +35,8 @@ class Controller {
         }
         return error;
     }
-    async onError(error) {
-        Logger_1.Logger.getInstance().error(error);
+    async onError(error, cyan) {
+        cyan.logger.error(error);
         const name = builtin_1.hasOwnProperty(error, "originalError") ? builtin_1.getConstructorName(error.originalError) : null;
         const message = `An error has occurred.${name ? ` (${name})` : ""}`;
         return new Http_response_1.HttpResponse(Http_status_1.Status.InternalServerError, message);

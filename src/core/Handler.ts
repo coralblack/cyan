@@ -17,6 +17,7 @@ import { ParamType } from "../router";
 import { CyanRequest, CyanResponse, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
 import { datetime } from "../util";
+import { Cyan } from ".";
 
 export class Handler {
   public static beforeHandler(controller: HttpController): HandlerFunction {
@@ -253,7 +254,7 @@ export class Handler {
     };
   }
 
-  public static errorHandler(controller: HttpController): ErrorHandlerFunction {
+  public static errorHandler(controller: HttpController, cyan: Cyan): ErrorHandlerFunction {
     return (err: Error, req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       if (err instanceof HttpResponse || err instanceof HttpError) {
         next(err);
@@ -263,7 +264,7 @@ export class Handler {
       res.finalized = true;
 
       controller
-        .onError(err)
+        .onError(err, cyan)
         .then(errResp => {
           next(errResp);
         })

@@ -40,7 +40,7 @@ export class Server {
     } else if (error instanceof HttpResponse) {
       response.status(error.status).send(error.content).set(error.headers).end();
     } else {
-      Logger.getInstance().error(error);
+      this.cyan.logger.error(error);
 
       response.status(500).send("An error has occurred.").end();
     }

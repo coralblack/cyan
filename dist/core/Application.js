@@ -95,7 +95,7 @@ class Cyan {
             .forEach(middleware => {
             handlers.push([middleware.options.priority || router_1.MIDDLEWARE_PRIORITY_ACTION_HANDLER - 100, middleware.handler]);
         });
-        this.server[route.action.toLowerCase()](path, controller.beforeMiddleware(this), ...handlers.sort((a, b) => a[0] - b[0]).map(e => e[1]), controller.afterMiddleware(this), controller.render(this), Handler_1.Handler.errorHandler(controller), Handler_1.Handler.httpErrorHandler(controller));
+        this.server[route.action.toLowerCase()](path, controller.beforeMiddleware(this), ...handlers.sort((a, b) => a[0] - b[0]).map(e => e[1]), controller.afterMiddleware(this), controller.render(this), Handler_1.Handler.errorHandler(controller, this), Handler_1.Handler.httpErrorHandler(controller));
     }
     initTasks() {
         if (!this.settings.tasks) {

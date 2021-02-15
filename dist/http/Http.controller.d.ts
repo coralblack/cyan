@@ -18,5 +18,5 @@ export declare abstract class Controller {
     beforeHandle(request: HttpRequest): Promise<void>;
     afterHandle(request: HttpRequest, response: any): Promise<HttpResponse>;
     onHttpError(request: HttpRequest, error: HttpError): Promise<HttpError>;
-    onError(error: Error | ExtendedError): Promise<HttpResponse>;
+    onError(error: Error | ExtendedError, cyan: Cyan): Promise<HttpResponse>;
 }

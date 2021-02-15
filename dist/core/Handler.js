@@ -274,7 +274,7 @@ class Handler {
             }
             res.finalized = true;
             controller
-                .onError(err, cyan)
+                .onError(err, req, cyan)
                 .then(errResp => {
                 next(errResp);
             })

@@ -2,12 +2,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Cyan } from "src/core";
 import { Controller } from "./Http.controller";
 import { HttpError } from "./Http.error";
 import { HttpRequest as HttpRequest } from "./Http.request";
 import { HttpResponse } from "./Http.response";
 import { Status as HttpStatus } from "./Http.status";
+import { Cyan } from "../core";
+import { CyanRequest } from "../types/Handler";
 import { getConstructorName, hasOwnProperty } from "../util/builtin";
 
 export class JsonController extends Controller {
@@ -29,8 +30,8 @@ export class JsonController extends Controller {
     return error;
   }
 
-  async onError(error: Error, cyan: Cyan): Promise<HttpResponse> {
-    const resp = await super.onError(error, cyan);
+  async onError(error: Error, req: CyanRequest, cyan: Cyan): Promise<HttpResponse> {
+    const resp = await super.onError(error, req, cyan);
 
     const name = hasOwnProperty(error, "originalError") ? getConstructorName(error.originalError) : null;
     const message = `An error has occurred.${name ? ` (${name})` : ""}`;

@@ -35,8 +35,8 @@ class Controller {
         }
         return error;
     }
-    async onError(error, cyan) {
-        cyan.logger.error(error);
+    async onError(error, req, cyan) {
+        cyan.logger.error(error, req.httpRequestContext);
         const name = builtin_1.hasOwnProperty(error, "originalError") ? builtin_1.getConstructorName(error.originalError) : null;
         const message = `An error has occurred.${name ? ` (${name})` : ""}`;
         return new Http_response_1.HttpResponse(Http_status_1.Status.InternalServerError, message);

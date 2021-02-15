@@ -23,8 +23,8 @@ class ApiController extends Http_controller_1.Controller {
         error.content = Object.assign({ result: false }, error.additional || {}, { data: error.content || undefined });
         return error;
     }
-    async onError(error, cyan) {
-        const resp = await super.onError(error, cyan);
+    async onError(error, req, cyan) {
+        const resp = await super.onError(error, req, cyan);
         const name = builtin_1.hasOwnProperty(error, "originalError") ? builtin_1.getConstructorName(error.originalError) : null;
         const message = `An error has occurred.${name ? ` (${name})` : ""}`;
         resp.content = {

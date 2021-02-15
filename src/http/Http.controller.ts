@@ -4,14 +4,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { ExtendedError } from "src/core/Error";
 import { Handler as ExpressHandler, Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
 import { HttpError } from "./Http.error";
 import { HttpRequest as HttpRequest } from "./Http.request";
 import { HttpResponse } from "./Http.response";
 import { Status as HttpStatus } from "./Http.status";
 import { Cyan } from "../core";
-import { Logger } from "../core/Logger";
+import { ExtendedError } from "../core/Error";
+import { CyanRequest } from "../types/Handler";
 import { getConstructorName, hasOwnProperty } from "../util/builtin";
 
 export interface ProcessedExpressResponse extends ExpressResponse {
@@ -59,8 +59,8 @@ export abstract class Controller {
     return error;
   }
 
-  async onError(error: Error | ExtendedError, cyan: Cyan): Promise<HttpResponse> {
-    cyan.logger.error(error);
+  async onError(error: Error | ExtendedError, req: CyanRequest, cyan: Cyan): Promise<HttpResponse> {
+    cyan.logger.error(error, req.httpRequestContext);
 
     const name = hasOwnProperty(error, "originalError") ? getConstructorName(error.originalError) : null;
     const message = `An error has occurred.${name ? ` (${name})` : ""}`;

@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { Cyan } from "src/core";
 import { Controller } from "./Http.controller";
 import { HttpError } from "./Http.error";
 import { HttpRequest as HttpRequest } from "./Http.request";
@@ -34,8 +35,8 @@ export class ApiController extends Controller {
     return error;
   }
 
-  async onError(error: Error): Promise<HttpResponse> {
-    const resp = await super.onError(error);
+  async onError(error: Error, cyan: Cyan): Promise<HttpResponse> {
+    const resp = await super.onError(error, cyan);
 
     const name = hasOwnProperty(error, "originalError") ? getConstructorName(error.originalError) : null;
     const message = `An error has occurred.${name ? ` (${name})` : ""}`;

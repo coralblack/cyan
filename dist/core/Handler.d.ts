@@ -3,6 +3,7 @@ import { CorsOptions, CorsOptionsDelegate } from "cors";
 import { Controller as HttpController } from "../http/Http.controller";
 import { CyanRequest, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
+import { Cyan } from ".";
 export declare class Handler {
     static beforeHandler(controller: HttpController): HandlerFunction;
     private static symActionParams;
@@ -10,7 +11,7 @@ export declare class Handler {
     static getActionParams(req: CyanRequest, route: RouteMetadataArgs, actionParams: RouteParamMetadataArgs[]): any[];
     static actionHandler(controller: HttpController, route: RouteMetadataArgs): HandlerFunction;
     static afterHandler(controller: HttpController): HandlerFunction;
-    static errorHandler(controller: HttpController): ErrorHandlerFunction;
+    static errorHandler(controller: HttpController, cyan: Cyan): ErrorHandlerFunction;
     static httpErrorHandler(controller: HttpController): ErrorHandlerFunction;
     static accessLogger(name: string): HandlerFunction;
     static jsonBodyParser(options?: bodyParser.OptionsJson): HandlerFunction;

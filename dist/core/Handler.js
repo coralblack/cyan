@@ -266,7 +266,7 @@ class Handler {
             });
         };
     }
-    static errorHandler(controller) {
+    static errorHandler(controller, cyan) {
         return (err, req, res, next) => {
             if (err instanceof Http_response_1.HttpResponse || err instanceof Http_error_1.HttpError) {
                 next(err);
@@ -274,7 +274,7 @@ class Handler {
             }
             res.finalized = true;
             controller
-                .onError(err)
+                .onError(err, cyan)
                 .then(errResp => {
                 next(errResp);
             })

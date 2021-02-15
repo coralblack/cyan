@@ -169,7 +169,7 @@ export class Cyan {
       ...handlers.sort((a, b) => a[0] - b[0]).map(e => e[1]),
       controller.afterMiddleware(this),
       controller.render(this),
-      Handler.errorHandler(controller),
+      Handler.errorHandler(controller, this),
       Handler.httpErrorHandler(controller)
     );
   }

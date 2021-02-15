@@ -59,8 +59,8 @@ export abstract class Controller {
     return error;
   }
 
-  async onError(error: Error | ExtendedError): Promise<HttpResponse> {
-    Logger.getInstance().error(error);
+  async onError(error: Error | ExtendedError, cyan: Cyan): Promise<HttpResponse> {
+    cyan.logger.error(error);
 
     const name = hasOwnProperty(error, "originalError") ? getConstructorName(error.originalError) : null;
     const message = `An error has occurred.${name ? ` (${name})` : ""}`;

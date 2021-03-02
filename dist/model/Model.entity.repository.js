@@ -146,10 +146,11 @@ class Repository {
             const offset = (BigInt(page) - BigInt(1)) * limit;
             let count;
             if (options.groupBy) {
+                const fields = options.groupBy.map(x => this.repositoryInfo.fields[x].name);
                 count = (await this.scope.kx
                     .from(this.where(this.scope.kx.from(this.repositoryInfo.tableName), options.where || {})
-                    .groupBy(options.groupBy)
-                    .select(options.groupBy)
+                    .groupBy(fields)
+                    .select(fields)
                     .as("temp"))
                     .count("* as cnt"))[0].cnt;
             }
@@ -170,20 +171,41 @@ class Repository {
     }
     async select(options) {
         try {
-            const selectColumns = options.select || options.groupBy || this.repositoryInfo.columns;
-            const select = selectColumns
+            const isFunctionalSelectOptionsType = v => typeof v === "object" && Object.prototype.hasOwnProperty.call(v, "column") && Array.isArray(v.column);
+            const isFunctionalSelectOptionHasSum = v => Object.prototype.hasOwnProperty.call(v, "sum") && Array.isArray(v.sum);
+            const convertSelectFields = columns => columns
                 .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
                 .map(column => `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[column].name} as ${column}`);
+            const selectColumns = options.select || options.groupBy || this.repositoryInfo.columns;
+            const select = Array.isArray(selectColumns)
+                ? convertSelectFields(selectColumns)
+                : isFunctionalSelectOptionsType(selectColumns)
+                    ? convertSelectFields(selectColumns.column)
+                    : new Error("It Is Not Supported Type!");
             let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
+            if (isFunctionalSelectOptionsType(selectColumns) && isFunctionalSelectOptionHasSum(selectColumns)) {
+                const { sum } = selectColumns;
+                sum.forEach(x => {
+                    const field = String(x);
+                    if (this.repositoryInfo.columns.includes(field)) {
+                        kx = kx.sum(`${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[field].name} as ${field}`);
+                    }
+                });
+            }
             if (options.forUpdate) {
                 kx = kx.forUpdate();
             }
-            kx = this.join(kx, options.select);
+            if (isFunctionalSelectOptionsType(options.select)) {
+                kx = this.join(kx, options.select.column);
+            }
+            else {
+                kx = this.join(kx, options.select);
+            }
             if (options.where) {
                 kx = this.where(kx, options.where);
             }
             if (options.groupBy) {
-                kx = kx.groupBy(options.groupBy);
+                kx = kx.groupBy(options.groupBy.map(x => `${this.repositoryInfo.tableName}.${this.repositoryInfo.fields[x].name}`));
             }
             if (options.order) {
                 if (Array.isArray(options.order)) {

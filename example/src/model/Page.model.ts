@@ -53,8 +53,6 @@ export class PageModel extends BaseModel {
         groupBy,
       });
 
-      console.log(items);
-
       return items;
     })
   }

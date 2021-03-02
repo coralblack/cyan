@@ -31,7 +31,7 @@ export type OrderCondition<T> = { [P in keyof T]?: "ASC" | "DESC" | RawQuery };
 export type OrderConditions<T> = OrderCondition<T> | Array<OrderCondition<T>>;
 
 export type FunctionalSelectOptions<T> = {
-  plain: (keyof T)[];
+  column: (keyof T)[];
   sum?: (keyof T)[];
 };
 

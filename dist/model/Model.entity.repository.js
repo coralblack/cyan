@@ -171,7 +171,7 @@ class Repository {
     }
     async select(options) {
         try {
-            const isFunctionalSelectOptionsType = v => typeof v === "object" && Object.prototype.hasOwnProperty.call(v, "plain") && Array.isArray(v.plain);
+            const isFunctionalSelectOptionsType = v => typeof v === "object" && Object.prototype.hasOwnProperty.call(v, "column") && Array.isArray(v.column);
             const isFunctionalSelectOptionHasSum = v => Object.prototype.hasOwnProperty.call(v, "sum") && Array.isArray(v.sum);
             const convertSelectFields = columns => columns
                 .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
@@ -180,7 +180,7 @@ class Repository {
             const select = Array.isArray(selectColumns)
                 ? convertSelectFields(selectColumns)
                 : isFunctionalSelectOptionsType(selectColumns)
-                    ? convertSelectFields(selectColumns.plain)
+                    ? convertSelectFields(selectColumns.column)
                     : new Error("It Is Not Supported Type!");
             let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
             if (isFunctionalSelectOptionsType(selectColumns) && isFunctionalSelectOptionHasSum(selectColumns)) {
@@ -196,7 +196,7 @@ class Repository {
                 kx = kx.forUpdate();
             }
             if (isFunctionalSelectOptionsType(options.select)) {
-                kx = this.join(kx, options.select.plain);
+                kx = this.join(kx, options.select.column);
             }
             else {
                 kx = this.join(kx, options.select);

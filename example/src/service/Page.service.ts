@@ -110,7 +110,7 @@ export class PageService {
       rpp,
       page,
       select: {
-        plain: ["category", "chapter"],
+        column: ["category", "chapter"],
         sum: ["page"],
       },
       groupBy: ["category", "chapter"],

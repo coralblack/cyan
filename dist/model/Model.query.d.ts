@@ -27,7 +27,7 @@ export declare type OrderCondition<T> = {
 };
 export declare type OrderConditions<T> = OrderCondition<T> | Array<OrderCondition<T>>;
 export declare type FunctionalSelectOptions<T> = {
-    plain: (keyof T)[];
+    column: (keyof T)[];
     sum?: (keyof T)[];
 };
 export interface FindOneOptions<T> {

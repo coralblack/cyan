@@ -30,7 +30,6 @@ export interface FindOneOptions<T> {
     select?: (keyof T)[];
     where?: FindConditions<T> | FindChainingConditions<T>;
     order?: OrderConditions<T>;
-    groupBy?: (keyof T)[];
     debug?: boolean;
     forUpdate?: boolean;
 }

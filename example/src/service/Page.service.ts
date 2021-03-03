@@ -104,27 +104,4 @@ export class PageService {
       }))
     };
   }
-
-  async getPaginatableChapterPageSummary(rpp: number = 10, page: number = 1): Promise<GetPagesResponse> {
-    const data = await this.pageModel.getPaginatableItems({
-      rpp,
-      page,
-      select: {
-        column: ["category", "chapter"],
-        sum: ["page"],
-      },
-      groupBy: ["category", "chapter"],
-    });
-
-    return {
-      page: String(data.page),
-      rpp: String(data.rpp),
-      count: String(data.count),
-      items: data.items.map(item => ({
-        category: item.category,
-        chapter: item.chapter,
-        page: String(item.page),
-      }))
-    };
-  }
 }

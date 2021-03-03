@@ -44,14 +44,4 @@ export class PageController extends BaseController {
 
 		return res;
 	}
-
-	@Get("/page/chapters/page-summary")
-	async getChaptersPageSummary(
-		@QueryParam("rpp") rpp: number,
-		@QueryParam("page") page: number,
-	): Promise<GetPagesResponse> {
-		const res = await this.pageServcie.getPaginatableChapterPageSummary(rpp, page);
-
-		return res;
-	}
 }

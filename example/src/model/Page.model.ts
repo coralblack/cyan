@@ -1,4 +1,4 @@
-import { Column, Entity, FindOneOptions, PaginationOptions, PrimaryColumn, TransactionScope } from "../../../dist/model";
+import { Column, Entity, FindOneOptions, PrimaryColumn, TransactionScope } from "../../../dist/model";
 import { BaseModel } from "./Base.model";
 
 @Entity({ name: "PAGES" })
@@ -38,12 +38,20 @@ export class PageModel extends BaseModel {
   }
 
   async getPaginatableItems(
-    opts: PaginationOptions<PageEntity>) {
+    opts: {
+      rpp: number; 
+      page: number;
+      groupBy?: (keyof PageEntity)[]
+    }) {
     return this.transactionWith(async (ctx: TransactionScope) => {
       const { rpp, page, groupBy } = opts;
 
       const repo = ctx.getRepository(PageEntity);
-      const items = await repo.pagination(opts);
+      const items = await repo.pagination({
+        rpp,
+        page,
+        groupBy,
+      });
 
       return items;
     })

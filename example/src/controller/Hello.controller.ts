@@ -204,13 +204,10 @@ export class HelloController extends BaseController {
       assert(pagesBody.page === "1" && pagesBody.rpp === "10" && pagesBody.count === "7" && Array.isArray(pagesBody.items) && pagesBody.items[0].id && pagesBody.items[0].category && pagesBody.items[0].chapter && pagesBody.items[0].part && pagesBody.items[0].page);
 
       const { body: partsBody }: { body: GetPagesResponse } = await this.httpHelper.request({ method: HttpMethod.Get, url: "http://127.0.0.1:9090/page/parts", params: { rpp: 10, page: 1 }});
-      assert(partsBody.page === "1" && partsBody.rpp === "10" && partsBody.count === "6" && Array.isArray(partsBody.items) && !partsBody.items[0].id && partsBody.items[0].category && partsBody.items[0].chapter && partsBody.items[0].part && !partsBody.items[0].page);
+      assert(partsBody.page === "1" && partsBody.rpp === "10" && partsBody.count === "6" && Array.isArray(partsBody.items) && !pagesBody.items[0].id && partsBody.items[0].category && partsBody.items[0].chapter && partsBody.items[0].part && !partsBody.items[0].page);
 
       const { body: chaptersBody }: { body: GetPagesResponse } = await this.httpHelper.request({ method: HttpMethod.Get, url: "http://127.0.0.1:9090/page/chapters", params: { rpp: 10, page: 1 }});
       assert(chaptersBody.page === "1" && chaptersBody.rpp === "10" && chaptersBody.count === "4" && Array.isArray(chaptersBody.items) && !chaptersBody.items[0].id && chaptersBody.items[0].category && chaptersBody.items[0].chapter && !chaptersBody.items[0].part && !chaptersBody.items[0].page);
-
-      const { body: chapterPageSummaryBody }: { body: GetPagesResponse } = await this.httpHelper.request({ method: HttpMethod.Get, url: "http://127.0.0.1:9090/page/chapters/page-summary", params: { rpp: 10, page: 1 }});
-      assert(chapterPageSummaryBody.page === "1" && chapterPageSummaryBody.rpp === "10" && chapterPageSummaryBody.count === "4" && Array.isArray(chapterPageSummaryBody.items) && !chapterPageSummaryBody.items[0].id && chapterPageSummaryBody.items[0].category && chapterPageSummaryBody.items[0].chapter && !chapterPageSummaryBody.items[0].part && chapterPageSummaryBody.items[0].page);
       
     } else {
       await this.helloService.model();

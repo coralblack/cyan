@@ -213,17 +213,6 @@ export class HelloModel extends BaseModel {
         )
       `);
 
-      await scope.execute(`
-        CREATE TABLE IF NOT EXISTS PAGES (
-          ID BIGINT(20) NOT NULL AUTO_INCREMENT,
-          CATEGORY VARCHAR(128) NOT NULL,
-          CHAPTER VARCHAR(128) NOT NULL,
-          PART VARCHAR(128) NOT NULL,
-          PAGE INT(3) NOT NULL,
-          PRIMARY KEY (ID)
-        )
-      `)
-
       const worldRepo = scope.getRepository(WorldEntity);
       const worldId = await worldRepo.save({
         id: (() => "UUID_SHORT()") as any,

@@ -1,4 +1,4 @@
-import knex from "knex";
+import knex, { Knex } from "knex";
 import { ModelConnectivitySettings, ModelConnectivitySettingsDriver } from "./Model";
 import { Repository } from "./Model.entity.repository";
 import { ClassType } from "../types";
@@ -19,7 +19,7 @@ export type QueryParameterTypes =
   | Buffer;
 
 export class TransactionScope {
-  constructor(public readonly kx: knex) {}
+  constructor(public readonly kx: Knex) {}
 
   async execute(query: string, params?: Array<QueryParameterTypes>): Promise<any> {
     const [res] = await this.kx.raw(query, params as any);
@@ -34,7 +34,7 @@ export class TransactionScope {
 }
 
 export class ConnectionManager {
-  constructor(private readonly kx: knex) {}
+  constructor(private readonly kx: Knex) {}
 
   static getConnectionManager(settings: ModelConnectivitySettings): ConnectionManager {
     const key = `${settings.driver}/${settings.username}:###@${settings.host}:${settings.port}/${settings.database}`;
@@ -100,7 +100,7 @@ export class ConnectionManager {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transaction<T>(ctx: (conn: TransactionScope) => Promise<T>): Promise<T> {
-    return this.kx.transaction((trx: knex) => {
+    return this.kx.transaction((trx: Knex) => {
       const connectivity = new TransactionScope(trx);
 
       return ctx(connectivity);

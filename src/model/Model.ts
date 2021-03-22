@@ -16,6 +16,7 @@ export interface ModelConnectivitySettings {
   timezone?: string;
   poolMin?: number;
   poolMax?: number;
+  connectTimeout?: number;
 }
 
 export interface ModelSettings extends ModelConnectivitySettings {}
@@ -38,6 +39,7 @@ export abstract class Model {
         timezone: process.env.CYAN_DB_TIMEZONE || null,
         poolMin: process.env.CYAN_DB_POOL_MIN || 0,
         poolMax: process.env.CYAN_DB_POOL_MAX || 10,
+        connectTimeout: process.env.CYAN_DB_CONNECT_TIMEOUT || 60 * 1000,
       },
       settings
     );

@@ -13,6 +13,7 @@ export interface ModelConnectivitySettings {
     timezone?: string;
     poolMin?: number;
     poolMax?: number;
+    connectTimeout?: number;
 }
 export interface ModelSettings extends ModelConnectivitySettings {
 }

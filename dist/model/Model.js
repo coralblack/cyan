@@ -20,6 +20,7 @@ class Model {
             timezone: process.env.CYAN_DB_TIMEZONE || null,
             poolMin: process.env.CYAN_DB_POOL_MIN || 0,
             poolMax: process.env.CYAN_DB_POOL_MAX || 10,
+            connectTimeout: process.env.CYAN_DB_CONNECT_TIMEOUT || 60 * 1000,
         }, settings);
     }
     async transactionWith(delegate, scope) {

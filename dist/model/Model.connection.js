@@ -39,6 +39,7 @@ class ConnectionManager {
                 database: settings.database,
                 timezone: settings.timezone,
                 charset: settings.charset,
+                connectTimeout: settings.connectTimeout,
                 supportBigNumbers: true,
                 bigNumberStrings: true,
             },

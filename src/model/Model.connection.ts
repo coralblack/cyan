@@ -58,6 +58,8 @@ export class ConnectionManager {
       pool: {
         min: settings.poolMin,
         max: settings.poolMax,
+        createTimeoutMillis: settings.createConnectionTimeout,
+        acquireTimeoutMillis: settings.acquireConnectionTimeout,
       },
       acquireConnectionTimeout: settings.acquireConnectionTimeout,
     };

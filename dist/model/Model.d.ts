@@ -14,6 +14,7 @@ export interface ModelConnectivitySettings {
     poolMin?: number;
     poolMax?: number;
     connectTimeout?: number;
+    createConnectionTimeout?: number;
     acquireConnectionTimeout?: number;
 }
 export interface ModelSettings extends ModelConnectivitySettings {

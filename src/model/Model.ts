@@ -17,6 +17,7 @@ export interface ModelConnectivitySettings {
   poolMin?: number;
   poolMax?: number;
   connectTimeout?: number;
+  createConnectionTimeout?: number;
   acquireConnectionTimeout?: number;
 }
 
@@ -41,6 +42,7 @@ export abstract class Model {
         poolMin: process.env.CYAN_DB_POOL_MIN || 0,
         poolMax: process.env.CYAN_DB_POOL_MAX || 10,
         connectTimeout: process.env.CYAN_DB_CONNECT_TIMEOUT || 60 * 1000,
+        createConnectionTimeout: process.env.CYAN_DB_CREATE_CONNECTION_TIMEOUT || 30 * 1000,
         acquireConnectionTimeout: process.env.CYAN_DB_ACQUIRE_CONNECTION_TIMEOUT || 60 * 1000,
       },
       settings

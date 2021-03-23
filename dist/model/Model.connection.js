@@ -47,6 +47,7 @@ class ConnectionManager {
                 min: settings.poolMin,
                 max: settings.poolMax,
             },
+            acquireConnectionTimeout: settings.acquireConnectionTimeout,
         };
         if (settings.driver === Model_1.ModelConnectivitySettingsDriver.MySQL) {
             delete opts.connection.timezone;

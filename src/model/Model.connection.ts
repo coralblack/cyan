@@ -41,7 +41,7 @@ export class ConnectionManager {
 
     if (managers[key]) return managers[key];
 
-    const opts: any = {
+    const opts: Knex.Config & { connection: Knex.MySqlConnectionConfig; options?: { bindObjectAsString: boolean } } = {
       client: settings.driver,
       connection: {
         host: settings.host,
@@ -59,6 +59,7 @@ export class ConnectionManager {
         min: settings.poolMin,
         max: settings.poolMax,
       },
+      acquireConnectionTimeout: settings.acquireConnectionTimeout,
     };
 
     if (settings.driver === ModelConnectivitySettingsDriver.MySQL) {

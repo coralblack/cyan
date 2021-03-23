@@ -2,7 +2,6 @@ import knex, { Knex } from "knex";
 import { ModelConnectivitySettings, ModelConnectivitySettingsDriver } from "./Model";
 import { Repository } from "./Model.entity.repository";
 import { ClassType } from "../types";
-import { hasOwnProperty } from "../util/builtin";
 
 const managers: { [key: string]: ConnectionManager } = {};
 

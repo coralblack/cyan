@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 import { plainToClass } from "class-transformer";
+import knex, { Knex } from "knex";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
 import { EntityRelationColumnOptions, EntityRelationType } from "./Model.entity.relation";
@@ -113,11 +114,17 @@ export class Repository<T> {
 
                 return [key, val];
               } else {
-                throw new Error(`Invalid Usage: Save with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
+                if (hasOwnProperty(entity, e)) {
+                  throw new Error(`Invalid Usage: Save with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
+                } else {
+                  return [null, null];
+                }
               }
             })();
 
+            if (key === null) return p;
             p[key] = val;
+
             return p;
           }, {})
         )
@@ -246,6 +253,8 @@ export class Repository<T> {
 
   private async select(options: FindOptions<T>): Promise<T[]> {
     try {
+      let kx = this.scope.kx.from(this.repositoryInfo.tableName);
+
       const selectColumns: any[] = options.select || this.repositoryInfo.columns;
       const select = selectColumns
         .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
@@ -255,11 +264,12 @@ export class Repository<T> {
           if (hasOwnProperty(column, "name")) {
             return `${this.repositoryInfo.tableName}.${column.name} as ${alias}`;
           } else {
-            return `${column.raw(this.repositoryInfo.tableName)} as ${alias}`;
+            kx.select(this.scope.kx.raw(`${column.raw(this.repositoryInfo.tableName)} as ${alias}`));
           }
-        });
+        })
+        .filter(x => x);
 
-      let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
+      kx = kx.select(select);
 
       if (options.forUpdate) {
         kx = kx.forUpdate();
@@ -427,28 +437,28 @@ export class Repository<T> {
         }
       } else {
         const column = this.repositoryInfo.fields[ke];
+        const isManipulatable = (v: any) =>
+          typeof v === "object" &&
+          (v.hasOwnProperty(">=") ||
+            v.hasOwnProperty(">") ||
+            v.hasOwnProperty("<=") ||
+            v.hasOwnProperty("<") ||
+            v.hasOwnProperty("!=") ||
+            v.hasOwnProperty("LIKE") ||
+            v.hasOwnProperty("LIKE%") ||
+            v.hasOwnProperty("%LIKE") ||
+            v.hasOwnProperty("%LIKE%") ||
+            v["$AND"] ||
+            v["$OR"] ||
+            typeof v["IS_NULL"] === "boolean" ||
+            typeof v["IS_NOT_NULL"] === "boolean");
 
         if (hasOwnProperty(column, "name")) {
           const k = `${this.repositoryInfo.tableName}.${column.name}`;
           const v = where[ke];
 
           if (Array.isArray(v)) kxx = kxx.whereIn(k, v);
-          else if (
-            typeof v === "object" &&
-            (v.hasOwnProperty(">=") ||
-              v.hasOwnProperty(">") ||
-              v.hasOwnProperty("<=") ||
-              v.hasOwnProperty("<") ||
-              v.hasOwnProperty("!=") ||
-              v.hasOwnProperty("LIKE") ||
-              v.hasOwnProperty("LIKE%") ||
-              v.hasOwnProperty("%LIKE") ||
-              v.hasOwnProperty("%LIKE%") ||
-              v["$AND"] ||
-              v["$OR"] ||
-              typeof v["IS_NULL"] === "boolean" ||
-              typeof v["IS_NOT_NULL"] === "boolean")
-          ) {
+          else if (isManipulatable(v)) {
             const that = this;
 
             kxx[orWhere ? "orWhere" : "andWhere"](function () {
@@ -480,7 +490,23 @@ export class Repository<T> {
           } else if (typeof v === "function") kxx = kxx[orWhere ? "orWhere" : "where"](this.scope.kx.raw(v(k)));
           else kxx = kxx[orWhere ? "orWhere" : "where"](k, v);
         } else {
-          throw new Error(`Invalid Usage: Query with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
+          const k = column.raw(this.repositoryInfo.tableName);
+          const v = where[ke];
+
+          if (Array.isArray(v)) {
+            kxx[orWhere ? "orWhere" : "andWhere"](function () {
+              if (v.length > 0) this.whereRaw(`${k} IN (?)`, [v]);
+              else this.whereRaw("false");
+            });
+          } else if (isManipulatable(v)) {
+            throw new Error(`Invalid Usage: Query with raw column not supported. (${column.raw(this.repositoryInfo.tableName)})`);
+          } else {
+            // const that = this;
+
+            kxx[orWhere ? "orWhere" : "andWhere"](function () {
+              this.whereRaw(`${k} = ?`, [v]);
+            });
+          }
         }
       }
     });

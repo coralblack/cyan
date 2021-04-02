@@ -18,7 +18,7 @@ export interface EntityTableColumnOptions {
 }
 
 export interface EntityRawColumnOptions {
-  raw: (key: string) => string;
+  raw: (tableName: string) => string;
 }
 
 export function Entity(options?: EntityOptions): ClassDecorator {

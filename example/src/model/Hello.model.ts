@@ -634,16 +634,16 @@ export class HelloModel extends BaseModel {
 
     const repo = trx.getRepository(TestRawColEntity);
 
-    const numA1 = Math.floor(Math.random() * 100000);
-    const numA2 = Math.floor(Math.random() * 100000);
+    const numA1 = Math.floor(Math.random() * 100000 + 10000);
+    const numA2 = Math.floor(Math.random() * 100000 + 10000);
 
     const insertedA = await repo.save({
       num1: numA1,
       num2: numA2,
     });
 
-    const numB1 = Math.floor(Math.random() * 10000);
-    const numB2 = Math.floor(Math.random() * 10000);
+    const numB1 = Math.floor(Math.random() * 1000);
+    const numB2 = Math.floor(Math.random() * 1000);
 
     const insertedB = await repo.save({
       num1: numB1,
@@ -687,5 +687,19 @@ export class HelloModel extends BaseModel {
     const foundEA = await repo.find({ where: { numSum: [] } });
 
     assert(foundEA.length === 0, "foundEA.length === 0");
+
+    const foundGTE = await repo.find({ where: { numSum: { ">=": numA1 + numA2 } } });
+
+    assert(
+      foundGTE.length && !foundGTE.find(x => BigInt(x.numSum) < BigInt(numA1 + numA2)),
+      "foundGTE.length && !foundGTE.find(x => BigInt(x.numSum) < BigInt(numA1 + numA2))"
+    );
+
+    const foundLTE = await repo.find({ where: { numSum: { "<=": numA1 + numA2 } } });
+
+    assert(
+      foundLTE.length && !foundLTE.find(x => BigInt(x.numSum) > BigInt(numA1 + numA2)),
+      "foundLTE.length && !foundLTE.find(x => BigInt(x.numSum) > BigInt(numA1 + numA2))"
+    );
   }
 }

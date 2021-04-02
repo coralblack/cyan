@@ -5,9 +5,13 @@ export declare enum EntityColumnType {
     Primary = "PRIMARY",
     Column = "COLUMN"
 }
-export interface EntityColumnOptions {
+export declare type EntityColumnOptions = EntityTableColumnOptions | EntityRawColumnOptions;
+export interface EntityTableColumnOptions {
     name: string;
-    default?: (key: string) => string;
+    default?: (tableName: string) => string;
+}
+export interface EntityRawColumnOptions {
+    raw: (tableName: string) => string;
 }
 export declare function Entity(options?: EntityOptions): ClassDecorator;
 export declare function PrimaryColumn(options: EntityColumnOptions): PropertyDecorator;

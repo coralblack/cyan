@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { assert } from "console";
-import { Column, Entity, OneToOne, PrimaryColumn } from "@coralblack/cyan/dist/model";
+import { Column, Entity, OneToOne, PrimaryColumn, TransactionScope } from "@coralblack/cyan/dist/model";
 import { BaseModel } from "./Base.model";
 
 @Entity({ name: "WORLD" })
@@ -132,6 +132,24 @@ class MulPriJoinEntity {
 
   @OneToOne({ name: ["PRIMARY_ID", "SECONDARY_ID"], target: MulPriEntity })
   mul?: MulPriEntity;
+}
+
+@Entity({ name: "TEST_RAW_COL" })
+class TestRawColEntity {
+  @PrimaryColumn({ name: "ID", default: () => "UUID_SHORT()" })
+  id?: bigint;
+
+  @Column({ name: "NUM_1" })
+  num1: number;
+
+  @Column({ name: "NUM_2" })
+  num2: number;
+
+  @Column({ raw: tbl => `${tbl}.NUM_1 + ${tbl}.NUM_2` })
+  numSum?: number;
+
+  @Column({ name: "CREATED_AT", default: () => "CURRENT_TIMESTAMP()" })
+  createdAt?: Date;
 }
 
 export class HelloModel extends BaseModel {
@@ -595,9 +613,79 @@ export class HelloModel extends BaseModel {
       assert(mulPriJoinEntity.foo === mulPriFoo, "mulPriJoinEntity.foo === mulPriFoo");
       assert(mulPriJoinEntity.mul?.primaryId === primaryId, "mulPriJoinEntity.mul.primaryId === primaryId");
 
+      await this.testRawCol(scope);
+
       return null;
     });
 
     return null;
+  }
+
+  private async testRawCol(trx: TransactionScope) {
+    await trx.execute(`
+      CREATE TABLE IF NOT EXISTS TEST_RAW_COL (
+          ID BIGINT(20) NOT NULL AUTO_INCREMENT,
+          NUM_1 BIGINT(20) DEFAULT NULL,
+          NUM_2 BIGINT(20) DEFAULT NULL,
+          CREATED_AT DATETIME DEFAULT NULL,
+          PRIMARY KEY (ID)
+      )
+    `);
+
+    const repo = trx.getRepository(TestRawColEntity);
+
+    const numA1 = Math.floor(Math.random() * 100000);
+    const numA2 = Math.floor(Math.random() * 100000);
+
+    const insertedA = await repo.save({
+      num1: numA1,
+      num2: numA2,
+    });
+
+    const numB1 = Math.floor(Math.random() * 10000);
+    const numB2 = Math.floor(Math.random() * 10000);
+
+    const insertedB = await repo.save({
+      num1: numB1,
+      num2: numB2,
+    });
+
+    const foundSE = await repo.findOne({ where: { id: BigInt(insertedB) }, select: ["id", "numSum"] });
+
+    assert(Object.keys(foundSE).length === 2 && BigInt(foundSE.numSum) === BigInt(numB1 + numB2));
+
+    const foundA = await repo.findOne({ where: { id: BigInt(insertedA) } });
+
+    assert(BigInt(foundA.numSum) === BigInt(numA1) + BigInt(numA2), "BigInt(foundA.numSum) === BigInt(numA1) + BigInt(numA2)");
+
+    const foundS = await repo.findOne({ where: { numSum: numA1 + numA2 } });
+
+    assert(BigInt(foundS.numSum) === BigInt(numA1) + BigInt(numA2), "foundS.numSum === BigInt(numA1) + BigInt(numA2)");
+
+    const foundSMA = await repo.find({ where: { numSum: [numA1 + numA2, numB1 + numB2] }, order: { numSum: "ASC" } });
+
+    assert(foundSMA.length >= 2, "foundSMA.length >= 2");
+    assert(
+      foundSMA.findIndex(x => BigInt(x.numSum) === BigInt(numA1 + numA2)) >
+        foundSMA.findIndex(x => BigInt(x.numSum) === BigInt(numB1 + numB2)),
+      `foundSMA.findIndex(${foundSMA.findIndex(x => BigInt(x.numSum) === BigInt(numA1 + numA2))} > ${foundSMA.findIndex(
+        x => BigInt(x.numSum) === BigInt(numB1 + numB2)
+      )})`
+    );
+
+    const foundSMD = await repo.find({ where: { numSum: [numA1 + numA2, numB1 + numB2] }, order: { numSum: "DESC" } });
+
+    assert(foundSMD.length >= 2, "foundSMD.length >= 2");
+    assert(
+      foundSMD.findIndex(x => BigInt(x.numSum) === BigInt(numA1 + numA2)) <
+        foundSMD.findIndex(x => BigInt(x.numSum) === BigInt(numB1 + numB2)),
+      `foundSMD.findIndex(${foundSMD.findIndex(x => BigInt(x.numSum) === BigInt(numA1 + numA2))} < ${foundSMD.findIndex(
+        x => BigInt(x.numSum) === BigInt(numB1 + numB2)
+      )})`
+    );
+
+    const foundEA = await repo.find({ where: { numSum: [] } });
+
+    assert(foundEA.length === 0, "foundEA.length === 0");
   }
 }

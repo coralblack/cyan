@@ -10,9 +10,15 @@ export enum EntityColumnType {
   Column = "COLUMN",
 }
 
-export interface EntityColumnOptions {
+export type EntityColumnOptions = EntityTableColumnOptions | EntityRawColumnOptions;
+
+export interface EntityTableColumnOptions {
   name: string;
-  default?: (key: string) => string;
+  default?: (tableName: string) => string;
+}
+
+export interface EntityRawColumnOptions {
+  raw: (key: string) => string;
 }
 
 export function Entity(options?: EntityOptions): ClassDecorator {

@@ -332,6 +332,7 @@ class Repository {
             }
             else {
                 const column = this.repositoryInfo.fields[ke];
+                const isConditional = (v) => typeof v === "object" && (v["$AND"] || v["$OR"]);
                 const isManipulatable = (v) => typeof v === "object" &&
                     (v.hasOwnProperty(">=") ||
                         v.hasOwnProperty(">") ||
@@ -342,71 +343,68 @@ class Repository {
                         v.hasOwnProperty("LIKE%") ||
                         v.hasOwnProperty("%LIKE") ||
                         v.hasOwnProperty("%LIKE%") ||
-                        v["$AND"] ||
-                        v["$OR"] ||
                         typeof v["IS_NULL"] === "boolean" ||
                         typeof v["IS_NOT_NULL"] === "boolean");
-                if (builtin_1.hasOwnProperty(column, "name")) {
-                    const k = `${this.repositoryInfo.tableName}.${column.name}`;
-                    const v = where[ke];
-                    if (Array.isArray(v))
-                        kxx = kxx.whereIn(k, v);
-                    else if (isManipulatable(v)) {
-                        const that = this;
-                        kxx[orWhere ? "orWhere" : "andWhere"](function () {
-                            Object.keys(v).forEach(cond => {
-                                if (cond === "$AND" || cond === "$OR") {
-                                    this[cond === "$OR" ? "orWhere" : "andWhere"](function () {
-                                        v[cond].forEach((vv) => {
-                                            that.where(this, { [ke]: vv }, cond === "$OR");
-                                        });
-                                    });
-                                }
-                                else if (cond === "IS_NULL" || cond === "IS_NOT_NULL") {
-                                    if (v["IS_NULL"] === true || v["IS_NOT_NULL"] === false) {
-                                        this[orWhere ? "orWhereNull" : "whereNull"](k);
-                                    }
-                                    else if (v["IS_NULL"] === false || v["IS_NOT_NULL"] === true) {
-                                        this[orWhere ? "orWhereNotNull" : "whereNotNull"](k);
-                                    }
-                                }
-                                else if (cond === "LIKE" || cond === "%LIKE" || cond === "LIKE%" || cond === "%LIKE%") {
-                                    if (cond === "LIKE")
-                                        this[orWhere ? "orWhere" : "where"](k, "LIKE", v[cond]);
-                                    else if (cond === "%LIKE")
-                                        this[orWhere ? "orWhere" : "where"](k, "LIKE", `%${v[cond]}`);
-                                    else if (cond === "LIKE%")
-                                        this[orWhere ? "orWhere" : "where"](k, "LIKE", `${v[cond]}%`);
-                                    else if (cond === "%LIKE%")
-                                        this[orWhere ? "orWhere" : "where"](k, "LIKE", `%${v[cond]}%`);
-                                }
-                                else if (typeof v[cond] === "function") {
-                                    this.whereRaw(`${k} ${cond} ${v[cond](k)}`);
-                                }
-                                else {
-                                    this[orWhere ? "orWhere" : "where"](k, cond, v[cond]);
-                                }
-                            });
-                        });
+                const raw = !!builtin_1.hasOwnProperty(column, "raw");
+                const k = builtin_1.hasOwnProperty(column, "name")
+                    ? `${this.repositoryInfo.tableName}.${column.name}`
+                    : column.raw(this.repositoryInfo.tableName);
+                const v = where[ke];
+                if (Array.isArray(v)) {
+                    if (!raw) {
+                        kxx.whereIn(k, v);
                     }
-                    else if (typeof v === "function")
-                        kxx = kxx[orWhere ? "orWhere" : "where"](this.scope.kx.raw(v(k)));
-                    else
-                        kxx = kxx[orWhere ? "orWhere" : "where"](k, v);
+                    else {
+                        if (v.length > 0)
+                            kxx.whereRaw(`${k} IN (?)`, [v]);
+                        else
+                            kxx.whereRaw("false");
+                    }
+                }
+                else if (isManipulatable(v) || isConditional(v)) {
+                    const that = this;
+                    kxx[orWhere ? "orWhere" : "andWhere"](function () {
+                        Object.keys(v).forEach(cond => {
+                            if (cond === "$AND" || cond === "$OR") {
+                                this[cond === "$OR" ? "orWhere" : "andWhere"](function () {
+                                    v[cond].forEach((vv) => {
+                                        that.where(this, { [ke]: vv }, cond === "$OR");
+                                    });
+                                });
+                            }
+                            else if (cond === "IS_NULL" || cond === "IS_NOT_NULL") {
+                                if (v["IS_NULL"] === true || v["IS_NOT_NULL"] === false) {
+                                    this[orWhere ? "orWhereNull" : "whereNull"](k);
+                                }
+                                else if (v["IS_NULL"] === false || v["IS_NOT_NULL"] === true) {
+                                    this[orWhere ? "orWhereNotNull" : "whereNotNull"](k);
+                                }
+                            }
+                            else if (cond === "LIKE" || cond === "%LIKE" || cond === "LIKE%" || cond === "%LIKE%") {
+                                if (cond === "LIKE")
+                                    this[orWhere ? "orWhere" : "where"](k, "LIKE", v[cond]);
+                                else if (cond === "%LIKE")
+                                    this[orWhere ? "orWhere" : "where"](k, "LIKE", `%${v[cond]}`);
+                                else if (cond === "LIKE%")
+                                    this[orWhere ? "orWhere" : "where"](k, "LIKE", `${v[cond]}%`);
+                                else if (cond === "%LIKE%")
+                                    this[orWhere ? "orWhere" : "where"](k, "LIKE", `%${v[cond]}%`);
+                            }
+                            else if (typeof v[cond] === "function") {
+                                this.whereRaw(`${k} ${cond} ?`, [v[cond](k)]);
+                            }
+                            else {
+                                this[orWhere ? "orWhereRaw" : "whereRaw"](`${k} ${cond} ?`, [v[cond]]);
+                            }
+                        });
+                    });
+                }
+                else if (typeof v === "function") {
+                    kxx[orWhere ? "orWhere" : "where"](this.scope.kx.raw(v(k)));
                 }
                 else {
-                    const k = column.raw(this.repositoryInfo.tableName);
-                    const v = where[ke];
-                    if (Array.isArray(v)) {
-                        kxx[orWhere ? "orWhere" : "andWhere"](function () {
-                            if (v.length > 0)
-                                this.whereRaw(`${k} IN (?)`, [v]);
-                            else
-                                this.whereRaw("false");
-                        });
-                    }
-                    else if (isManipulatable(v)) {
-                        throw new Error(`Invalid Usage: Query with raw column not supported. (${column.raw(this.repositoryInfo.tableName)})`);
+                    if (!raw) {
+                        kxx[orWhere ? "orWhere" : "where"](k, v);
                     }
                     else {
                         kxx[orWhere ? "orWhere" : "andWhere"](function () {

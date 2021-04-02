@@ -69,9 +69,16 @@ class Repository {
                         return [key, val];
                     }
                     else {
-                        throw new Error(`Invalid Usage: Save with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
+                        if (builtin_1.hasOwnProperty(entity, e)) {
+                            throw new Error(`Invalid Usage: Save with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
+                        }
+                        else {
+                            return [null, null];
+                        }
                     }
                 })();
+                if (key === null)
+                    return p;
                 p[key] = val;
                 return p;
             }, {}))
@@ -175,6 +182,7 @@ class Repository {
     }
     async select(options) {
         try {
+            let kx = this.scope.kx.from(this.repositoryInfo.tableName);
             const selectColumns = options.select || this.repositoryInfo.columns;
             const select = selectColumns
                 .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
@@ -184,10 +192,11 @@ class Repository {
                     return `${this.repositoryInfo.tableName}.${column.name} as ${alias}`;
                 }
                 else {
-                    return `${column.raw(this.repositoryInfo.tableName)} as ${alias}`;
+                    kx.select(this.scope.kx.raw(`${column.raw(this.repositoryInfo.tableName)} as ${alias}`));
                 }
-            });
-            let kx = this.scope.kx.select(select).from(this.repositoryInfo.tableName);
+            })
+                .filter(x => x);
+            kx = kx.select(select);
             if (options.forUpdate) {
                 kx = kx.forUpdate();
             }
@@ -323,25 +332,26 @@ class Repository {
             }
             else {
                 const column = this.repositoryInfo.fields[ke];
+                const isManipulatable = (v) => typeof v === "object" &&
+                    (v.hasOwnProperty(">=") ||
+                        v.hasOwnProperty(">") ||
+                        v.hasOwnProperty("<=") ||
+                        v.hasOwnProperty("<") ||
+                        v.hasOwnProperty("!=") ||
+                        v.hasOwnProperty("LIKE") ||
+                        v.hasOwnProperty("LIKE%") ||
+                        v.hasOwnProperty("%LIKE") ||
+                        v.hasOwnProperty("%LIKE%") ||
+                        v["$AND"] ||
+                        v["$OR"] ||
+                        typeof v["IS_NULL"] === "boolean" ||
+                        typeof v["IS_NOT_NULL"] === "boolean");
                 if (builtin_1.hasOwnProperty(column, "name")) {
                     const k = `${this.repositoryInfo.tableName}.${column.name}`;
                     const v = where[ke];
                     if (Array.isArray(v))
                         kxx = kxx.whereIn(k, v);
-                    else if (typeof v === "object" &&
-                        (v.hasOwnProperty(">=") ||
-                            v.hasOwnProperty(">") ||
-                            v.hasOwnProperty("<=") ||
-                            v.hasOwnProperty("<") ||
-                            v.hasOwnProperty("!=") ||
-                            v.hasOwnProperty("LIKE") ||
-                            v.hasOwnProperty("LIKE%") ||
-                            v.hasOwnProperty("%LIKE") ||
-                            v.hasOwnProperty("%LIKE%") ||
-                            v["$AND"] ||
-                            v["$OR"] ||
-                            typeof v["IS_NULL"] === "boolean" ||
-                            typeof v["IS_NOT_NULL"] === "boolean")) {
+                    else if (isManipulatable(v)) {
                         const that = this;
                         kxx[orWhere ? "orWhere" : "andWhere"](function () {
                             Object.keys(v).forEach(cond => {
@@ -385,7 +395,24 @@ class Repository {
                         kxx = kxx[orWhere ? "orWhere" : "where"](k, v);
                 }
                 else {
-                    throw new Error(`Invalid Usage: Query with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
+                    const k = column.raw(this.repositoryInfo.tableName);
+                    const v = where[ke];
+                    if (Array.isArray(v)) {
+                        kxx[orWhere ? "orWhere" : "andWhere"](function () {
+                            if (v.length > 0)
+                                this.whereRaw(`${k} IN (?)`, [v]);
+                            else
+                                this.whereRaw("false");
+                        });
+                    }
+                    else if (isManipulatable(v)) {
+                        throw new Error(`Invalid Usage: Query with raw column not supported. (${column.raw(this.repositoryInfo.tableName)})`);
+                    }
+                    else {
+                        kxx[orWhere ? "orWhere" : "andWhere"](function () {
+                            this.whereRaw(`${k} = ?`, [v]);
+                        });
+                    }
                 }
             }
         });

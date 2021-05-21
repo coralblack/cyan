@@ -27,7 +27,7 @@ export type FindConditions<T> = {
   [P in keyof T]?: T[P] | T[P][] | FindOperatorComp<T[P]> | RawQuery;
 };
 
-export type OrderCondition<T> = { [P in keyof T]?: "ASC" | "DESC" | RawQuery };
+export type OrderCondition<T> = { [P in keyof T]?: "ASC" | "DESC" | RawQuery } | ((aliases: { [key: string]: string }) => string);
 export type OrderConditions<T> = OrderCondition<T> | Array<OrderCondition<T>>;
 
 export interface FindOneOptions<T> {

@@ -168,6 +168,16 @@ export class HelloModel extends BaseModel {
       await scope.execute(`
         CREATE TABLE IF NOT EXISTS WORLD (
             ID BIGINT(20) NOT NULL AUTO_INCREMENT,
+            UNIVERSE_ID BIGINT(20) DEFAULT NULL,
+            NAME VARCHAR(128) DEFAULT NULL,
+            CREATED_AT DATETIME DEFAULT NULL,
+            PRIMARY KEY (ID)
+        )
+      `);
+
+      await scope.execute(`
+        CREATE TABLE IF NOT EXISTS UNIVERSE (
+            ID BIGINT(20) NOT NULL AUTO_INCREMENT,
             NAME VARCHAR(128) DEFAULT NULL,
             CREATED_AT DATETIME DEFAULT NULL,
             PRIMARY KEY (ID)
@@ -614,6 +624,8 @@ export class HelloModel extends BaseModel {
       assert(mulPriJoinEntity.mul?.primaryId === primaryId, "mulPriJoinEntity.mul.primaryId === primaryId");
 
       await this.testRawCol(scope);
+      await this.testSort1(scope);
+      await this.testSort2(scope);
 
       return null;
     });
@@ -701,5 +713,90 @@ export class HelloModel extends BaseModel {
       foundLTE.length && !foundLTE.find(x => BigInt(x.numSum) > BigInt(numA1 + numA2)),
       "foundLTE.length && !foundLTE.find(x => BigInt(x.numSum) > BigInt(numA1 + numA2))"
     );
+  }
+
+  private async testSort1(trx: TransactionScope) {
+    const fozRepo = trx.getRepository(FozEntity);
+    const fozId1 = await fozRepo.save({ id: (() => "UUID_SHORT()") as any, name: "foz_1", createdAt: new Date() });
+    const fozId2 = await fozRepo.save({ id: (() => "UUID_SHORT()") as any, name: "foz_2", createdAt: new Date() });
+
+    const bazRepo = trx.getRepository(BazEntity);
+    const bazId1 = await bazRepo.save({ id: (() => "UUID_SHORT()") as any, fozId: BigInt(fozId1) });
+    const bazId2 = await bazRepo.save({ id: (() => "UUID_SHORT()") as any, fozId: BigInt(fozId2) });
+
+    const barRepo = trx.getRepository(BarEntity);
+    const barId1 = await barRepo.save({
+      id: (() => "UUID_SHORT()") as any,
+      bazId: BigInt(bazId1),
+      baz2Id: BigInt(bazId1),
+    });
+
+    const barId2 = await barRepo.save({
+      id: (() => "UUID_SHORT()") as any,
+      bazId: BigInt(bazId2),
+      baz2Id: BigInt(bazId2),
+    });
+
+    const fooRepo = trx.getRepository(FooEntity);
+    const fooId1 = await fooRepo.save({
+      id: (() => "UUID_SHORT()") as any,
+      barId: BigInt(barId1),
+    });
+
+    const fooId2 = await fooRepo.save({
+      id: (() => "UUID_SHORT()") as any,
+      barId: BigInt(barId2),
+    });
+
+    const fooSort1 = await fooRepo.findOne({ order: { id: "DESC" }, where: { id: [BigInt(fooId1), BigInt(fooId2)] } });
+
+    assert(BigInt(fooSort1.id) === BigInt(fooId2), "BigInt(fooSort1.id) === BigInt(fooId2)");
+
+    const fooSort2 = await fooRepo.findOne({
+      order: as => `${as[".bar.baz.foz"]}.ID DESC`,
+      where: { id: [BigInt(fooId1), BigInt(fooId2)] },
+    });
+
+    assert(BigInt(fooSort2.bar.baz.foz.id) === BigInt(fozId2), "BigInt(fooSort2.bar.baz.foz.id) === BigInt(fozId2)");
+  }
+
+  private async testSort2(trx: TransactionScope) {
+    const fozRepo = trx.getRepository(FozEntity);
+    const fozId = await fozRepo.save({ id: (() => "UUID_SHORT()") as any, name: "foz_1", createdAt: new Date() });
+
+    const bazRepo = trx.getRepository(BazEntity);
+    const bazId1 = await bazRepo.save({ id: (() => "UUID_SHORT()") as any, fozId: BigInt(fozId) });
+    const bazId2 = await bazRepo.save({ id: (() => "UUID_SHORT()") as any, fozId: BigInt(fozId) });
+
+    const barRepo = trx.getRepository(BarEntity);
+    const barId1 = await barRepo.save({
+      id: (() => "UUID_SHORT()") as any,
+      bazId: BigInt(bazId1),
+      baz2Id: BigInt(bazId1),
+    });
+
+    const barId2 = await barRepo.save({
+      id: (() => "UUID_SHORT()") as any,
+      bazId: BigInt(bazId2),
+      baz2Id: BigInt(bazId2),
+    });
+
+    const fooRepo = trx.getRepository(FooEntity);
+    const fooId1 = await fooRepo.save({
+      id: (() => "UUID_SHORT()") as any,
+      barId: BigInt(barId1),
+    });
+
+    const fooId2 = await fooRepo.save({
+      id: (() => "UUID_SHORT()") as any,
+      barId: BigInt(barId2),
+    });
+
+    const fooSort = await fooRepo.findOne({
+      order: [as => `${as[".bar.baz"]}.FOZ_ID DESC`, { id: "ASC" }],
+      where: { id: [BigInt(fooId1), BigInt(fooId2)] },
+    });
+
+    assert(BigInt(fooSort.bar.baz.foz.id) === BigInt(fozId), "BigInt(fooSort.bar.baz.foz.id) === BigInt(fozId)");
   }
 }

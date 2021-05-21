@@ -182,6 +182,7 @@ class Repository {
     }
     async select(options) {
         try {
+            const joinAliases = {};
             let kx = this.scope.kx.from(this.repositoryInfo.tableName);
             const selectColumns = options.select || this.repositoryInfo.columns;
             const select = selectColumns
@@ -200,18 +201,18 @@ class Repository {
             if (options.forUpdate) {
                 kx = kx.forUpdate();
             }
-            kx = this.join(kx, options.select);
+            kx = this.join(kx, options.select, joinAliases);
             if (options.where) {
                 kx = this.where(kx, options.where);
             }
+            const joinAliasesProp = Object.keys(joinAliases).reduce((p, e) => {
+                p[`.${e.split(joinSeparator).join(".")}`] = joinAliases[e];
+                return p;
+            }, {});
             if (options.order) {
-                if (Array.isArray(options.order)) {
-                    for (let i = 0; i < options.order.length; i++) {
-                        kx = this.order(kx, options.order[i]);
-                    }
-                }
-                else {
-                    kx = this.order(kx, options.order);
+                const orderBy = Array.isArray(options.order) ? options.order : [options.order];
+                for (let i = 0; i < orderBy.length; i++) {
+                    kx = this.order(kx, orderBy[i], joinAliasesProp);
                 }
             }
             if (options.offset)
@@ -233,7 +234,7 @@ class Repository {
     async count(options) {
         try {
             let kx = this.scope.kx.count("* AS cnt").from(this.repositoryInfo.tableName);
-            kx = this.join(kx, []);
+            kx = this.join(kx, [], {});
             if (options.where) {
                 kx = this.where(kx, options.where);
             }
@@ -249,7 +250,7 @@ class Repository {
             throw Error_1.TraceableError(err);
         }
     }
-    joinWith(kx, rec, fromTable, propertyKey, to) {
+    joinWith(kx, rec, fromTable, propertyKey, to, aliases) {
         const kxx = kx;
         const fromColumns = to.options.name;
         const toFields = to.repository.fields;
@@ -265,6 +266,7 @@ class Repository {
                 throw new Error(`Invalid Usage: Join with raw column not allowed. (${column.raw(toTableNameAlias)})`);
             }
         });
+        aliases[propertyKey] = toTableNameAlias;
         if (fromColumns.length !== toColumns.length) {
             throw new Error(`Invalid Relation: Joining columns are not matched (${fromColumns.join(",")} -> ${toColumns.join(",")})`);
         }
@@ -282,16 +284,16 @@ class Repository {
         kxx.select(joinTableColumns);
         let idx = 0;
         to.repository.oneToOneRelationColumns.forEach(relationColumn => {
-            this.joinWith(kxx, rec * 10 + idx++, toTableNameAlias, `${propertyKey}${joinSeparator}${relationColumn}`, to.repository.oneToOneRelations[relationColumn]);
+            this.joinWith(kxx, rec * 10 + idx++, toTableNameAlias, `${propertyKey}${joinSeparator}${relationColumn}`, to.repository.oneToOneRelations[relationColumn], aliases);
         });
         return kxx;
     }
-    join(kx, selectColumns) {
+    join(kx, selectColumns, aliases) {
         const kxx = kx;
         let idx = 0;
         this.repositoryInfo.oneToOneRelationColumns.forEach(relationColumn => {
             if (!selectColumns || selectColumns.indexOf(relationColumn) !== -1) {
-                this.joinWith(kxx, ++idx, this.repositoryInfo.tableName, relationColumn, this.repositoryInfo.oneToOneRelations[relationColumn]);
+                this.joinWith(kxx, ++idx, this.repositoryInfo.tableName, relationColumn, this.repositoryInfo.oneToOneRelations[relationColumn], aliases);
             }
         });
         return kxx;
@@ -416,12 +418,20 @@ class Repository {
         });
         return kxx;
     }
-    order(kx, order) {
+    order(kx, orderCond, joinAliases) {
+        const order = typeof orderCond === "function" ? [orderCond] : orderCond;
         let kxx = kx;
         Object.keys(order).forEach(ke => {
             const column = this.repositoryInfo.fields[ke];
+            const oto = !column && this.repositoryInfo.oneToOneRelations[ke];
             const v = order[ke];
-            if (builtin_1.hasOwnProperty(column, "name")) {
+            if (oto) {
+                throw new Error("Invalid Usage: Sorting by joining column must be used delegated function.)");
+            }
+            else if (!column && typeof v === "function") {
+                kxx = kx.orderByRaw(v(joinAliases));
+            }
+            else if (builtin_1.hasOwnProperty(column, "name")) {
                 const k = `${this.repositoryInfo.tableName}.${column.name}`;
                 if (typeof v === "function") {
                     kxx = kx.orderByRaw(v(k));

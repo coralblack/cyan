@@ -18,6 +18,9 @@ function Entity(options) {
 exports.Entity = Entity;
 function EntityColumn(type, options) {
     return function EntityColumnInner(target, propertyKey) {
+        if (propertyKey.includes("_")) {
+            throw new Error(`Invalid Usage: Underscore is not allowed for the property key. (${propertyKey})`);
+        }
         Decorator_1.Metadata.getStorage().entityColumns.push({
             target: target.constructor,
             propertyKey,

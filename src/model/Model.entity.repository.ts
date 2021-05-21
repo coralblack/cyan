@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 import { plainToClass } from "class-transformer";
-import knex, { Knex } from "knex";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
 import { EntityRelationColumnOptions, EntityRelationType } from "./Model.entity.relation";
@@ -253,6 +252,7 @@ export class Repository<T> {
 
   private async select(options: FindOptions<T>): Promise<T[]> {
     try {
+      const joinAliases: { [key: string]: string } = {};
       let kx = this.scope.kx.from(this.repositoryInfo.tableName);
 
       const selectColumns: any[] = options.select || this.repositoryInfo.columns;
@@ -275,21 +275,25 @@ export class Repository<T> {
         kx = kx.forUpdate();
       }
 
-      kx = this.join(kx, options.select);
+      // Join
+      kx = this.join(kx, options.select, joinAliases);
 
       // Query
       if (options.where) {
         kx = this.where(kx, options.where);
       }
 
+      const joinAliasesProp = Object.keys(joinAliases).reduce((p, e) => {
+        p[`.${e.split(joinSeparator).join(".")}`] = joinAliases[e];
+        return p;
+      }, {});
+
       // Sort
       if (options.order) {
-        if (Array.isArray(options.order)) {
-          for (let i = 0; i < options.order.length; i++) {
-            kx = this.order(kx, options.order[i]);
-          }
-        } else {
-          kx = this.order(kx, options.order);
+        const orderBy = Array.isArray(options.order) ? options.order : [options.order];
+
+        for (let i = 0; i < orderBy.length; i++) {
+          kx = this.order(kx, orderBy[i], joinAliasesProp);
         }
       }
 
@@ -316,7 +320,7 @@ export class Repository<T> {
     try {
       let kx = this.scope.kx.count("* AS cnt").from(this.repositoryInfo.tableName);
 
-      kx = this.join(kx, []);
+      kx = this.join(kx, [], {});
 
       // Query
       if (options.where) {
@@ -338,7 +342,14 @@ export class Repository<T> {
     }
   }
 
-  private joinWith(kx: any, rec: number, fromTable: string, propertyKey: string, to: RelationalRepositoryInfo) {
+  private joinWith(
+    kx: any,
+    rec: number,
+    fromTable: string,
+    propertyKey: string,
+    to: RelationalRepositoryInfo,
+    aliases: { [key: string]: string }
+  ) {
     const kxx = kx;
     const fromColumns = to.options.name;
     const toFields = to.repository.fields;
@@ -354,6 +365,9 @@ export class Repository<T> {
         throw new Error(`Invalid Usage: Join with raw column not allowed. (${column.raw(toTableNameAlias)})`);
       }
     });
+
+    // Assign alias
+    aliases[propertyKey] = toTableNameAlias;
 
     if (fromColumns.length !== toColumns.length) {
       throw new Error(
@@ -382,20 +396,28 @@ export class Repository<T> {
         rec * 10 + idx++,
         toTableNameAlias,
         `${propertyKey}${joinSeparator}${relationColumn}`,
-        to.repository.oneToOneRelations[relationColumn]
+        to.repository.oneToOneRelations[relationColumn],
+        aliases
       );
     });
 
     return kxx;
   }
 
-  private join(kx: any, selectColumns: Array<keyof T>): any {
+  private join(kx: any, selectColumns: Array<keyof T>, aliases: { [key: string]: string }): any {
     const kxx = kx;
     let idx = 0;
 
     this.repositoryInfo.oneToOneRelationColumns.forEach(relationColumn => {
       if (!selectColumns || selectColumns.indexOf(relationColumn as keyof T) !== -1) {
-        this.joinWith(kxx, ++idx, this.repositoryInfo.tableName, relationColumn, this.repositoryInfo.oneToOneRelations[relationColumn]);
+        this.joinWith(
+          kxx,
+          ++idx,
+          this.repositoryInfo.tableName,
+          relationColumn,
+          this.repositoryInfo.oneToOneRelations[relationColumn],
+          aliases
+        );
       }
     });
 
@@ -531,14 +553,20 @@ export class Repository<T> {
     return kxx;
   }
 
-  private order(kx: any, order?: OrderCondition<T>): any {
+  private order(kx: any, orderCond: OrderCondition<T>, joinAliases: { [key: string]: string }): any {
+    const order = typeof orderCond === "function" ? [orderCond] : orderCond;
     let kxx = kx;
 
     Object.keys(order).forEach(ke => {
       const column = this.repositoryInfo.fields[ke];
+      const oto = !column && this.repositoryInfo.oneToOneRelations[ke];
       const v = order[ke];
 
-      if (hasOwnProperty(column, "name")) {
+      if (oto) {
+        throw new Error("Invalid Usage: Sorting by joining column must be used delegated function.)");
+      } else if (!column && typeof v === "function") {
+        kxx = kx.orderByRaw(v(joinAliases));
+      } else if (hasOwnProperty(column, "name")) {
         const k = `${this.repositoryInfo.tableName}.${column.name}`;
 
         if (typeof v === "function") {

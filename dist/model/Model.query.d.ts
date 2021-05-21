@@ -24,7 +24,9 @@ export declare type FindConditions<T> = {
 };
 export declare type OrderCondition<T> = {
     [P in keyof T]?: "ASC" | "DESC" | RawQuery;
-};
+} | ((aliases: {
+    [key: string]: string;
+}) => string);
 export declare type OrderConditions<T> = OrderCondition<T> | Array<OrderCondition<T>>;
 export interface FindOneOptions<T> {
     select?: (keyof T)[];

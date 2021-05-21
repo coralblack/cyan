@@ -32,6 +32,10 @@ export function Entity(options?: EntityOptions): ClassDecorator {
 
 function EntityColumn(type: EntityColumnType, options: EntityColumnOptions): PropertyDecorator {
   return function EntityColumnInner(target: any, propertyKey: string) {
+    if (propertyKey.includes("_")) {
+      throw new Error(`Invalid Usage: Underscore is not allowed for the property key. (${propertyKey})`);
+    }
+
     Metadata.getStorage().entityColumns.push({
       target: target.constructor,
       propertyKey,

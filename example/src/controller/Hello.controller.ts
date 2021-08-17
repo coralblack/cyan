@@ -36,6 +36,8 @@ class CustomClass {
   constructor(public readonly message: string) {}
 }
 
+const DEFAULT_VAL = "DEFAULT_VAL";
+
 export class HelloController extends BaseController {
   constructor(@Inject() private readonly helloService: HelloService, @Inject() private readonly httpHelper: HttpHelper) {
     super();
@@ -51,6 +53,7 @@ export class HelloController extends BaseController {
     @BodyParam("enum.num", { type: "ENUM", enum: FooBarNum }) fooBarNum: FooBarNum,
     @BodyParam("enum.str", { type: "ENUM", enum: FooBarStr }) fooBarStr: FooBarStr,
     @BodyParam("enum.mix", { type: "ENUM", enum: FooBarMix }) fooBarMix: FooBarMix,
+    @BodyParam("default", { default: DEFAULT_VAL }) defaultVal: string,
     @BodyParam("invalidMsg", { invalid: "INVALID!" }) _invalidMsg: FooBarNum,
     @BodyParam("invalidFun", { invalid: (v: string) => `INVALID(${v})` }) _invalidFun: FooBarNum,
     @BodyParam("invalidFunTh", { invalid: (v: string) => new HttpError(400, `INVALID(${v})`) }) _invalidFunTh: FooBarNum,
@@ -85,6 +88,9 @@ export class HelloController extends BaseController {
 
     if (foo !== "DO-NOT-RECUR") {
       assert((await this.httpHelper.request(payload)).status === 200, "Assert 200");
+
+      // DefaultVal
+      assert(defaultVal === DEFAULT_VAL, "Assert defaultVal");
 
       // Bool
       assert(

@@ -166,6 +166,9 @@ class Handler {
                     throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
                 }
             }
+            if (builtin_1.hasOwnProperty(actionParam.options, "default") && value === undefined) {
+                value = actionParam.options.default;
+            }
             if (actionParam.options.required && (value === null || typeof value === "undefined" || (typeof value === "string" && value === ""))) {
                 if (typeof actionParam.options.missing === "function") {
                     throw actionParam.options.missing();

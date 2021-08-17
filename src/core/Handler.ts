@@ -144,6 +144,10 @@ export class Handler {
         }
       }
 
+      if (hasOwnProperty(actionParam.options, "default") && value === undefined) {
+        value = actionParam.options.default;
+      }
+
       if (actionParam.options.required && (value === null || typeof value === "undefined" || (typeof value === "string" && value === ""))) {
         if (typeof actionParam.options.missing === "function") {
           throw actionParam.options.missing();

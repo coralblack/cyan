@@ -2,13 +2,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Cyan } from "src/core";
-import { CyanRequest } from "src/types/Handler";
 import { Controller } from "./Http.controller";
 import { HttpError } from "./Http.error";
 import { HttpRequest as HttpRequest } from "./Http.request";
 import { HttpResponse } from "./Http.response";
 import { Status as HttpStatus } from "./Http.status";
+import { Cyan } from "../core";
+import { CyanRequest } from "../types/Handler";
 import { getConstructorName, hasOwnProperty } from "../util/builtin";
 
 export class ApiController extends Controller {

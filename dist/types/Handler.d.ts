@@ -1,6 +1,6 @@
-import { HttpMethod } from "src/http";
 import { NextFunction } from "express";
 import { Headers as HttpHeaders, Params as HttpParams, Queries as HttpQueries } from "./Http";
+import { HttpMethod } from "../http";
 import { HttpError } from "../http/Http.error";
 import { HttpRequest as HttpRequest } from "../http/Http.request";
 import { Status as HttpStatus } from "../http/Http.status";

@@ -2,7 +2,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { assert } from "console";
-import { Column, Entity, OneToOne, PrimaryColumn, TransactionScope } from "@coralblack/cyan/dist/model";
+import {
+  Column,
+  Entity,
+  getColumnByEntityProperty,
+  getEntityProperties,
+  OneToOne,
+  PrimaryColumn,
+  TransactionScope,
+} from "@coralblack/cyan/dist/model";
 import { BaseModel } from "./Base.model";
 
 @Entity({ name: "WORLD" })
@@ -798,5 +806,14 @@ export class HelloModel extends BaseModel {
     });
 
     assert(BigInt(fooSort.bar.baz.foz.id) === BigInt(fozId), "BigInt(fooSort.bar.baz.foz.id) === BigInt(fozId)");
+
+    const keysExpected = ["id", "name", "worldId", "world", "createdAt"];
+    const keys = getEntityProperties(HelloEntity);
+    const column = getColumnByEntityProperty(HelloEntity, "worldId");
+
+    keys.sort();
+    keysExpected.sort();
+
+    assert(keys.join("|") === keysExpected.join("|") && column === "WORLD_ID");
   }
 }

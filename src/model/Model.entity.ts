@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Metadata } from "../core/Decorator";
+import { ClassType } from "../types";
+import { hasOwnProperty } from "../util/builtin";
 
 export interface EntityOptions {
   name: string;
@@ -51,4 +53,21 @@ export function PrimaryColumn(options: EntityColumnOptions): PropertyDecorator {
 
 export function Column(options: EntityColumnOptions): PropertyDecorator {
   return EntityColumn(EntityColumnType.Column, options);
+}
+
+export function getEntityProperties<T>(entity: ClassType<T>): Array<keyof T> {
+  return Metadata.getStorage()
+    .entityColumns.filter(x => x.target === entity)
+    .map(x => x.propertyKey)
+    .concat(
+      Metadata.getStorage()
+        .entityRelations.filter(x => x.target === entity)
+        .map(x => x.propertyKey)
+    ) as Array<keyof T>;
+}
+
+export function getColumnByEntityProperty<T>(entity: ClassType<T>, propertyKey: keyof T): string | undefined {
+  return (v => (hasOwnProperty(v.options, "name") ? v.options.name : undefined))(
+    Metadata.getStorage().entityColumns.find(x => x.target === entity && x.propertyKey === propertyKey)
+  );
 }

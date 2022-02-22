@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Column = exports.PrimaryColumn = exports.Entity = exports.EntityColumnType = void 0;
+exports.getColumnByEntityProperty = exports.getEntityProperties = exports.Column = exports.PrimaryColumn = exports.Entity = exports.EntityColumnType = void 0;
 const Decorator_1 = require("../core/Decorator");
+const builtin_1 = require("../util/builtin");
 var EntityColumnType;
 (function (EntityColumnType) {
     EntityColumnType["Primary"] = "PRIMARY";
@@ -37,4 +38,17 @@ function Column(options) {
     return EntityColumn(EntityColumnType.Column, options);
 }
 exports.Column = Column;
+function getEntityProperties(entity) {
+    return Decorator_1.Metadata.getStorage()
+        .entityColumns.filter(x => x.target === entity)
+        .map(x => x.propertyKey)
+        .concat(Decorator_1.Metadata.getStorage()
+        .entityRelations.filter(x => x.target === entity)
+        .map(x => x.propertyKey));
+}
+exports.getEntityProperties = getEntityProperties;
+function getColumnByEntityProperty(entity, propertyKey) {
+    return (v => (builtin_1.hasOwnProperty(v.options, "name") ? v.options.name : undefined))(Decorator_1.Metadata.getStorage().entityColumns.find(x => x.target === entity && x.propertyKey === propertyKey));
+}
+exports.getColumnByEntityProperty = getColumnByEntityProperty;
 //# sourceMappingURL=Model.entity.js.map

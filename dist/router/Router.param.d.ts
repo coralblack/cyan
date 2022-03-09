@@ -16,6 +16,7 @@ export interface ParamEnumOptions<T extends {
 }> extends ParamBaseOptions {
     type: "ENUM";
     enum: T;
+    array?: boolean;
 }
 export declare type ParamOptions<T extends {
     [key: string]: string | number;

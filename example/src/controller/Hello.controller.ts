@@ -5,6 +5,7 @@ import { HttpHelper } from "@coralblack/cyan/dist/helper";
 import { HttpMethod } from "@coralblack/cyan/dist/http";
 import { HttpResponder } from "@coralblack/cyan/dist/http/Http.response";
 import { BodyParam, Get, HeaderParam, PathParam, Post, QueryParam } from "@coralblack/cyan/dist/router";
+import e from "express";
 import { BaseController } from "./Base.controller";
 import { HttpError } from "../../../dist/http/Http.error";
 import { HelloService } from "../service/Hello.service";
@@ -212,21 +213,44 @@ export class HelloController extends BaseController {
         "Assert enum 3"
       );
 
-      // BigInt
-      const bigintPayload = {
-        method: HttpMethod.Post,
-        url: "http://127.0.0.1:9090/test/bigint/case1",
+      const test = async (method: HttpMethod, path: string, data: any, opts: { contains?: string; equal?: string }) => {
+        const bigintPayload = {
+          method: method,
+          url: `http://127.0.0.1:9090${path}`,
+        };
+
+        const res = (await this.httpHelper.request({ ...bigintPayload, data })).body;
+
+        if (opts.contains) {
+          assert(String(res).includes(opts.contains));
+        }
+
+        if (opts.equal) {
+          assert(res === opts.equal);
+        }
       };
 
-      assert((await this.httpHelper.request({ ...bigintPayload, data: { val: 0 } })).body === "RES:0");
-      assert((await this.httpHelper.request({ ...bigintPayload, data: { val: 1 } })).body === "RES:1");
-      assert(String((await this.httpHelper.request({ ...bigintPayload, data: { val: "" } })).body).includes("Missing BODY"));
-      assert(String((await this.httpHelper.request({ ...bigintPayload, data: { val: "1x" } })).body).includes("Invalid BODY"));
-      assert(String((await this.httpHelper.request({ ...bigintPayload, data: { val: "x1" } })).body).includes("Invalid BODY"));
-      /* assert(
-        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bigint: 0 } })).body as string).includes("{B-F}"),
-        "Assert bool 8"
-      ); */
+      // BigInt
+      await test(HttpMethod.Post, "/test/bigint/case1", { val: 0 }, { equal: "RES:0" });
+      await test(HttpMethod.Post, "/test/bigint/case1", { val: 1 }, { equal: "RES:1" });
+      await test(HttpMethod.Post, "/test/bigint/case1", { val: "" }, { contains: "Missing BODY" });
+      await test(HttpMethod.Post, "/test/bigint/case1", { val: "1x" }, { contains: "Invalid BODY" });
+      await test(HttpMethod.Post, "/test/bigint/case1", { val: "x1" }, { contains: "Invalid BODY" });
+
+      // Enum
+      await test(HttpMethod.Post, "/test/enum/case1", { val: FooBarNum.Bar }, { equal: `RES:${FooBarNum.Bar}` });
+      await test(HttpMethod.Post, "/test/enum/case1", { val: FooBarStr.Foo }, { contains: "Invalid BODY" });
+      await test(HttpMethod.Post, "/test/enum/case2", { val: FooBarNum.Foo }, { equal: `RES:${FooBarNum.Foo}` });
+      await test(HttpMethod.Post, "/test/enum/case2", { val: [FooBarNum.Foo] }, { equal: `RES:${FooBarNum.Foo}` });
+      await test(
+        HttpMethod.Post,
+        "/test/enum/case2",
+        { val: [FooBarNum.Foo, FooBarNum.Bar] },
+        { equal: `RES:${FooBarNum.Foo},${FooBarNum.Bar}` }
+      );
+      await test(HttpMethod.Post, "/test/enum/case2", { val: [FooBarNum.Foo, FooBarStr.Bar] }, { contains: "Invalid BODY" });
+      await test(HttpMethod.Post, "/test/enum/case2", undefined, { contains: "Missing BODY" });
+      await test(HttpMethod.Post, "/test/enum/case2", { val: [] }, { contains: "Missing BODY" });
     } else {
       await this.helloService.model();
     }
@@ -281,7 +305,17 @@ export class HelloController extends BaseController {
   }
 
   @Post("/test/bigint/case1")
-  testBigintCase1(@BodyParam("val", { required: true, type: BigInt }) bigintVal: bigint): string {
-    return `RES:${bigintVal}`;
+  testBigintCase1(@BodyParam("val", { required: true, type: BigInt }) val: bigint): string {
+    return `RES:${val}`;
+  }
+
+  @Post("/test/enum/case1")
+  testEnumCase1(@BodyParam("val", { required: true, type: "ENUM", enum: FooBarNum }) val: FooBarNum): string {
+    return `RES:${val}`;
+  }
+
+  @Post("/test/enum/case2")
+  testEnumCase2(@BodyParam("val", { required: true, type: "ENUM", enum: FooBarNum, array: true }) val: FooBarNum[]): string {
+    return `RES:${val.join(",")}`;
   }
 }

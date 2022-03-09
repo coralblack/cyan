@@ -89,18 +89,36 @@ export class Handler {
         if (value || typeof value === "boolean" || typeof value === "number") {
           if (actionParam.options.type === "ENUM") {
             const em = actionParam.options.enum;
-            const emKey = Object.keys(em).find(e => em[e] === value);
+            const check = (iterVal: any) => {
+              const emKey = Object.keys(em).find(e => em[e] === iterVal);
 
-            if (!emKey) {
-              let invalid: any = actionParam.options.invalid;
+              if (!emKey) {
+                let invalid: any = actionParam.options.invalid;
 
-              if (typeof invalid === "function") {
-                invalid = invalid(value);
+                if (typeof invalid === "function") {
+                  invalid = invalid(iterVal);
+                }
+
+                throw invalid instanceof HttpError
+                  ? invalid
+                  : HttpResponder.badRequest.message(
+                      invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`
+                    )();
+              }
+            };
+
+            if (actionParam.options.array === true) {
+              value = Array.isArray(value) ? value : [value];
+
+              for (const iterVal of value) {
+                check(iterVal);
               }
 
-              throw invalid instanceof HttpError
-                ? invalid
-                : HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
+              if (actionParam.options.required && !value.length) {
+                value = null;
+              }
+            } else {
+              check(value);
             }
           } else if (Array.prototype === e.prototype) {
             if (typeof value === "string") {

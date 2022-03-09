@@ -4,7 +4,7 @@ import { Inject } from "@coralblack/cyan/dist/core";
 import { HttpHelper } from "@coralblack/cyan/dist/helper";
 import { HttpMethod } from "@coralblack/cyan/dist/http";
 import { HttpResponder } from "@coralblack/cyan/dist/http/Http.response";
-import { BodyParam, Get, HeaderParam, PathParam, QueryParam } from "@coralblack/cyan/dist/router";
+import { BodyParam, Get, HeaderParam, PathParam, Post, QueryParam } from "@coralblack/cyan/dist/router";
 import { BaseController } from "./Base.controller";
 import { HttpError } from "../../../dist/http/Http.error";
 import { HelloService } from "../service/Hello.service";
@@ -49,6 +49,7 @@ export class HelloController extends BaseController {
     @QueryParam("bar", { required: true }) bar: number,
     @BodyParam("foo.bar.baz", { required: true }) baz: number,
     @BodyParam("bool", { required: false }) bool: boolean,
+
     @HeaderParam("content-type", { required: true }) foz: string,
     @BodyParam("enum.num", { type: "ENUM", enum: FooBarNum }) fooBarNum: FooBarNum,
     @BodyParam("enum.str", { type: "ENUM", enum: FooBarStr }) fooBarStr: FooBarStr,
@@ -78,6 +79,7 @@ export class HelloController extends BaseController {
       data: {
         foo: { bar: { baz: 1234, bool: bool } },
         bool: true,
+        bigint: 1,
         enum: {
           num: FooBarNum.Bar,
           str: "FOO",
@@ -152,6 +154,7 @@ export class HelloController extends BaseController {
           "INVALID(VVSS)",
         "Assert invalid 3"
       );
+
       // Validate
       assert(
         ((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateStr: "vvs" } })).body as string).includes("HiHi"),
@@ -208,6 +211,22 @@ export class HelloController extends BaseController {
         ).includes("Invalid BODY: enum.mix"),
         "Assert enum 3"
       );
+
+      // BigInt
+      const bigintPayload = {
+        method: HttpMethod.Post,
+        url: "http://127.0.0.1:9090/test/bigint/case1",
+      };
+
+      assert((await this.httpHelper.request({ ...bigintPayload, data: { val: 0 } })).body === "RES:0");
+      assert((await this.httpHelper.request({ ...bigintPayload, data: { val: 1 } })).body === "RES:1");
+      assert(String((await this.httpHelper.request({ ...bigintPayload, data: { val: "" } })).body).includes("Missing BODY"));
+      assert(String((await this.httpHelper.request({ ...bigintPayload, data: { val: "1x" } })).body).includes("Invalid BODY"));
+      assert(String((await this.httpHelper.request({ ...bigintPayload, data: { val: "x1" } })).body).includes("Invalid BODY"));
+      /* assert(
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, bigint: 0 } })).body as string).includes("{B-F}"),
+        "Assert bool 8"
+      ); */
     } else {
       await this.helloService.model();
     }
@@ -259,5 +278,10 @@ export class HelloController extends BaseController {
   @Get("/hello/error/cls")
   helloCustomClass(): never {
     throw new CustomClass("Throw Custom Class");
+  }
+
+  @Post("/test/bigint/case1")
+  testBigintCase1(@BodyParam("val", { required: true, type: BigInt }) bigintVal: bigint): string {
+    return `RES:${bigintVal}`;
   }
 }

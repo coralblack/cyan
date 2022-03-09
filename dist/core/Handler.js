@@ -115,15 +115,29 @@ class Handler {
                 if (value || typeof value === "boolean" || typeof value === "number") {
                     if (actionParam.options.type === "ENUM") {
                         const em = actionParam.options.enum;
-                        const emKey = Object.keys(em).find(e => em[e] === value);
-                        if (!emKey) {
-                            let invalid = actionParam.options.invalid;
-                            if (typeof invalid === "function") {
-                                invalid = invalid(value);
+                        const check = (iterVal) => {
+                            const emKey = Object.keys(em).find(e => em[e] === iterVal);
+                            if (!emKey) {
+                                let invalid = actionParam.options.invalid;
+                                if (typeof invalid === "function") {
+                                    invalid = invalid(iterVal);
+                                }
+                                throw invalid instanceof Http_error_1.HttpError
+                                    ? invalid
+                                    : Http_response_1.HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
                             }
-                            throw invalid instanceof Http_error_1.HttpError
-                                ? invalid
-                                : Http_response_1.HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
+                        };
+                        if (actionParam.options.array === true) {
+                            value = Array.isArray(value) ? value : [value];
+                            for (const iterVal of value) {
+                                check(iterVal);
+                            }
+                            if (actionParam.options.required && !value.length) {
+                                value = null;
+                            }
+                        }
+                        else {
+                            check(value);
                         }
                     }
                     else if (Array.prototype === e.prototype) {

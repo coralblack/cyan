@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { assert } from "console";
@@ -314,7 +313,7 @@ export class HelloModel extends BaseModel {
       assert(save2Id === save2, "save2Id === save2");
 
       const save3Id = BigInt(new Date().getTime() + 1234);
-      const save3 = await repo.save({ id: save3Id } as any);
+      const save3 = await repo.save({ id: save3Id } as any); // eslint-disable-line @typescript-eslint/no-unsafe-argument
       const found3 = await repo.findOne({ where: { id: save3 as bigint } });
 
       assert(found3.name.length === "2ca4d1cc-010c-11eb-8052-51e99d56d62f".length, "found3.name.length");

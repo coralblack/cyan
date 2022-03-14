@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-/* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 import "reflect-metadata";
 import "source-map-support";
 

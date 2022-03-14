@@ -98,9 +98,17 @@ class Handler {
     }
     static getActionParams(req, route, actionParams) {
         return (route.params || []).map((e, i) => {
-            const actionParam = actionParams.find(ap => ap.index === i);
-            if (!actionParam)
+            const actionParamFound = actionParams.find(ap => ap.index === i);
+            let actionParam = null;
+            if (!actionParamFound)
                 return undefined;
+            if (builtin_1.hasOwnProperty(actionParamFound.options, "type") && actionParamFound.options.type === "REQ") {
+                const { httpRequestContext } = req;
+                return httpRequestContext[actionParamFound.options.attr];
+            }
+            else {
+                actionParam = actionParamFound;
+            }
             let value = ((type, name) => {
                 if (type === router_1.ParamType.Query)
                     return req.query[name];

@@ -24,7 +24,6 @@
     "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/quotes": ["error"],
     "@typescript-eslint/semi": ["error"],
-    "@typescript-eslint/no-unused-vars-experimental": "warn",
     "@typescript-eslint/member-delimiter-style": [
       "error",
       {
@@ -171,7 +170,7 @@
       {
         "arrays": "always-multiline",
         "objects": "always-multiline",
-        "imports": "never",
+        "imports": "always-multiline",
         "exports": "never",
         "functions": "never"
       }

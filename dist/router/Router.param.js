@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.QueryParam = exports.PathParam = exports.BodyParam = exports.HeaderParam = exports.ParamType = void 0;
+exports.SystemParam = exports.QueryParam = exports.PathParam = exports.BodyParam = exports.HeaderParam = exports.ParamType = void 0;
 const Decorator_1 = require("../core/Decorator");
 var ParamType;
 (function (ParamType) {
@@ -8,6 +8,7 @@ var ParamType;
     ParamType["Header"] = "HEADER";
     ParamType["Body"] = "BODY";
     ParamType["Path"] = "PATH";
+    ParamType["System"] = "SYSTEM";
 })(ParamType = exports.ParamType || (exports.ParamType = {}));
 function Param(type, name, options) {
     return function ParamInner(target, method, index) {
@@ -37,4 +38,8 @@ function QueryParam(name, options) {
     return Param(ParamType.Query, name, options || {});
 }
 exports.QueryParam = QueryParam;
+function SystemParam(options) {
+    return Param(ParamType.System, null, options);
+}
+exports.SystemParam = SystemParam;
 //# sourceMappingURL=Router.param.js.map

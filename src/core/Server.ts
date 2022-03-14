@@ -23,12 +23,12 @@ export class Server {
   public beforeInitRoutes() {}
   public afterInitRoutes() {}
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars-experimental, @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public onPageNotFound(request: ExpressRequest, response: ExpressResponse, next: NextFunction) {
     response.status(404).send(`Page Not Found. (${request.method} ${request.path})`).end();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars-experimental, @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public onError(error: Error, request: ExpressRequest, response: ExpressResponse, next: NextFunction) {
     if (error instanceof HttpError) {
       response

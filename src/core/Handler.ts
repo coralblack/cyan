@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unused-vars-experimental */
 import * as bodyParser from "body-parser";
 import cors, { CorsOptions, CorsOptionsDelegate } from "cors";
 import { NextFunction } from "express";
@@ -13,7 +12,7 @@ import { HttpError } from "../http/Http.error";
 import { HttpRequest as HttpRequest } from "../http/Http.request";
 import { HttpResponder, HttpResponse } from "../http/Http.response";
 import { Status as HttpStatus } from "../http/Http.status";
-import { ParamType } from "../router";
+import { ParamOptions, ParamType } from "../router";
 import { CyanRequest, CyanResponse, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
 import { datetime } from "../util";
@@ -74,9 +73,17 @@ export class Handler {
 
   public static getActionParams(req: CyanRequest, route: RouteMetadataArgs, actionParams: RouteParamMetadataArgs[]): any[] {
     return (route.params || []).map((e, i) => {
-      const actionParam = actionParams.find(ap => ap.index === i);
+      const actionParamFound: RouteParamMetadataArgs = actionParams.find(ap => ap.index === i);
+      let actionParam: RouteParamMetadataArgs<ParamOptions> = null;
 
-      if (!actionParam) return undefined;
+      if (!actionParamFound) return undefined;
+      if (hasOwnProperty(actionParamFound.options, "type") && actionParamFound.options.type === "REQ") {
+        const { httpRequestContext } = req;
+
+        return httpRequestContext[actionParamFound.options.attr];
+      } else {
+        actionParam = (actionParamFound as unknown) as RouteParamMetadataArgs<ParamOptions>;
+      }
 
       let value = ((type: ParamType, name: string) => {
         if (type === ParamType.Query) return req.query[name];

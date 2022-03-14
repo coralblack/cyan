@@ -1,6 +1,6 @@
 import { Controller as HttpController } from "..//http/Http.controller";
 export declare type Headers = {
-    [key: string]: string | number;
+    [key: string]: string | number | boolean;
 };
 export declare type Queries = {
     [key: string]: string;

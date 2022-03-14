@@ -21,11 +21,11 @@ class TaskInvoker {
         while (this.invokeEnabled) {
             try {
                 await this.target[this.method].call(this.target);
-                await util_1.delay(this.options.nextInvokeDelay);
+                await (0, util_1.delay)(this.options.nextInvokeDelay);
             }
             catch (err) {
                 this.logger.error(err);
-                await util_1.delay(this.options.nextErrorDelay || 10 * 1000);
+                await (0, util_1.delay)(this.options.nextErrorDelay || 10 * 1000);
             }
         }
     }

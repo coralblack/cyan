@@ -83,7 +83,7 @@ class Cyan {
         });
     }
     initHandler(controller, route) {
-        const path = path_1.resolve(this.settings.basePath || "/", route.path);
+        const path = (0, path_1.resolve)(this.settings.basePath || "/", route.path);
         this.logger.info(`[router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
         const handlers = [
             [router_1.MIDDLEWARE_PRIORITY_BEFORE_HANDLER, Handler_1.Handler.beforeHandler(controller)],

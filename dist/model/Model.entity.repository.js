@@ -55,7 +55,7 @@ class Repository {
                 .insert(this.repositoryInfo.columns.reduce((p, e) => {
                 const [key, val] = (() => {
                     const column = this.repositoryInfo.fields[e];
-                    if (builtin_1.hasOwnProperty(column, "name")) {
+                    if ((0, builtin_1.hasOwnProperty)(column, "name")) {
                         const key = column.name;
                         const val = ((v) => {
                             if (typeof v === "function")
@@ -69,7 +69,7 @@ class Repository {
                         return [key, val];
                     }
                     else {
-                        if (builtin_1.hasOwnProperty(entity, e)) {
+                        if ((0, builtin_1.hasOwnProperty)(entity, e)) {
                             throw new Error(`Invalid Usage: Save with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
                         }
                         else {
@@ -93,7 +93,7 @@ class Repository {
             return res || lid.seq;
         }
         catch (err) {
-            throw Error_1.TraceableError(err);
+            throw (0, Error_1.TraceableError)(err);
         }
     }
     async update(entity, options) {
@@ -106,7 +106,7 @@ class Repository {
             kx = this.where(kx, conditions);
             kx = kx.update(((options === null || options === void 0 ? void 0 : options.update) || this.repositoryInfo.columns).reduce((p, e) => {
                 const column = this.repositoryInfo.fields[e];
-                if (builtin_1.hasOwnProperty(column, "name")) {
+                if ((0, builtin_1.hasOwnProperty)(column, "name")) {
                     p[column.name] = entity[e];
                 }
                 else {
@@ -121,7 +121,7 @@ class Repository {
             return Number(affected);
         }
         catch (err) {
-            throw Error_1.TraceableError(err);
+            throw (0, Error_1.TraceableError)(err);
         }
     }
     async delete(entity, options) {
@@ -140,7 +140,7 @@ class Repository {
             return Number(affected);
         }
         catch (err) {
-            throw Error_1.TraceableError(err);
+            throw (0, Error_1.TraceableError)(err);
         }
     }
     async findOne(options) {
@@ -149,7 +149,7 @@ class Repository {
             return res || null;
         }
         catch (err) {
-            throw Error_1.TraceableError(err);
+            throw (0, Error_1.TraceableError)(err);
         }
     }
     async find(options) {
@@ -158,7 +158,7 @@ class Repository {
             return res;
         }
         catch (err) {
-            throw Error_1.TraceableError(err);
+            throw (0, Error_1.TraceableError)(err);
         }
     }
     async pagination(options) {
@@ -177,7 +177,7 @@ class Repository {
             };
         }
         catch (err) {
-            throw Error_1.TraceableError(err);
+            throw (0, Error_1.TraceableError)(err);
         }
     }
     async select(options) {
@@ -189,7 +189,7 @@ class Repository {
                 .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
                 .map(alias => {
                 const column = this.repositoryInfo.fields[alias];
-                if (builtin_1.hasOwnProperty(column, "name")) {
+                if ((0, builtin_1.hasOwnProperty)(column, "name")) {
                     return `${this.repositoryInfo.tableName}.${column.name} as ${alias}`;
                 }
                 else {
@@ -228,7 +228,7 @@ class Repository {
             return rows.map((row) => this.mapping(row));
         }
         catch (err) {
-            throw Error_1.TraceableError(err);
+            throw (0, Error_1.TraceableError)(err);
         }
     }
     async count(options) {
@@ -247,7 +247,7 @@ class Repository {
             return BigInt(res[0].cnt || 0);
         }
         catch (err) {
-            throw Error_1.TraceableError(err);
+            throw (0, Error_1.TraceableError)(err);
         }
     }
     joinWith(kx, rec, fromTable, propertyKey, to, aliases) {
@@ -259,7 +259,7 @@ class Repository {
         const toTable = `${to.repository.tableName} AS ${toTableNameAlias}`;
         const joinTableColumns = to.repository.columns.map(col => {
             const column = to.repository.fields[col];
-            if (builtin_1.hasOwnProperty(column, "name")) {
+            if ((0, builtin_1.hasOwnProperty)(column, "name")) {
                 return `${toTableNameAlias}.${column.name} as ${propertyKey}${joinSeparator}${col}`;
             }
             else {
@@ -273,7 +273,7 @@ class Repository {
         kxx.leftOuterJoin(toTable, function () {
             for (let i = 0; i < fromColumns.length; i++) {
                 const column = toFields[toColumns[i]];
-                if (builtin_1.hasOwnProperty(column, "name")) {
+                if ((0, builtin_1.hasOwnProperty)(column, "name")) {
                     this.on(`${fromTable}.${fromColumns[i]}`, `${toTableNameAlias}.${column.name}`);
                 }
                 else {
@@ -347,8 +347,8 @@ class Repository {
                         v.hasOwnProperty("%LIKE%") ||
                         typeof v["IS_NULL"] === "boolean" ||
                         typeof v["IS_NOT_NULL"] === "boolean");
-                const raw = !!builtin_1.hasOwnProperty(column, "raw");
-                const k = builtin_1.hasOwnProperty(column, "name")
+                const raw = !!(0, builtin_1.hasOwnProperty)(column, "raw");
+                const k = (0, builtin_1.hasOwnProperty)(column, "name")
                     ? `${this.repositoryInfo.tableName}.${column.name}`
                     : column.raw(this.repositoryInfo.tableName);
                 const v = where[ke];
@@ -431,7 +431,7 @@ class Repository {
             else if (!column && typeof v === "function") {
                 kxx = kx.orderByRaw(v(joinAliases));
             }
-            else if (builtin_1.hasOwnProperty(column, "name")) {
+            else if ((0, builtin_1.hasOwnProperty)(column, "name")) {
                 const k = `${this.repositoryInfo.tableName}.${column.name}`;
                 if (typeof v === "function") {
                     kxx = kx.orderByRaw(v(k));
@@ -448,7 +448,7 @@ class Repository {
         return kxx;
     }
     mapping(row, repositoryInfo, prefix) {
-        const x = class_transformer_1.plainToClass((repositoryInfo || this.repositoryInfo).target, Object.keys(row)
+        const x = (0, class_transformer_1.plainToClass)((repositoryInfo || this.repositoryInfo).target, Object.keys(row)
             .filter(e => !prefix || e.startsWith(`${prefix}${joinSeparator}`))
             .reduce((p, c) => {
             const col = !prefix ? c : c.substring(prefix.length + 1);

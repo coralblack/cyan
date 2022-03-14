@@ -4,7 +4,7 @@ import { Inject } from "@coralblack/cyan/dist/core";
 import { HttpHelper } from "@coralblack/cyan/dist/helper";
 import { HttpMethod } from "@coralblack/cyan/dist/http";
 import { HttpResponder } from "@coralblack/cyan/dist/http/Http.response";
-import { BodyParam, Get, HeaderParam, PathParam, Post, QueryParam } from "@coralblack/cyan/dist/router";
+import { BodyParam, Get, HeaderParam, PathParam, Post, QueryParam, SystemParam } from "@coralblack/cyan/dist/router";
 import e from "express";
 import { BaseController } from "./Base.controller";
 import { HttpError } from "../../../dist/http/Http.error";
@@ -251,6 +251,9 @@ export class HelloController extends BaseController {
       await test(HttpMethod.Post, "/test/enum/case2", { val: [FooBarNum.Foo, FooBarStr.Bar] }, { contains: "Invalid BODY" });
       await test(HttpMethod.Post, "/test/enum/case2", undefined, { contains: "Missing BODY" });
       await test(HttpMethod.Post, "/test/enum/case2", { val: [] }, { contains: "Missing BODY" });
+
+      // SysParam
+      await test(HttpMethod.Post, "/test/sys/req/method", {}, { contains: "RES:POST" });
     } else {
       await this.helloService.model();
     }
@@ -317,5 +320,13 @@ export class HelloController extends BaseController {
   @Post("/test/enum/case2")
   testEnumCase2(@BodyParam("val", { required: true, type: "ENUM", enum: FooBarNum, array: true }) val: FooBarNum[]): string {
     return `RES:${val.join(",")}`;
+  }
+
+  @Post("/test/sys/req/method")
+  testSysReqMethod(
+    @SystemParam({ type: "REQ", attr: "method" }) reqMethod: HttpMethod,
+    @SystemParam({ type: "REQ", attr: "remoteAddress" }) remoteAddress: string
+  ): string {
+    return `RES:${reqMethod}:${remoteAddress}`;
   }
 }

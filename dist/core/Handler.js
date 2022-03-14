@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -98,9 +102,17 @@ class Handler {
     }
     static getActionParams(req, route, actionParams) {
         return (route.params || []).map((e, i) => {
-            const actionParam = actionParams.find(ap => ap.index === i);
-            if (!actionParam)
+            const actionParamFound = actionParams.find(ap => ap.index === i);
+            let actionParam = null;
+            if (!actionParamFound)
                 return undefined;
+            if ((0, builtin_1.hasOwnProperty)(actionParamFound.options, "type") && actionParamFound.options.type === "REQ") {
+                const { httpRequestContext } = req;
+                return httpRequestContext[actionParamFound.options.attr];
+            }
+            else {
+                actionParam = actionParamFound;
+            }
             let value = ((type, name) => {
                 if (type === router_1.ParamType.Query)
                     return req.query[name];
@@ -109,7 +121,7 @@ class Handler {
                 if (type === router_1.ParamType.Header)
                     return req.headers[name];
                 if (type === router_1.ParamType.Body)
-                    return lodash_1.get(req.body, name);
+                    return (0, lodash_1.get)(req.body, name);
             })(actionParam.type, actionParam.name);
             try {
                 if (value || typeof value === "boolean" || typeof value === "number") {
@@ -180,7 +192,7 @@ class Handler {
                     throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
                 }
             }
-            if (builtin_1.hasOwnProperty(actionParam.options, "default") && value === undefined) {
+            if ((0, builtin_1.hasOwnProperty)(actionParam.options, "default") && value === undefined) {
                 value = actionParam.options.default;
             }
             if (actionParam.options.required && (value === null || typeof value === "undefined" || (typeof value === "string" && value === ""))) {
@@ -229,8 +241,8 @@ class Handler {
                     next(resp);
                 }
                 else {
-                    const name = builtin_1.hasOwnProperty(resp, "name") ? resp.name : "Unknown";
-                    next(new Error_1.ExtendedError(builtin_1.hasOwnProperty(resp, "message") ? resp.message : `An error has occurred. (${name})`, resp));
+                    const name = (0, builtin_1.hasOwnProperty)(resp, "name") ? resp.name : "Unknown";
+                    next(new Error_1.ExtendedError((0, builtin_1.hasOwnProperty)(resp, "message") ? resp.message : `An error has occurred. (${name})`, resp));
                 }
             }
             else {
@@ -317,8 +329,8 @@ class Handler {
         };
     }
     static accessLogger(name) {
-        return morgan_1.default((tokens, req, res) => [
-            `${util_1.datetime(",")}`,
+        return (0, morgan_1.default)((tokens, req, res) => [
+            `${(0, util_1.datetime)(",")}`,
             `${name},`,
             tokens.method(req, res),
             tokens.url(req, res),
@@ -346,7 +358,7 @@ class Handler {
         return bodyParser.urlencoded(options || { extended: true });
     }
     static corsHandler(options) {
-        return cors_1.default(options);
+        return (0, cors_1.default)(options);
     }
 }
 exports.Handler = Handler;

@@ -32,7 +32,7 @@ class Model {
                 return resp;
             }
             catch (err) {
-                throw Error_1.TraceableError(err);
+                throw (0, Error_1.TraceableError)(err);
             }
         }
         const manager = Model_connection_1.ConnectionManager.getConnectionManager(this.settings);

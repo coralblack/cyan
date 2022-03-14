@@ -10,7 +10,7 @@ const Http_response_1 = require("../http/Http.response");
 class Server {
     constructor(cyan) {
         this.cyan = cyan;
-        this._server = express_1.default();
+        this._server = (0, express_1.default)();
     }
     getServer() {
         return this._server;

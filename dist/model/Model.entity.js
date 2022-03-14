@@ -48,7 +48,7 @@ function getEntityProperties(entity) {
 }
 exports.getEntityProperties = getEntityProperties;
 function getColumnByEntityProperty(entity, propertyKey) {
-    return (v => (builtin_1.hasOwnProperty(v.options, "name") ? v.options.name : undefined))(Decorator_1.Metadata.getStorage().entityColumns.find(x => x.target === entity && x.propertyKey === propertyKey));
+    return (v => ((0, builtin_1.hasOwnProperty)(v.options, "name") ? v.options.name : undefined))(Decorator_1.Metadata.getStorage().entityColumns.find(x => x.target === entity && x.propertyKey === propertyKey));
 }
 exports.getColumnByEntityProperty = getColumnByEntityProperty;
 //# sourceMappingURL=Model.entity.js.map

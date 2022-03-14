@@ -76,7 +76,7 @@ class ConnectionManager {
                 return next();
             };
         }
-        const kx = knex_1.default(opts);
+        const kx = (0, knex_1.default)(opts);
         managers[key] = new ConnectionManager(kx);
         return managers[key];
     }

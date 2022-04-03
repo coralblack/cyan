@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { HttpMethod } from "src/http";
 import * as bodyParser from "body-parser";
 import cors, { CorsOptions, CorsOptionsDelegate } from "cors";
 import { NextFunction } from "express";

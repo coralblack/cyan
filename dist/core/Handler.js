@@ -128,7 +128,11 @@ class Handler {
                     if (actionParam.options.type === "ENUM") {
                         const em = actionParam.options.enum;
                         const check = (iterVal) => {
-                            const emKey = Object.keys(em).find(e => em[e] === iterVal);
+                            const emKey = Object.keys(em).find(e => {
+                                if (actionParam.type === router_1.ParamType.Query)
+                                    return String(em[e]) === String(iterVal);
+                                return em[e] === iterVal;
+                            });
                             if (!emKey) {
                                 let invalid = actionParam.options.invalid;
                                 if (typeof invalid === "function") {
@@ -139,6 +143,11 @@ class Handler {
                                     : Http_response_1.HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
                             }
                         };
+                        if (typeof value === "string") {
+                            if (actionParam.options.delimiter) {
+                                value = value.split(actionParam.options.delimiter);
+                            }
+                        }
                         if (actionParam.options.array === true) {
                             value = Array.isArray(value) ? value : [value];
                             for (const iterVal of value) {

@@ -97,7 +97,10 @@ export class Handler {
           if (actionParam.options.type === "ENUM") {
             const em = actionParam.options.enum;
             const check = (iterVal: any) => {
-              const emKey = Object.keys(em).find(e => em[e] === iterVal);
+              const emKey = Object.keys(em).find(e => {
+                if (actionParam.type === ParamType.Query) return String(em[e]) === String(iterVal);
+                return em[e] === iterVal;
+              });
 
               if (!emKey) {
                 let invalid: any = actionParam.options.invalid;
@@ -113,6 +116,12 @@ export class Handler {
                     )();
               }
             };
+
+            if (typeof value === "string") {
+              if (actionParam.options.delimiter) {
+                value = value.split(actionParam.options.delimiter);
+              }
+            }
 
             if (actionParam.options.array === true) {
               value = Array.isArray(value) ? value : [value];

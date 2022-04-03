@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { assert } from "console";
+import { ok as assert } from "assert";
 import { Inject } from "@coralblack/cyan/dist/core";
 import { HttpHelper } from "@coralblack/cyan/dist/helper";
 import { HttpMethod } from "@coralblack/cyan/dist/http";
 import { HttpResponder } from "@coralblack/cyan/dist/http/Http.response";
 import { BodyParam, Get, HeaderParam, PathParam, Post, QueryParam, SystemParam } from "@coralblack/cyan/dist/router";
-import e from "express";
 import { BaseController } from "./Base.controller";
 import { HttpError } from "../../../dist/http/Http.error";
 import { HelloService } from "../service/Hello.service";
@@ -213,20 +212,29 @@ export class HelloController extends BaseController {
         "Assert enum 3"
       );
 
-      const test = async (method: HttpMethod, path: string, data: any, opts: { contains?: string; equal?: string }) => {
+      const test = async (method: HttpMethod, path: string, data: any, opts: { contains?: string; equal?: string; debug?: boolean }) => {
         const bigintPayload = {
           method: method,
           url: `http://127.0.0.1:9090${path}`,
         };
 
-        const res = (await this.httpHelper.request({ ...bigintPayload, data })).body;
+        const res = (
+          await this.httpHelper.request({
+            ...bigintPayload,
+            data: method !== HttpMethod.Get ? data : undefined,
+            params: method === HttpMethod.Get ? data : undefined,
+          })
+        ).body;
 
         if (opts.contains) {
-          assert(String(res).includes(opts.contains));
+          assert(
+            String(res).includes(opts.contains),
+            `${method} ${path} ${JSON.stringify(data)} ${JSON.stringify(opts)} -> ${String(res)}`
+          );
         }
 
         if (opts.equal) {
-          assert(res === opts.equal);
+          assert(res === opts.equal, `${method} ${path} ${JSON.stringify(data)} ${JSON.stringify(opts)} -> ${String(res)}`);
         }
       };
 
@@ -251,6 +259,15 @@ export class HelloController extends BaseController {
       await test(HttpMethod.Post, "/test/enum/case2", { val: [FooBarNum.Foo, FooBarStr.Bar] }, { contains: "Invalid BODY" });
       await test(HttpMethod.Post, "/test/enum/case2", undefined, { contains: "Missing BODY" });
       await test(HttpMethod.Post, "/test/enum/case2", { val: [] }, { contains: "Missing BODY" });
+      await test(HttpMethod.Get, "/test/enum/case3", { val: FooBarNum.Foo }, { equal: `RES:${FooBarNum.Foo}` });
+      await test(
+        HttpMethod.Get,
+        "/test/enum/case3",
+        { val: [FooBarNum.Foo, FooBarNum.Bar].join(",") },
+        { equal: `RES:${FooBarNum.Foo},${FooBarNum.Bar}` }
+      );
+      await test(HttpMethod.Get, "/test/enum/case3", { val: [] }, { contains: "Missing QUERY" });
+      await test(HttpMethod.Get, "/test/enum/case3", {}, { contains: "Missing QUERY" });
 
       // SysParam
       await test(HttpMethod.Post, "/test/sys/req/method", {}, { contains: "RES:POST" });
@@ -319,6 +336,13 @@ export class HelloController extends BaseController {
 
   @Post("/test/enum/case2")
   testEnumCase2(@BodyParam("val", { required: true, type: "ENUM", enum: FooBarNum, array: true }) val: FooBarNum[]): string {
+    return `RES:${val.join(",")}`;
+  }
+
+  @Get("/test/enum/case3")
+  testEnumCase3(
+    @QueryParam("val", { required: true, type: "ENUM", enum: FooBarNum, array: true, delimiter: "," }) val: FooBarNum[]
+  ): string {
     return `RES:${val.join(",")}`;
   }
 

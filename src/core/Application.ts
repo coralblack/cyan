@@ -145,7 +145,8 @@ export class Cyan {
   }
 
   private initHandler(controller: HttpController, route: RouteMetadataArgs) {
-    const path = this.settings.os ? route.path : resolve(this.settings.basePath || "/", route.path);
+    const basePath = this.settings.basePath?.endsWith("/") ? this.settings.basePath.slice(0, -1) : this.settings.basePath || "";
+    const path = (basePath => (route.path.startsWith("/") ? `${basePath}${route.path}` : `${basePath}/${route.path}`))(basePath);
 
     this.logger.info(`[router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
 

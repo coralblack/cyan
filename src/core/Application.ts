@@ -27,7 +27,6 @@ export enum Stage {
 }
 
 export interface CyanSettings {
-  os?: "Windows_NT" | undefined;
   stage?: Stage;
   name?: string;
   port?: number;

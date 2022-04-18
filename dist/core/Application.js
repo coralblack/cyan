@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Cyan = exports.Stage = void 0;
 require("reflect-metadata");
 require("source-map-support");
-const path_1 = require("path");
 const Decorator_1 = require("./Decorator");
 const Handler_1 = require("./Handler");
 const Injector_1 = require("./Injector");
@@ -83,7 +82,9 @@ class Cyan {
         });
     }
     initHandler(controller, route) {
-        const path = (0, path_1.resolve)(this.settings.basePath || "/", route.path);
+        var _a;
+        const basePath = ((_a = this.settings.basePath) === null || _a === void 0 ? void 0 : _a.endsWith("/")) ? this.settings.basePath.slice(0, -1) : this.settings.basePath || "";
+        const path = (basePath => (route.path.startsWith("/") ? `${basePath}${route.path}` : `${basePath}/${route.path}`))(basePath);
         this.logger.info(`[router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
         const handlers = [
             [router_1.MIDDLEWARE_PRIORITY_BEFORE_HANDLER, Handler_1.Handler.beforeHandler(controller)],

@@ -14,6 +14,7 @@ export type QueryParameterTypes =
   | Date
   | Array<string>
   | Array<number>
+  | Array<bigint>
   | Array<Date>
   | Array<boolean>
   | Buffer;

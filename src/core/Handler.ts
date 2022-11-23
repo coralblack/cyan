@@ -39,7 +39,10 @@ export class Handler {
     if (String.prototype === type.prototype) {
       value = type(value);
     } else if (Number.prototype === type.prototype) {
+      if (RegExp(/\s/).test(value)) throw new Error("..");
+
       value = type(value);
+
       if (isNaN(value)) throw new Error("..");
     } else if (BigInt.prototype === type.prototype) {
       value = type(value);

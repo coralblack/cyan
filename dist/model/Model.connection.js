@@ -12,7 +12,8 @@ class TransactionScope {
     constructor(kx) {
         this.kx = kx;
     }
-    async execute(query, params) {
+    async execute(query, params, options) {
+        (options === null || options === void 0 ? void 0 : options.debug) && console.log(this.kx.raw(query, params).toQuery());
         const [res] = await this.kx.raw(query, params);
         return res;
     }

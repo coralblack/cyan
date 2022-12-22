@@ -22,10 +22,11 @@ export type QueryParameterTypes =
 export class TransactionScope {
   constructor(public readonly kx: Knex) {}
 
-  async execute(query: string, params?: Array<QueryParameterTypes>): Promise<any> {
+  async execute(query: string, params?: Array<QueryParameterTypes>, options?: { debug: boolean }): Promise<any> {
     const [res] = await this.kx.raw(query, params as any);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    // eslint-disable-next-line no-console
+    options?.debug && console.log(this.kx.raw(query, params as any).toQuery());
     return res;
   }
 

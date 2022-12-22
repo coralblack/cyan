@@ -23,13 +23,11 @@ export class TransactionScope {
   constructor(public readonly kx: Knex) {}
 
   async execute(query: string, params?: Array<QueryParameterTypes>, options?: { debug: boolean }): Promise<any> {
+    const resp = await this.kx.raw(query, params as any);
+
     // eslint-disable-next-line no-console
-    options?.debug && console.log(this.kx.raw(query, params as any).toQuery());
-
-    const [res] = await this.kx.raw(query, params as any);
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return res;
+    options?.debug && console.log(resp.toQuery());
+    return resp[0];
   }
 
   getRepository<T>(repository: ClassType<T>): Repository<T> {

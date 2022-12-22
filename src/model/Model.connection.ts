@@ -26,7 +26,7 @@ export class TransactionScope {
     const resp = await this.kx.raw(query, params as any);
 
     // eslint-disable-next-line no-console
-    options?.debug && console.log(resp.toQuery());
+    options?.debug && console.log(this.kx.raw(query, params as any).toQuery());
     return resp[0];
   }
 

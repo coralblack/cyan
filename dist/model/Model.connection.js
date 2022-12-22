@@ -13,9 +13,9 @@ class TransactionScope {
         this.kx = kx;
     }
     async execute(query, params, options) {
-        const resp = await this.kx.raw(query, params);
+        const [res] = await this.kx.raw(query, params);
         (options === null || options === void 0 ? void 0 : options.debug) && console.log(this.kx.raw(query, params).toQuery());
-        return resp[0];
+        return res;
     }
     getRepository(repository) {
         return new Model_entity_repository_1.Repository(this, repository);

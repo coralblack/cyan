@@ -16,6 +16,7 @@ import {
   OrderCondition,
   Paginatable,
   PaginationOptions,
+  StreamFunctions,
   UpdateOptions,
 } from "./Model.query";
 import { Metadata } from "../core/Decorator";
@@ -250,14 +251,16 @@ export class Repository<T> {
     }
   }
 
-  async streaming(options: FindOptions<T>, fn: (row: T) => void, endFn: () => void): Promise<void> {
+  async streaming(options: FindOptions<T>, streamFn: StreamFunctions<T>): Promise<void> {
     try {
       const kx = this.prepareQuery(options);
 
       await kx.stream(stream => {
-        stream.on("data", row => fn(this.mapping(row)));
+        stream.on("data", row => streamFn.onData(this.mapping(row)));
 
-        stream.on("end", () => endFn());
+        if (streamFn.onStreamEnd) {
+          stream.on("end", () => streamFn.onStreamEnd());
+        }
       });
     } catch (err) {
       throw TraceableError(err);

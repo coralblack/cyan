@@ -180,12 +180,14 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async streaming(options, fn, endFn) {
+    async streaming(options, streamFn) {
         try {
             const kx = this.prepareQuery(options);
             await kx.stream(stream => {
-                stream.on("data", row => fn(this.mapping(row)));
-                stream.on("end", () => endFn());
+                stream.on("data", row => streamFn.onData(this.mapping(row)));
+                if (streamFn.onStreamEnd) {
+                    stream.on("end", () => streamFn.onStreamEnd());
+                }
             });
         }
         catch (err) {

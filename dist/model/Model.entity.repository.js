@@ -70,7 +70,6 @@ class Repository {
                     }
                     else {
                         if ((0, builtin_1.hasOwnProperty)(entity, e)) {
-                            ("");
                             throw new Error(`Invalid Usage: Save with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
                         }
                         else {

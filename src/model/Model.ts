@@ -19,6 +19,7 @@ export interface ModelConnectivitySettings {
   connectTimeout?: number;
   createConnectionTimeout?: number;
   acquireConnectionTimeout?: number;
+  extra?: { [key: string]: any };
 }
 
 export interface ModelSettings extends ModelConnectivitySettings {}

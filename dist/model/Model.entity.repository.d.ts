@@ -33,6 +33,8 @@ export declare class Repository<T> {
     findOne(options?: FindOneOptions<T>): Promise<T>;
     find(options?: FindOptions<T>): Promise<T[]>;
     pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>>;
+    streaming(options: FindOptions<T>, fn: (row: T) => void, endFn: () => void): Promise<void>;
+    private prepareQuery;
     private select;
     count(options: CountOptions<T>): Promise<bigint>;
     private joinWith;

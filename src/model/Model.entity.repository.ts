@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { plainToClass } from "class-transformer";
+import { Knex } from "knex";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
 import { EntityRelationColumnOptions, EntityRelationType } from "./Model.entity.relation";
@@ -113,6 +114,7 @@ export class Repository<T> {
                 return [key, val];
               } else {
                 if (hasOwnProperty(entity, e)) {
+                  ("");
                   throw new Error(`Invalid Usage: Save with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
                 } else {
                   return [null, null];
@@ -249,7 +251,21 @@ export class Repository<T> {
     }
   }
 
-  private async select(options: FindOptions<T>): Promise<T[]> {
+  async streaming(options: FindOptions<T>, fn: (row: T) => void, endFn: () => void): Promise<void> {
+    try {
+      const kx = this.prepareQuery(options);
+
+      await kx.stream(stream => {
+        stream.on("data", row => fn(this.mapping(row)));
+
+        stream.on("end", () => endFn());
+      });
+    } catch (err) {
+      throw TraceableError(err);
+    }
+  }
+
+  private prepareQuery(options: FindOptions<T>): Knex.QueryBuilder {
     try {
       const joinAliases: { [key: string]: string } = {};
       let kx = this.scope.kx.from(this.repositoryInfo.tableName);
@@ -305,7 +321,15 @@ export class Repository<T> {
         console.log(">", kx.toSQL());
       }
 
-      const rows = await kx;
+      return kx;
+    } catch (err) {
+      throw TraceableError(err);
+    }
+  }
+
+  private async select(options: FindOptions<T>): Promise<T[]> {
+    try {
+      const rows = await this.prepareQuery(options);
 
       if (!rows || !rows.length) return [];
 

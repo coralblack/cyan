@@ -70,6 +70,7 @@ class Repository {
                     }
                     else {
                         if ((0, builtin_1.hasOwnProperty)(entity, e)) {
+                            ("");
                             throw new Error(`Invalid Usage: Save with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
                         }
                         else {
@@ -180,7 +181,19 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async select(options) {
+    async streaming(options, fn, endFn) {
+        try {
+            const kx = this.prepareQuery(options);
+            await kx.stream(stream => {
+                stream.on("data", row => fn(this.mapping(row)));
+                stream.on("end", () => endFn());
+            });
+        }
+        catch (err) {
+            throw (0, Error_1.TraceableError)(err);
+        }
+    }
+    prepareQuery(options) {
         try {
             const joinAliases = {};
             let kx = this.scope.kx.from(this.repositoryInfo.tableName);
@@ -222,7 +235,15 @@ class Repository {
             if (options.debug) {
                 console.log(">", kx.toSQL());
             }
-            const rows = await kx;
+            return kx;
+        }
+        catch (err) {
+            throw (0, Error_1.TraceableError)(err);
+        }
+    }
+    async select(options) {
+        try {
+            const rows = await this.prepareQuery(options);
             if (!rows || !rows.length)
                 return [];
             return rows.map((row) => this.mapping(row));

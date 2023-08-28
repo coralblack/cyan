@@ -7,6 +7,7 @@ export class BaseModel extends Model {
       username: "root",
       password: null,
       database: "cyan",
+      extra: { multipleStatements: true },
     });
   }
 }

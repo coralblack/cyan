@@ -32,18 +32,7 @@ class ConnectionManager {
             return managers[key];
         const opts = {
             client: settings.driver,
-            connection: {
-                host: settings.host,
-                user: settings.username,
-                port: settings.port,
-                password: settings.password,
-                database: settings.database,
-                timezone: settings.timezone,
-                charset: settings.charset,
-                connectTimeout: settings.connectTimeout,
-                supportBigNumbers: true,
-                bigNumberStrings: true,
-            },
+            connection: Object.assign({ host: settings.host, user: settings.username, port: settings.port, password: settings.password, database: settings.database, timezone: settings.timezone, charset: settings.charset, connectTimeout: settings.connectTimeout, supportBigNumbers: true, bigNumberStrings: true }, ((settings === null || settings === void 0 ? void 0 : settings.extra) || {})),
             pool: {
                 min: settings.poolMin,
                 max: settings.poolMax,

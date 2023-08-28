@@ -56,6 +56,7 @@ export class ConnectionManager {
         connectTimeout: settings.connectTimeout,
         supportBigNumbers: true,
         bigNumberStrings: true,
+        ...(settings?.extra || {}),
       },
       pool: {
         min: settings.poolMin,

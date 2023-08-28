@@ -399,6 +399,14 @@ export class HelloModel extends BaseModel {
         "queryPagination1.items[1].id === queryPagination3.items[0].id"
       );
 
+      const queriesRaw = await scope.execute(`
+        SELECT ID FROM HELLO WHERE ID = ?;
+        SELECT ID FROM HELLO WHERE ID = ?;
+      `, [queryPagination1.items[0].id, queryPagination1.items[1].id]);
+
+      assert(queryPagination1.items[0].id === queriesRaw[0][0].ID, "queryPagination1.items[0].id === queriesRaw[0][0].ID");
+      assert(queryPagination1.items[0].id === queriesRaw[1][0].ID, "queryPagination1.items[0].id === queriesRaw[1][0].ID");
+
       const queryRaw = await scope.execute("SELECT ID FROM HELLO WHERE ID = ?", [queryPagination1.items[0].id]);
 
       assert(queryPagination1.items[0].id === queryRaw[0].ID, "queryPagination1.items[0].id === queryRaw[0].ID");

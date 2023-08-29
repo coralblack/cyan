@@ -260,7 +260,7 @@ export class Repository<T> {
     }
   }
 
-  async streamAsync(options: FindOptions<T>, streamFn?: StreamFunctions<T>): Promise<void> {
+  async streamAsync(options: FindOptions<T>, streamFn: StreamFunctions<T>): Promise<void> {
     try {
       const kx = this.prepareQuery(options);
 

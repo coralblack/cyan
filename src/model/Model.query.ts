@@ -1,4 +1,6 @@
-export type RawQuery = (k: string) => string;
+type Value = string | number | bigint | boolean | null | Date | Array<string> | Array<number> | Array<Date> | Array<boolean> | Buffer;
+
+export type RawQuery = (k: string) => string | { operand: string; bindings: Value[] };
 export type InsertId = bigint | number;
 
 type FindOperatorComp<T> = Partial<{

@@ -829,10 +829,7 @@ export class HelloModel extends BaseModel {
 
     const select: Array<keyof HelloEntity> = ["id"];
     const where: FindConditions<HelloEntity> = {
-      createdAt: {
-        ">=": startOfCurrentDay,
-        "<=": current,
-      },
+      createdAt: { ">=": startOfCurrentDay, "<=": current },
     };
 
     const repoId: Set<string> = new Set(
@@ -846,7 +843,7 @@ export class HelloModel extends BaseModel {
 
     let recordCount = 0;
 
-    repo.streaming(
+    await repo.streaming(
       { select, where },
       {
         onData: (entity: HelloEntity) => {

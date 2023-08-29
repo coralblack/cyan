@@ -49,7 +49,6 @@ export class HelloController extends BaseController {
     @QueryParam("bar", { required: true }) bar: number,
     @BodyParam("foo.bar.baz", { required: true }) baz: number,
     @BodyParam("bool", { required: false }) bool: boolean,
-
     @HeaderParam("content-type", { required: true }) foz: string,
     @BodyParam("enum.num", { type: "ENUM", enum: FooBarNum }) fooBarNum: FooBarNum,
     @BodyParam("enum.str", { type: "ENUM", enum: FooBarStr }) fooBarStr: FooBarStr,
@@ -181,34 +180,27 @@ export class HelloController extends BaseController {
         "Assert validate 5"
       );
       assert(
-        (
-          (await this.httpHelper.request({ ...payload, data: { ...payload.data, validateBad: "vvs!" } })).body as {
-            code: string;
-            message: string;
-          }
-        ).message === "VvS",
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, validateBad: "vvs!" } })).body as {
+          code: string;
+          message: string;
+        }).message === "VvS",
         "Assert validate 6"
       );
 
       // Enum
       assert(
-        (
-          (await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, num: "FOO" } } }))
-            .body as string
-        ).includes("Invalid BODY: enum.num"),
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, num: "FOO" } } }))
+          .body as string).includes("Invalid BODY: enum.num"),
         "Assert enum 1"
       );
       assert(
-        (
-          (await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, str: 1 } } })).body as string
-        ).includes("Invalid BODY: enum.str"),
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, str: 1 } } }))
+          .body as string).includes("Invalid BODY: enum.str"),
         "Assert enum 2"
       );
       assert(
-        (
-          (await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, mix: "FOO" } } }))
-            .body as string
-        ).includes("Invalid BODY: enum.mix"),
+        ((await this.httpHelper.request({ ...payload, data: { ...payload.data, enum: { ...payload.data.enum, mix: "FOO" } } }))
+          .body as string).includes("Invalid BODY: enum.mix"),
         "Assert enum 3"
       );
 

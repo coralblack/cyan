@@ -4,6 +4,7 @@ import { assert } from "console";
 import {
   Column,
   Entity,
+  FindConditions,
   getColumnByEntityProperty,
   getEntityProperties,
   OneToOne,
@@ -248,6 +249,8 @@ export class HelloModel extends BaseModel {
         )
       `);
 
+      const current = new Date();
+
       const worldRepo = scope.getRepository(WorldEntity);
       const worldId = await worldRepo.save({
         id: (() => "UUID_SHORT()") as any,
@@ -344,7 +347,7 @@ export class HelloModel extends BaseModel {
         where: {
           createdAt: {
             ">=": new Date("2000-01-01 00:00:00"),
-            "<=": () => "CURRENT_TIMESTAMP()",
+            "<=": current,
           },
         },
         order: { createdAt: "ASC" },
@@ -354,7 +357,7 @@ export class HelloModel extends BaseModel {
         where: {
           createdAt: {
             ">=": new Date("2000-01-01 00:00:00"),
-            "<=": () => "CURRENT_TIMESTAMP()",
+            "<=": current,
           },
         },
         order: { createdAt: (k: string) => `${k} IS NOT NULL, ${k} DESC` },
@@ -366,7 +369,7 @@ export class HelloModel extends BaseModel {
         where: {
           createdAt: {
             ">=": new Date("2000-01-01 00:00:00"),
-            "<=": () => "CURRENT_TIMESTAMP()",
+            "<=": current,
           },
         },
         order: [{ createdAt: (k: string) => `${k} IS NOT NULL, ${k} DESC` }, { createdAt: "ASC" }],
@@ -378,7 +381,7 @@ export class HelloModel extends BaseModel {
         where: {
           createdAt: {
             ">=": new Date("2000-01-01 00:00:00"),
-            "<=": () => "CURRENT_TIMESTAMP()",
+            "<=": current,
           },
         },
         order: [{ createdAt: "ASC" }, { createdAt: (k: string) => `${k} IS NOT NULL, ${k} DESC` }],
@@ -425,7 +428,7 @@ export class HelloModel extends BaseModel {
         where: {
           createdAt: {
             ">=": new Date("2000-01-01 00:00:00"),
-            "<=": () => "CURRENT_TIMESTAMP()",
+            "<=": current,
           },
         },
       });
@@ -633,6 +636,7 @@ export class HelloModel extends BaseModel {
       await this.testRawCol(scope);
       await this.testSort1(scope);
       await this.testSort2(scope);
+      await this.testStreaming(scope);
 
       return null;
     });
@@ -814,5 +818,49 @@ export class HelloModel extends BaseModel {
     keysExpected.sort();
 
     assert(keys.join("|") === keysExpected.join("|") && column === "WORLD_ID");
+  }
+
+  private async testStreaming(trx: TransactionScope) {
+    const repo = trx.getRepository(HelloEntity);
+
+    const current = new Date();
+    const startOfCurrentDay = new Date(current);
+    startOfCurrentDay.setHours(0, 0, 0, 0);
+
+    const select: Array<keyof HelloEntity> = ["id"];
+    const where: FindConditions<HelloEntity> = {
+      createdAt: {
+        ">=": startOfCurrentDay,
+        "<=": current,
+      },
+    };
+
+    const repoId = new Set(
+      (
+        await repo.find({
+          select,
+          where,
+        })
+      ).map(e => e.id)
+    );
+
+    let recordCount = 0;
+
+    repo.streaming(
+      { select, where },
+      {
+        onData: entity => {
+          recordCount++;
+          if (!repoId.has(entity.id)) {
+            assert(!repoId.has(entity.id), "!repoId.has(entity.id)");
+          }
+        },
+        onStreamEnd() {
+          if (recordCount !== repoId.size) {
+            assert(recordCount !== repoId.size, "recordCount !== repoId.size");
+          }
+        },
+      }
+    );
   }
 }

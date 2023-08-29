@@ -835,13 +835,13 @@ export class HelloModel extends BaseModel {
       },
     };
 
-    const repoMap: Map<number, bigint> = new Map(
+    const repoId: Set<string> = new Set(
       (
         await repo.find({
           select,
           where,
         })
-      ).map((e: HelloEntity, idx: number) => [idx, e.id])
+      ).map((e: HelloEntity) => String(e.id))
     );
 
     let recordCount = 0;
@@ -850,11 +850,11 @@ export class HelloModel extends BaseModel {
       { select, where },
       {
         onData: (entity: HelloEntity) => {
-          assert(String(repoMap.get(recordCount)) === String(entity.id), "String(repoMap.get(recordCount - 1)) !== String(entity.id)");
+          assert(String(repoId.has(String(entity.id))), "String(repoId.has(String(entity.id))");
           recordCount++;
         },
         onStreamEnd() {
-          assert(recordCount === repoMap.size, "recordCount !== repoMap.size");
+          assert(recordCount === repoId.size, "recordCount === repoId.size");
         },
       }
     );

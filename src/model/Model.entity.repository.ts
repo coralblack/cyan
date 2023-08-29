@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+import internal from "stream";
 import { plainToClass } from "class-transformer";
 import { Knex } from "knex";
 import { TransactionScope } from "./Model.connection";
@@ -251,11 +252,19 @@ export class Repository<T> {
     }
   }
 
-  async streaming(options: FindOptions<T>, streamFn: StreamFunctions<T>): Promise<void> {
+  streaming(options: FindOptions<T>): internal.PassThrough & AsyncIterable<T> {
+    try {
+      return this.prepareQuery(options).stream();
+    } catch (err) {
+      throw TraceableError(err);
+    }
+  }
+
+  async streamAsync(options: FindOptions<T>, streamFn?: StreamFunctions<T>): Promise<void> {
     try {
       const kx = this.prepareQuery(options);
 
-      await kx.stream(stream => {
+      kx.stream(stream => {
         stream.on("data", row => streamFn.onData(this.mapping(row)));
 
         if (streamFn.onStreamEnd) {

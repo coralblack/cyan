@@ -310,7 +310,7 @@ export class HelloModel extends BaseModel {
       const save2 = await repo.save({
         id: save2Id,
         name: save2Name,
-        createdAt: new Date(),
+        createdAt: current,
       });
 
       assert(save2Id === save2, "save2Id === save2");
@@ -823,13 +823,14 @@ export class HelloModel extends BaseModel {
   private async testStreaming(trx: TransactionScope) {
     const repo = trx.getRepository(HelloEntity);
 
-    const current = new Date();
-    const startOfCurrentDay = new Date(current);
+    const startOfCurrentDay = new Date();
+    const lastOfCurrentDay = new Date();
     startOfCurrentDay.setHours(0, 0, 0, 0);
+    lastOfCurrentDay.setHours(23, 59, 59, 59);
 
     const select: Array<keyof HelloEntity> = ["id"];
     const where: FindConditions<HelloEntity> = {
-      createdAt: { ">=": startOfCurrentDay, "<=": current },
+      createdAt: { ">=": startOfCurrentDay, "<=": lastOfCurrentDay },
     };
 
     const repoId: Set<string> = new Set(
@@ -841,19 +842,30 @@ export class HelloModel extends BaseModel {
       ).map((e: HelloEntity) => String(e.id))
     );
 
-    let recordCount = 0;
+    let recordCount1 = 0;
 
-    await repo.streaming(
+    await repo.streamAsync(
       { select, where },
       {
         onData: (entity: HelloEntity) => {
           assert(String(repoId.has(String(entity.id))), "String(repoId.has(String(entity.id))");
-          recordCount++;
+          recordCount1++;
         },
         onStreamEnd() {
-          assert(recordCount === repoId.size, "recordCount === repoId.size");
+          assert(recordCount1 === repoId.size, "recordCount1 === repoId.size");
         },
       }
     );
+
+    let recordCount2 = 0;
+
+    const repoStream = repo.streaming({ select, where });
+
+    for await (const entity of repoStream) {
+      recordCount2++;
+      assert(String(repoId.has(String(entity.id))), "String(repoId.has(String(entity.id))");
+    }
+
+    assert(recordCount2 === repoId.size, "recordCount2 === repoId.size");
   }
 }

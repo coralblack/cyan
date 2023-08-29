@@ -1,3 +1,5 @@
+/// <reference types="node" />
+import internal from "stream";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions } from "./Model.entity";
 import { EntityRelationColumnOptions } from "./Model.entity.relation";
@@ -33,7 +35,8 @@ export declare class Repository<T> {
     findOne(options?: FindOneOptions<T>): Promise<T>;
     find(options?: FindOptions<T>): Promise<T[]>;
     pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>>;
-    streaming(options: FindOptions<T>, streamFn: StreamFunctions<T>): Promise<void>;
+    streaming(options: FindOptions<T>): internal.PassThrough & AsyncIterable<T>;
+    streamAsync(options: FindOptions<T>, streamFn?: StreamFunctions<T>): Promise<void>;
     private prepareQuery;
     private select;
     count(options: CountOptions<T>): Promise<bigint>;

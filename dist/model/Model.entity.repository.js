@@ -180,10 +180,18 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async streaming(options, streamFn) {
+    streaming(options) {
+        try {
+            return this.prepareQuery(options).stream();
+        }
+        catch (err) {
+            throw (0, Error_1.TraceableError)(err);
+        }
+    }
+    async streamAsync(options, streamFn) {
         try {
             const kx = this.prepareQuery(options);
-            await kx.stream(stream => {
+            kx.stream(stream => {
                 stream.on("data", row => streamFn.onData(this.mapping(row)));
                 if (streamFn.onStreamEnd) {
                     stream.on("end", () => streamFn.onStreamEnd());

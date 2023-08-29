@@ -545,7 +545,13 @@ export class Repository<T> {
                 else if (cond === "LIKE%") this[orWhere ? "orWhere" : "where"](k, "LIKE", `${v[cond]}%`);
                 else if (cond === "%LIKE%") this[orWhere ? "orWhere" : "where"](k, "LIKE", `%${v[cond]}%`);
               } else if (typeof v[cond] === "function") {
-                this.whereRaw(`${k} ${cond} ?`, [v[cond](k)]);
+                const res = v[cond](k);
+
+                if (typeof res === "object") {
+                  this.whereRaw(`${k} ${cond} ${res.operand}`, res.bindings);
+                } else {
+                  this.whereRaw(`${k} ${cond} ${res}`);
+                }
               } else {
                 this[orWhere ? "orWhereRaw" : "whereRaw"](`${k} ${cond} ?`, [v[cond]]);
               }

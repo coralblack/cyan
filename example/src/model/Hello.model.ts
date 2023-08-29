@@ -411,6 +411,13 @@ export class HelloModel extends BaseModel {
 
       assert(queryPagination1.items[0].id === queryRaw[0].ID, "queryPagination1.items[0].id === queryRaw[0].ID");
 
+      const queryRawBinding = await repo.findOne({
+        where: { id: { "<": () => ({ operand: "?", bindings: [queryPagination1.items[0].id] }) } },
+        order: { id: "DESC" },
+      });
+
+      assert(queryRawBinding.id === queryPagination1.items[1].id, "queryRawBinding.id === queryPagination1.items[1].id");
+
       await this.transactionWith(async innerScope => {
         const repoX = innerScope.getRepository(HelloEntity);
         const foundX = await repoX.findOne({ where: { id: queryPagination1.items[0].id } });

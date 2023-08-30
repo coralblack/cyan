@@ -249,8 +249,6 @@ export class HelloModel extends BaseModel {
         )
       `);
 
-      const current = new Date();
-
       const worldRepo = scope.getRepository(WorldEntity);
       const worldId = await worldRepo.save({
         id: (() => "UUID_SHORT()") as any,
@@ -310,7 +308,7 @@ export class HelloModel extends BaseModel {
       const save2 = await repo.save({
         id: save2Id,
         name: save2Name,
-        createdAt: current,
+        createdAt: new Date(),
       });
 
       assert(save2Id === save2, "save2Id === save2");

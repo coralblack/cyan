@@ -65,4 +65,8 @@ export interface DeleteOptions<T> {
     where?: FindConditions<T>;
     debug?: boolean;
 }
+export interface StreamFunctions<T> {
+    onData: (row: T) => void;
+    onStreamEnd?: () => void;
+}
 export {};

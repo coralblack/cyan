@@ -180,7 +180,29 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async select(options) {
+    streaming(options) {
+        try {
+            return this.prepareQuery(options).stream();
+        }
+        catch (err) {
+            throw (0, Error_1.TraceableError)(err);
+        }
+    }
+    async streamAsync(options, streamFn) {
+        try {
+            const kx = this.prepareQuery(options);
+            kx.stream(stream => {
+                stream.on("data", row => streamFn.onData(this.mapping(row)));
+                if (streamFn.onStreamEnd) {
+                    stream.on("end", () => streamFn.onStreamEnd());
+                }
+            });
+        }
+        catch (err) {
+            throw (0, Error_1.TraceableError)(err);
+        }
+    }
+    prepareQuery(options) {
         try {
             const joinAliases = {};
             let kx = this.scope.kx.from(this.repositoryInfo.tableName);
@@ -222,7 +244,15 @@ class Repository {
             if (options.debug) {
                 console.log(">", kx.toSQL());
             }
-            const rows = await kx;
+            return kx;
+        }
+        catch (err) {
+            throw (0, Error_1.TraceableError)(err);
+        }
+    }
+    async select(options) {
+        try {
+            const rows = await this.prepareQuery(options);
             if (!rows || !rows.length)
                 return [];
             return rows.map((row) => this.mapping(row));

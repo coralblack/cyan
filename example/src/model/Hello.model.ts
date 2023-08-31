@@ -4,6 +4,7 @@ import { assert } from "console";
 import {
   Column,
   Entity,
+  FindConditions,
   getColumnByEntityProperty,
   getEntityProperties,
   OneToOne,
@@ -399,10 +400,13 @@ export class HelloModel extends BaseModel {
         "queryPagination1.items[1].id === queryPagination3.items[0].id"
       );
 
-      const queriesRaw = await scope.execute(`
+      const queriesRaw = await scope.execute(
+        `
         SELECT ID FROM HELLO WHERE ID = ?;
         SELECT ID FROM HELLO WHERE ID = ?;
-      `, [queryPagination1.items[0].id, queryPagination1.items[1].id]);
+      `,
+        [queryPagination1.items[0].id, queryPagination1.items[1].id]
+      );
 
       assert(queryPagination1.items[0].id === queriesRaw[0][0].ID, "queryPagination1.items[0].id === queriesRaw[0][0].ID");
       assert(queryPagination1.items[0].id === queriesRaw[1][0].ID, "queryPagination1.items[0].id === queriesRaw[1][0].ID");
@@ -648,6 +652,7 @@ export class HelloModel extends BaseModel {
       await this.testRawCol(scope);
       await this.testSort1(scope);
       await this.testSort2(scope);
+      await this.testStreaming(scope);
 
       return null;
     });
@@ -829,5 +834,54 @@ export class HelloModel extends BaseModel {
     keysExpected.sort();
 
     assert(keys.join("|") === keysExpected.join("|") && column === "WORLD_ID");
+  }
+
+  private async testStreaming(trx: TransactionScope) {
+    const repo = trx.getRepository(HelloEntity);
+
+    const startOfCurrentDay = new Date();
+    const lastOfCurrentDay = new Date();
+    startOfCurrentDay.setHours(0, 0, 0, 0);
+    lastOfCurrentDay.setHours(23, 59, 59, 59);
+
+    const select: Array<keyof HelloEntity> = ["id"];
+    const where: FindConditions<HelloEntity> = {
+      createdAt: { ">=": startOfCurrentDay, "<=": lastOfCurrentDay },
+    };
+
+    const repoId: Set<string> = new Set(
+      (
+        await repo.find({
+          select,
+          where,
+        })
+      ).map((e: HelloEntity) => String(e.id))
+    );
+
+    let recordCount1 = 0;
+
+    await repo.streamAsync(
+      { select, where },
+      {
+        onData: (entity: HelloEntity) => {
+          assert(String(repoId.has(String(entity.id))), "String(repoId.has(String(entity.id))");
+          recordCount1++;
+        },
+        onStreamEnd() {
+          assert(recordCount1 === repoId.size, "recordCount1 === repoId.size");
+        },
+      }
+    );
+
+    let recordCount2 = 0;
+
+    const repoStream = repo.streaming({ select, where });
+
+    for await (const entity of repoStream) {
+      recordCount2++;
+      assert(String(repoId.has(String(entity.id))), "String(repoId.has(String(entity.id))");
+    }
+
+    assert(recordCount2 === repoId.size, "recordCount2 === repoId.size");
   }
 }

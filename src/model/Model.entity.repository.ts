@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+import internal from "stream";
 import { plainToClass } from "class-transformer";
+import { Knex } from "knex";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions, EntityColumnType } from "./Model.entity";
 import { EntityRelationColumnOptions, EntityRelationType } from "./Model.entity.relation";
@@ -15,6 +17,7 @@ import {
   OrderCondition,
   Paginatable,
   PaginationOptions,
+  StreamFunctions,
   UpdateOptions,
 } from "./Model.query";
 import { Metadata } from "../core/Decorator";
@@ -249,7 +252,31 @@ export class Repository<T> {
     }
   }
 
-  private async select(options: FindOptions<T>): Promise<T[]> {
+  streaming(options: FindOptions<T>): internal.PassThrough & AsyncIterable<T> {
+    try {
+      return this.prepareQuery(options).stream();
+    } catch (err) {
+      throw TraceableError(err);
+    }
+  }
+
+  async streamAsync(options: FindOptions<T>, streamFn: StreamFunctions<T>): Promise<void> {
+    try {
+      const kx = this.prepareQuery(options);
+
+      kx.stream(stream => {
+        stream.on("data", row => streamFn.onData(this.mapping(row)));
+
+        if (streamFn.onStreamEnd) {
+          stream.on("end", () => streamFn.onStreamEnd());
+        }
+      });
+    } catch (err) {
+      throw TraceableError(err);
+    }
+  }
+
+  private prepareQuery(options: FindOptions<T>): Knex.QueryBuilder {
     try {
       const joinAliases: { [key: string]: string } = {};
       let kx = this.scope.kx.from(this.repositoryInfo.tableName);
@@ -305,7 +332,15 @@ export class Repository<T> {
         console.log(">", kx.toSQL());
       }
 
-      const rows = await kx;
+      return kx;
+    } catch (err) {
+      throw TraceableError(err);
+    }
+  }
+
+  private async select(options: FindOptions<T>): Promise<T[]> {
+    try {
+      const rows = await this.prepareQuery(options);
 
       if (!rows || !rows.length) return [];
 

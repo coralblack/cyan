@@ -297,6 +297,10 @@ export class Repository<T> {
 
       kx = kx.select(select);
 
+      if (typeof options.distinct === "boolean") {
+        kx.distinct(select);
+      }
+
       if (options.forUpdate) {
         kx = kx.forUpdate();
       }

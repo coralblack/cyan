@@ -653,6 +653,7 @@ export class HelloModel extends BaseModel {
       await this.testSort1(scope);
       await this.testSort2(scope);
       await this.testStreaming(scope);
+      await this.testDistinct(scope);
 
       return null;
     });
@@ -883,5 +884,16 @@ export class HelloModel extends BaseModel {
     }
 
     assert(recordCount2 === repoId.size, "recordCount2 === repoId.size");
+  }
+
+  private async testDistinct(trx: TransactionScope) {
+    const repo = trx.getRepository(HelloEntity);
+    const select: Array<keyof HelloEntity> = ["createdAt"];
+
+    const uniqRecord: Set<string> = new Set((await repo.find({ select })).map((e: HelloEntity) => String(e.createdAt)));
+
+    const distinctRecord = await repo.find({ select, distinct: true });
+
+    assert(uniqRecord.size === distinctRecord?.length, "uniqRecord.size === distinctRecord?.length");
   }
 }

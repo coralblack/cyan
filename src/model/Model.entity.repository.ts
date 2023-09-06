@@ -297,7 +297,7 @@ export class Repository<T> {
 
       kx = kx.select(select);
 
-      if (typeof options.distinct === "boolean") {
+      if (typeof options.distinct === "boolean" && options.distinct) {
         kx.distinct(select);
       }
 

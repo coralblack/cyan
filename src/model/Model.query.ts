@@ -34,7 +34,6 @@ export type OrderConditions<T> = OrderCondition<T> | Array<OrderCondition<T>>;
 
 export interface FindOneOptions<T> {
   select?: (keyof T)[];
-  distinct?: boolean;
   where?: FindConditions<T> | FindChainingConditions<T>;
   order?: OrderConditions<T>;
   debug?: boolean;
@@ -44,6 +43,7 @@ export interface FindOneOptions<T> {
 export interface FindOptions<T> extends FindOneOptions<T> {
   offset?: number | bigint;
   limit?: number | bigint;
+  distinct?: boolean;
 }
 
 export interface CountOptions<T> extends Omit<FindOneOptions<T>, "select" | "order"> {}

@@ -887,10 +887,10 @@ export class HelloModel extends BaseModel {
   }
 
   private async testDistinct(trx: TransactionScope) {
-    const repo = trx.getRepository(HelloEntity);
-    const select: Array<keyof HelloEntity> = ["createdAt"];
+    const repo = trx.getRepository(FozEntity);
+    const select: Array<keyof FozEntity> = ["name"];
 
-    const uniqRecord: Set<string> = new Set((await repo.find({ select })).map((e: HelloEntity) => String(e.createdAt)));
+    const uniqRecord: Set<string> = new Set((await repo.find({ select })).map((e: HelloEntity) => String(e.name)));
 
     const distinctRecord = await repo.find({ select, distinct: true });
 

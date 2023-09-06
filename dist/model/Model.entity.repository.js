@@ -220,6 +220,9 @@ class Repository {
             })
                 .filter(x => x);
             kx = kx.select(select);
+            if (typeof options.distinct === "boolean" && options.distinct) {
+                kx.distinct(select);
+            }
             if (options.forUpdate) {
                 kx = kx.forUpdate();
             }

@@ -43,6 +43,7 @@ export interface FindOneOptions<T> {
 export interface FindOptions<T> extends FindOneOptions<T> {
   offset?: number | bigint;
   limit?: number | bigint;
+  distinct?: boolean;
 }
 
 export interface CountOptions<T> extends Omit<FindOneOptions<T>, "select" | "order"> {}

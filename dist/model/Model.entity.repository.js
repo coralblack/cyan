@@ -214,7 +214,7 @@ class Repository {
             const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn] })).map(e => e[primaryColumn]);
             const filteredEntities = entities.filter(e => ids.includes(e[primaryColumn]));
             const updatedEntities = filteredEntities.map(entity => {
-                return options.update.reduce((p, column) => {
+                return this.repositoryInfo.columns.reduce((p, column) => {
                     const field = this.repositoryInfo.fields[column];
                     if (!field) {
                         throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) not allowed.`);
@@ -231,11 +231,7 @@ class Repository {
                     return p;
                 }, { [primaryColumn]: entity[primaryColumn] });
             });
-            await this.scope.kx
-                .insert(updatedEntities.map(e => (Object.assign(Object.assign({}, e), { CREATED_AT: "2010-01-01 00:00:00" }))))
-                .into(this.repositoryInfo.tableName)
-                .onConflict(primaryFieldName)
-                .merge(updateFieldNames);
+            await this.scope.kx.insert(updatedEntities).into(this.repositoryInfo.tableName).onConflict(primaryFieldName).merge(updateFieldNames);
             return updatedEntities.length;
         }
         catch (err) {

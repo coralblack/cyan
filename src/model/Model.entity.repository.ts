@@ -281,7 +281,7 @@ export class Repository<T> {
       const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn as keyof T] })).map(e => e[primaryColumn]);
       const filteredEntities = entities.filter(e => ids.includes(e[primaryColumn]));
       const updatedEntities = filteredEntities.map(entity => {
-        return (options.update as string[]).reduce(
+        return this.repositoryInfo.columns.reduce(
           (p, column) => {
             const field = this.repositoryInfo.fields[column];
 
@@ -302,11 +302,7 @@ export class Repository<T> {
         );
       });
 
-      await this.scope.kx
-        .insert(updatedEntities.map(e => ({ ...e, CREATED_AT: "2010-01-01 00:00:00" })))
-        .into(this.repositoryInfo.tableName)
-        .onConflict(primaryFieldName)
-        .merge(updateFieldNames);
+      await this.scope.kx.insert(updatedEntities).into(this.repositoryInfo.tableName).onConflict(primaryFieldName).merge(updateFieldNames);
 
       return updatedEntities.length;
     } catch (err) {

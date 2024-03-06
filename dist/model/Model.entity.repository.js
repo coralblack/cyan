@@ -108,7 +108,7 @@ class Repository {
             const newEntities = entities.map(entity => {
                 return this.repositoryInfo.columns.reduce((p, column) => {
                     const field = this.repositoryInfo.fields[column];
-                    const isPrmiaryColumn = this.repositoryInfo.primaryColumns[0] === column;
+                    const isPrimaryColumn = this.repositoryInfo.primaryColumns[0] === column;
                     if (!field) {
                         throw new Error(`Invalid Usage: Save with column(${column}) not allowed. `);
                     }
@@ -140,7 +140,7 @@ class Repository {
                     })();
                     if (key === null)
                         return p;
-                    if (isPrmiaryColumn) {
+                    if (isPrimaryColumn) {
                         insertedIds.push(val);
                     }
                     p[key] = val;

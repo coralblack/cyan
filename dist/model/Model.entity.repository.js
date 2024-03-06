@@ -96,6 +96,64 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
+    async saveBulk(entities) {
+        try {
+            if (this.repositoryInfo.primaryColumns.length !== 1) {
+                throw new Error("Not Supprted: SaveBulk with multiple primary columns. ");
+            }
+            else if (entities.find(e => !e[this.repositoryInfo.primaryColumns[0]])) {
+                throw new Error("Not Supprted: SaveBulk with empty primary column value. ");
+            }
+            const insertedIds = [];
+            const newEntities = entities.map(entity => {
+                return this.repositoryInfo.columns.reduce((p, column) => {
+                    const field = this.repositoryInfo.fields[column];
+                    const isPrimaryColumn = this.repositoryInfo.primaryColumns[0] === column;
+                    if (!field) {
+                        throw new Error(`Invalid Usage: Save with column(${column}) not allowed. `);
+                    }
+                    const [key, val] = (() => {
+                        if (!field) {
+                            return [null, null];
+                        }
+                        else if ("name" in field) {
+                            const key = field.name;
+                            const val = ((v) => {
+                                if (typeof v === "function")
+                                    return this.scope.kx.raw(v(key));
+                                else if (v === undefined && field.default) {
+                                    return this.scope.kx.raw(field.default(key));
+                                }
+                                else
+                                    return v;
+                            })(entity[column]);
+                            return [key, val];
+                        }
+                        else {
+                            if ((0, builtin_1.hasOwnProperty)(entity, column)) {
+                                throw new Error(`Invalid Usage: Save with raw column not allowed. (${field.raw(this.repositoryInfo.tableName)})`);
+                            }
+                            else {
+                                return [null, null];
+                            }
+                        }
+                    })();
+                    if (key === null)
+                        return p;
+                    if (isPrimaryColumn) {
+                        insertedIds.push(val);
+                    }
+                    p[key] = val;
+                    return p;
+                }, {});
+            });
+            await this.scope.kx.insert(newEntities).into(this.repositoryInfo.tableName);
+            return insertedIds;
+        }
+        catch (err) {
+            throw (0, Error_1.TraceableError)(err);
+        }
+    }
     async update(entity, options) {
         try {
             let kx = this.scope.kx.from(this.repositoryInfo.tableName);
@@ -119,6 +177,62 @@ class Repository {
             }
             const affected = await kx;
             return Number(affected);
+        }
+        catch (err) {
+            throw (0, Error_1.TraceableError)(err);
+        }
+    }
+    async updateBulk(entities, options) {
+        try {
+            const primaryColumn = this.repositoryInfo.primaryColumns[0];
+            const primaryField = this.repositoryInfo.fields[primaryColumn];
+            if (this.repositoryInfo.primaryColumns.length !== 1) {
+                throw new Error("Not Supprted: updateBulk with multiple primary columns. ");
+            }
+            else if (entities.find(e => !e[primaryColumn])) {
+                throw new Error("Not Supprted: updateBulk with empty primary column value. ");
+            }
+            else if (!options.update.length) {
+                return 0;
+            }
+            const primaryFieldName = primaryField && "name" in primaryField ? primaryField.name : null;
+            const updateFieldNames = options.update
+                .map(e => {
+                const field = this.repositoryInfo.fields[e];
+                return field && "name" in field ? field.name : null;
+            })
+                .filter(e => e);
+            if (!primaryFieldName) {
+                throw new Error(`Invalid Usage: UpdateBulk with primary column(${primaryColumn}) not allowed.`);
+            }
+            else if (updateFieldNames.length !== options.update.length) {
+                throw new Error(`Invalid Usage: UpdateBulk with column(${options.update.join(", ")}) not allowed.`);
+            }
+            const entityIds = entities.map(e => e[primaryColumn]);
+            const findWhere = {};
+            findWhere[primaryColumn] = entityIds;
+            const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn] })).map(e => e[primaryColumn]);
+            const filteredEntities = entities.filter(e => ids.includes(e[primaryColumn]));
+            const updatedEntities = filteredEntities.map(entity => {
+                return this.repositoryInfo.columns.reduce((p, column) => {
+                    const field = this.repositoryInfo.fields[column];
+                    if (!field) {
+                        throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) not allowed.`);
+                    }
+                    else if ("name" in field) {
+                        if (entity[column] === undefined) {
+                            throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) is undefined.`);
+                        }
+                        p[field.name] = entity[column];
+                    }
+                    else {
+                        throw new Error(`Invalid Usage: UpdateBulk with raw column not allowed. (${field.raw(this.repositoryInfo.tableName)})`);
+                    }
+                    return p;
+                }, { [primaryColumn]: entity[primaryColumn] });
+            });
+            await this.scope.kx.insert(updatedEntities).into(this.repositoryInfo.tableName).onConflict(primaryFieldName).merge(updateFieldNames);
+            return updatedEntities.length;
         }
         catch (err) {
             throw (0, Error_1.TraceableError)(err);

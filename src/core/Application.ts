@@ -2,7 +2,6 @@
 import "reflect-metadata";
 import "source-map-support";
 
-import { resolve } from "path";
 import * as bodyParser from "body-parser";
 import { CorsOptions, CorsOptionsDelegate } from "cors";
 import { Metadata } from "./Decorator";

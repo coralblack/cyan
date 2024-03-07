@@ -102,7 +102,7 @@ export class Repository<T> {
 
   async save(entity: T, options?: SaveOptions): Promise<InsertId> {
     try {
-      const kx = options?.transaction.kx || this.kx;
+      const kx = options?.transaction?.kx || this.kx;
       const [res] = await kx
         .insert(
           this.repositoryInfo.columns.reduce((p, e) => {
@@ -154,7 +154,7 @@ export class Repository<T> {
 
   async saveBulk(entities: Array<T>, options?: SaveOptions): Promise<InsertId[]> {
     try {
-      const kx = options?.transaction.kx || this.kx;
+      const kx = options?.transaction?.kx || this.kx;
 
       if (this.repositoryInfo.primaryColumns.length !== 1) {
         throw new Error("Not Supprted: SaveBulk with multiple primary columns. ");
@@ -216,7 +216,7 @@ export class Repository<T> {
 
   async update(entity: T, options?: UpdateOptions<T>): Promise<number> {
     try {
-      let kx = (options?.transaction.kx || this.kx).from(this.repositoryInfo.tableName);
+      let kx = (options?.transaction?.kx || this.kx).from(this.repositoryInfo.tableName);
 
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
@@ -253,7 +253,7 @@ export class Repository<T> {
 
   async updateBulk(entities: Array<T>, options: UpdateBulkOptions<T>): Promise<number> {
     try {
-      const kx = options?.transaction.kx || this.kx;
+      const kx = options?.transaction?.kx || this.kx;
       const primaryColumn = this.repositoryInfo.primaryColumns[0];
       const primaryField = this.repositoryInfo.fields[primaryColumn];
 
@@ -319,7 +319,7 @@ export class Repository<T> {
 
   async delete(entity: T, options?: DeleteOptions<T>): Promise<number> {
     try {
-      let kx = (options?.transaction.kx || this.kx).from(this.repositoryInfo.tableName);
+      let kx = (options?.transaction?.kx || this.kx).from(this.repositoryInfo.tableName);
 
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
@@ -365,7 +365,7 @@ export class Repository<T> {
 
   async pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>> {
     try {
-      const kx = options?.transaction.kx || this.kx;
+      const kx = options?.transaction?.kx || this.kx;
       const page = Math.max(1, options && options.page ? options.page : 1);
       const rpp = Math.max(1, options && options.rpp ? options.rpp : 30);
       const limit = BigInt(rpp);
@@ -412,7 +412,7 @@ export class Repository<T> {
 
   private prepareQuery(options: FindOptions<T>): Knex.QueryBuilder {
     try {
-      const knex = options?.transaction.kx || this.kx;
+      const knex = options?.transaction?.kx || this.kx;
       const joinAliases: { [key: string]: string } = {};
       let kx = knex.from(this.repositoryInfo.tableName);
 
@@ -491,7 +491,7 @@ export class Repository<T> {
 
   async count(options: CountOptions<T>): Promise<bigint> {
     try {
-      let kx = (options?.transaction.kx || this.kx).count("* AS cnt").from(this.repositoryInfo.tableName);
+      let kx = (options?.transaction?.kx || this.kx).count("* AS cnt").from(this.repositoryInfo.tableName);
 
       kx = this.join(kx, [], {});
 

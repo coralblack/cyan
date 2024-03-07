@@ -17,6 +17,7 @@ import {
   OrderCondition,
   Paginatable,
   PaginationOptions,
+  SaveOptions,
   StreamFunctions,
   UpdateBulkOptions,
   UpdateOptions,
@@ -48,9 +49,11 @@ export const symRepositoryInfo = Symbol();
 
 export class Repository<T> {
   private readonly repositoryInfo: RepositoryInfo<T>;
+  private readonly kx: Knex;
 
-  constructor(private readonly scope: TransactionScope, entity: ClassType<T>) {
+  constructor(scope: TransactionScope | Knex, entity: ClassType<T>) {
     this.repositoryInfo = Repository.getRepositoryInfo(entity);
+    this.kx = scope instanceof TransactionScope ? scope.kx : scope;
   }
 
   static getRepositoryInfo<T>(entity: ClassType<T>): RepositoryInfo<T> {
@@ -97,9 +100,10 @@ export class Repository<T> {
     return info;
   }
 
-  async save(entity: T): Promise<InsertId> {
+  async save(entity: T, options?: SaveOptions): Promise<InsertId> {
     try {
-      const [res] = await this.scope.kx
+      const kx = options?.transaction.kx || this.kx;
+      const [res] = await kx
         .insert(
           this.repositoryInfo.columns.reduce((p, e) => {
             const [key, val] = (() => {
@@ -108,9 +112,9 @@ export class Repository<T> {
               if (hasOwnProperty(column, "name")) {
                 const key = column.name;
                 const val = ((v): any => {
-                  if (typeof v === "function") return this.scope.kx.raw(v(key));
+                  if (typeof v === "function") return kx.raw(v(key));
                   else if (v === undefined && column.default) {
-                    return this.scope.kx.raw(column.default(key));
+                    return kx.raw(column.default(key));
                   } else return v;
                 })(entity[e]);
 
@@ -140,7 +144,7 @@ export class Repository<T> {
         }
       }
 
-      const [[lid]] = await this.scope.kx.raw("SELECT LAST_INSERT_ID() AS seq");
+      const [[lid]] = await kx.raw("SELECT LAST_INSERT_ID() AS seq");
 
       return res || lid.seq;
     } catch (err) {
@@ -148,8 +152,10 @@ export class Repository<T> {
     }
   }
 
-  async saveBulk(entities: Array<T>): Promise<InsertId[]> {
+  async saveBulk(entities: Array<T>, options?: SaveOptions): Promise<InsertId[]> {
     try {
+      const kx = options?.transaction.kx || this.kx;
+
       if (this.repositoryInfo.primaryColumns.length !== 1) {
         throw new Error("Not Supprted: SaveBulk with multiple primary columns. ");
       } else if (entities.find(e => !e[this.repositoryInfo.primaryColumns[0]])) {
@@ -173,9 +179,9 @@ export class Repository<T> {
             } else if ("name" in field) {
               const key = field.name;
               const val = ((v): any => {
-                if (typeof v === "function") return this.scope.kx.raw(v(key));
+                if (typeof v === "function") return kx.raw(v(key));
                 else if (v === undefined && field.default) {
-                  return this.scope.kx.raw(field.default(key));
+                  return kx.raw(field.default(key));
                 } else return v;
               })(entity[column]);
 
@@ -200,7 +206,7 @@ export class Repository<T> {
         }, {});
       });
 
-      await this.scope.kx.insert(newEntities).into(this.repositoryInfo.tableName);
+      await kx.insert(newEntities).into(this.repositoryInfo.tableName);
 
       return insertedIds;
     } catch (err) {
@@ -210,7 +216,7 @@ export class Repository<T> {
 
   async update(entity: T, options?: UpdateOptions<T>): Promise<number> {
     try {
-      let kx = this.scope.kx.from(this.repositoryInfo.tableName);
+      let kx = (options?.transaction.kx || this.kx).from(this.repositoryInfo.tableName);
 
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
@@ -247,6 +253,7 @@ export class Repository<T> {
 
   async updateBulk(entities: Array<T>, options: UpdateBulkOptions<T>): Promise<number> {
     try {
+      const kx = options?.transaction.kx || this.kx;
       const primaryColumn = this.repositoryInfo.primaryColumns[0];
       const primaryField = this.repositoryInfo.fields[primaryColumn];
 
@@ -302,7 +309,7 @@ export class Repository<T> {
         );
       });
 
-      await this.scope.kx.insert(updatedEntities).into(this.repositoryInfo.tableName).onConflict(primaryFieldName).merge(updateFieldNames);
+      await kx.insert(updatedEntities).into(this.repositoryInfo.tableName).onConflict(primaryFieldName).merge(updateFieldNames);
 
       return updatedEntities.length;
     } catch (err) {
@@ -312,7 +319,7 @@ export class Repository<T> {
 
   async delete(entity: T, options?: DeleteOptions<T>): Promise<number> {
     try {
-      let kx = this.scope.kx.from(this.repositoryInfo.tableName);
+      let kx = (options?.transaction.kx || this.kx).from(this.repositoryInfo.tableName);
 
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
@@ -358,12 +365,13 @@ export class Repository<T> {
 
   async pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>> {
     try {
+      const kx = options?.transaction.kx || this.kx;
       const page = Math.max(1, options && options.page ? options.page : 1);
       const rpp = Math.max(1, options && options.rpp ? options.rpp : 30);
       const limit = BigInt(rpp);
       const offset: bigint = (BigInt(page) - BigInt(1)) * limit;
 
-      const count = (await this.where(this.scope.kx.from(this.repositoryInfo.tableName), options.where || {}).count("* as cnt"))[0].cnt;
+      const count = (await this.where(kx.from(this.repositoryInfo.tableName), options.where || {}).count("* as cnt"))[0].cnt;
 
       const items = await this.find({ ...options, limit, offset });
 
@@ -404,8 +412,9 @@ export class Repository<T> {
 
   private prepareQuery(options: FindOptions<T>): Knex.QueryBuilder {
     try {
+      const knex = options?.transaction.kx || this.kx;
       const joinAliases: { [key: string]: string } = {};
-      let kx = this.scope.kx.from(this.repositoryInfo.tableName);
+      let kx = knex.from(this.repositoryInfo.tableName);
 
       const selectColumns: any[] = options.select || this.repositoryInfo.columns;
       const select = selectColumns
@@ -416,7 +425,7 @@ export class Repository<T> {
           if (hasOwnProperty(column, "name")) {
             return `${this.repositoryInfo.tableName}.${column.name} as ${alias}`;
           } else {
-            kx.select(this.scope.kx.raw(`${column.raw(this.repositoryInfo.tableName)} as ${alias}`));
+            kx.select(knex.raw(`${column.raw(this.repositoryInfo.tableName)} as ${alias}`));
           }
         })
         .filter(x => x);
@@ -482,7 +491,7 @@ export class Repository<T> {
 
   async count(options: CountOptions<T>): Promise<bigint> {
     try {
-      let kx = this.scope.kx.count("* AS cnt").from(this.repositoryInfo.tableName);
+      let kx = (options?.transaction.kx || this.kx).count("* AS cnt").from(this.repositoryInfo.tableName);
 
       kx = this.join(kx, [], {});
 
@@ -688,7 +697,7 @@ export class Repository<T> {
             });
           });
         } else if (typeof v === "function") {
-          kxx[orWhere ? "orWhere" : "where"](this.scope.kx.raw(v(k)));
+          kxx[orWhere ? "orWhere" : "where"](kx.raw(v(k)));
         } else {
           if (!raw) {
             kxx[orWhere ? "orWhere" : "where"](k, v);

@@ -17,4 +17,5 @@ export declare class ConnectionManager {
     constructor(kx: Knex);
     static getConnectionManager(settings: ModelConnectivitySettings): ConnectionManager;
     transaction<T>(ctx: (conn: TransactionScope) => Promise<T>): Promise<T>;
+    getRepository<T>(repository: ClassType<T>): Repository<T>;
 }

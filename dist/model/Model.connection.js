@@ -76,8 +76,8 @@ class ConnectionManager {
             return ctx(connectivity);
         });
     }
-    getRepository(repository) {
-        return new Model_entity_repository_1.Repository(this.kx, repository);
+    getRepository(entity) {
+        return new Model_entity_repository_1.Repository(this.kx, entity);
     }
 }
 exports.ConnectionManager = ConnectionManager;

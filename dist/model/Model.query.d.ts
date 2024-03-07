@@ -1,5 +1,4 @@
 /// <reference types="node" />
-import { TransactionScope } from "./Model.connection";
 declare type Value = string | number | bigint | boolean | null | Date | Array<string> | Array<number> | Array<Date> | Array<boolean> | Buffer;
 export declare type RawQuery = (k: string) => string | {
     operand: string;
@@ -40,7 +39,6 @@ export interface FindOneOptions<T> {
     order?: OrderConditions<T>;
     debug?: boolean;
     forUpdate?: boolean;
-    transaction?: TransactionScope;
 }
 export interface FindOptions<T> extends FindOneOptions<T> {
     offset?: number | bigint;
@@ -59,23 +57,17 @@ export interface Paginatable<T> {
     count: bigint;
     items: Array<T>;
 }
-export interface SaveOptions {
-    transaction?: TransactionScope;
-}
 export interface UpdateOptions<T> {
     where?: FindConditions<T>;
     update?: (keyof T)[];
-    transaction?: TransactionScope;
     debug?: boolean;
 }
 export interface UpdateBulkOptions<T> {
     update: (keyof T)[];
-    transaction?: TransactionScope;
     debug?: boolean;
 }
 export interface DeleteOptions<T> {
     where?: FindConditions<T>;
-    transaction?: TransactionScope;
     debug?: boolean;
 }
 export interface StreamFunctions<T> {

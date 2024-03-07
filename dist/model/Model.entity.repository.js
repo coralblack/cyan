@@ -50,10 +50,9 @@ class Repository {
             }, {}));
         return info;
     }
-    async save(entity, options) {
-        var _a;
+    async save(entity, trx) {
         try {
-            const kx = ((_a = options === null || options === void 0 ? void 0 : options.transaction) === null || _a === void 0 ? void 0 : _a.kx) || this.kx;
+            const kx = (trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx;
             const [res] = await kx
                 .insert(this.repositoryInfo.columns.reduce((p, e) => {
                 const [key, val] = (() => {
@@ -99,10 +98,9 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async saveBulk(entities, options) {
-        var _a;
+    async saveBulk(entities, trx) {
         try {
-            const kx = ((_a = options === null || options === void 0 ? void 0 : options.transaction) === null || _a === void 0 ? void 0 : _a.kx) || this.kx;
+            const kx = (trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx;
             if (this.repositoryInfo.primaryColumns.length !== 1) {
                 throw new Error("Not Supprted: SaveBulk with multiple primary columns. ");
             }
@@ -159,10 +157,9 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async update(entity, options) {
-        var _a;
+    async update(entity, options, trx) {
         try {
-            let kx = (((_a = options === null || options === void 0 ? void 0 : options.transaction) === null || _a === void 0 ? void 0 : _a.kx) || this.kx).from(this.repositoryInfo.tableName);
+            let kx = ((trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx).from(this.repositoryInfo.tableName);
             const conditions = Object.assign({}, (options === null || options === void 0 ? void 0 : options.where) || {});
             this.repositoryInfo.primaryColumns.forEach(e => {
                 conditions[e] = entity[e];
@@ -188,10 +185,9 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async updateBulk(entities, options) {
-        var _a;
+    async updateBulk(entities, options, trx) {
         try {
-            const kx = ((_a = options === null || options === void 0 ? void 0 : options.transaction) === null || _a === void 0 ? void 0 : _a.kx) || this.kx;
+            const kx = (trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx;
             const primaryColumn = this.repositoryInfo.primaryColumns[0];
             const primaryField = this.repositoryInfo.fields[primaryColumn];
             if (this.repositoryInfo.primaryColumns.length !== 1) {
@@ -246,10 +242,9 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async delete(entity, options) {
-        var _a;
+    async delete(entity, options, trx) {
         try {
-            let kx = (((_a = options === null || options === void 0 ? void 0 : options.transaction) === null || _a === void 0 ? void 0 : _a.kx) || this.kx).from(this.repositoryInfo.tableName);
+            let kx = ((trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx).from(this.repositoryInfo.tableName);
             const conditions = Object.assign({}, (options === null || options === void 0 ? void 0 : options.where) || {});
             this.repositoryInfo.primaryColumns.forEach(e => {
                 conditions[e] = entity[e];
@@ -266,28 +261,27 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async findOne(options) {
+    async findOne(options, trx) {
         try {
-            const [res] = await this.select(Object.assign(Object.assign({}, options), { limit: 1 }));
+            const [res] = await this.select(Object.assign(Object.assign({}, options), { limit: 1 }), trx);
             return res || null;
         }
         catch (err) {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async find(options) {
+    async find(options, trx) {
         try {
-            const res = await this.select(options);
+            const res = await this.select(options, trx);
             return res;
         }
         catch (err) {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async pagination(options) {
-        var _a;
+    async pagination(options, trx) {
         try {
-            const kx = ((_a = options === null || options === void 0 ? void 0 : options.transaction) === null || _a === void 0 ? void 0 : _a.kx) || this.kx;
+            const kx = (trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx;
             const page = Math.max(1, options && options.page ? options.page : 1);
             const rpp = Math.max(1, options && options.rpp ? options.rpp : 30);
             const limit = BigInt(rpp);
@@ -327,10 +321,9 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    prepareQuery(options) {
-        var _a;
+    prepareQuery(options, trx) {
         try {
-            const knex = ((_a = options === null || options === void 0 ? void 0 : options.transaction) === null || _a === void 0 ? void 0 : _a.kx) || this.kx;
+            const knex = (trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx;
             const joinAliases = {};
             let kx = knex.from(this.repositoryInfo.tableName);
             const selectColumns = options.select || this.repositoryInfo.columns;
@@ -380,9 +373,9 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async select(options) {
+    async select(options, trx) {
         try {
-            const rows = await this.prepareQuery(options);
+            const rows = await this.prepareQuery(options, trx);
             if (!rows || !rows.length)
                 return [];
             return rows.map((row) => this.mapping(row));
@@ -391,10 +384,9 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async count(options) {
-        var _a;
+    async count(options, trx) {
         try {
-            let kx = (((_a = options === null || options === void 0 ? void 0 : options.transaction) === null || _a === void 0 ? void 0 : _a.kx) || this.kx).count("* AS cnt").from(this.repositoryInfo.tableName);
+            let kx = ((trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx).count("* AS cnt").from(this.repositoryInfo.tableName);
             kx = this.join(kx, [], {});
             if (options.where) {
                 kx = this.where(kx, options.where);

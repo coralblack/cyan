@@ -114,7 +114,7 @@ export class ConnectionManager {
     });
   }
 
-  getRepository<T>(repository: ClassType<T>): Repository<T> {
-    return new Repository<T>(this.kx, repository);
+  getRepository<T>(entity: ClassType<T>): Repository<T> {
+    return new Repository<T>(this.kx, entity);
   }
 }

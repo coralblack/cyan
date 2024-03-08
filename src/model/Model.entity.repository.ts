@@ -284,7 +284,9 @@ export class Repository<T> {
 
       findWhere[primaryColumn] = entityIds;
 
-      const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn as keyof T] })).map(e => e[primaryColumn]);
+      const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn as keyof T] }, trx)).map(
+        e => e[primaryColumn]
+      );
       const filteredEntities = entities.filter(e => ids.includes(e[primaryColumn]));
       const updatedEntities = filteredEntities.map(entity => {
         return this.repositoryInfo.columns.reduce(
@@ -372,7 +374,7 @@ export class Repository<T> {
 
       const count = (await this.where(kx.from(this.repositoryInfo.tableName), options.where || {}).count("* as cnt"))[0].cnt;
 
-      const items = await this.find({ ...options, limit, offset });
+      const items = await this.find({ ...options, limit, offset }, trx);
 
       return {
         page,
@@ -385,17 +387,17 @@ export class Repository<T> {
     }
   }
 
-  streaming(options: FindOptions<T>): internal.PassThrough & AsyncIterable<T> {
+  streaming(options: FindOptions<T>, trx?: TransactionScope): internal.PassThrough & AsyncIterable<T> {
     try {
-      return this.prepareQuery(options).stream();
+      return this.prepareQuery(options, trx).stream();
     } catch (err) {
       throw TraceableError(err);
     }
   }
 
-  async streamAsync(options: FindOptions<T>, streamFn: StreamFunctions<T>): Promise<void> {
+  async streamAsync(options: FindOptions<T>, streamFn: StreamFunctions<T>, trx?: TransactionScope): Promise<void> {
     try {
-      const kx = this.prepareQuery(options);
+      const kx = this.prepareQuery(options, trx);
 
       kx.stream(stream => {
         stream.on("data", row => streamFn.onData(this.mapping(row)));

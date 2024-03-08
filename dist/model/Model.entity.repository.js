@@ -215,7 +215,7 @@ class Repository {
             const entityIds = entities.map(e => e[primaryColumn]);
             const findWhere = {};
             findWhere[primaryColumn] = entityIds;
-            const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn] })).map(e => e[primaryColumn]);
+            const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn] }, trx)).map(e => e[primaryColumn]);
             const filteredEntities = entities.filter(e => ids.includes(e[primaryColumn]));
             const updatedEntities = filteredEntities.map(entity => {
                 return this.repositoryInfo.columns.reduce((p, column) => {
@@ -287,7 +287,7 @@ class Repository {
             const limit = BigInt(rpp);
             const offset = (BigInt(page) - BigInt(1)) * limit;
             const count = (await this.where(kx.from(this.repositoryInfo.tableName), options.where || {}).count("* as cnt"))[0].cnt;
-            const items = await this.find(Object.assign(Object.assign({}, options), { limit, offset }));
+            const items = await this.find(Object.assign(Object.assign({}, options), { limit, offset }), trx);
             return {
                 page,
                 rpp,
@@ -299,17 +299,17 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    streaming(options) {
+    streaming(options, trx) {
         try {
-            return this.prepareQuery(options).stream();
+            return this.prepareQuery(options, trx).stream();
         }
         catch (err) {
             throw (0, Error_1.TraceableError)(err);
         }
     }
-    async streamAsync(options, streamFn) {
+    async streamAsync(options, streamFn, trx) {
         try {
-            const kx = this.prepareQuery(options);
+            const kx = this.prepareQuery(options, trx);
             kx.stream(stream => {
                 stream.on("data", row => streamFn.onData(this.mapping(row)));
                 if (streamFn.onStreamEnd) {

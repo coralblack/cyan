@@ -38,8 +38,8 @@ export declare class Repository<T> {
     findOne(options?: FindOneOptions<T>, trx?: TransactionScope): Promise<T>;
     find(options?: FindOptions<T>, trx?: TransactionScope): Promise<T[]>;
     pagination(options?: PaginationOptions<T>, trx?: TransactionScope): Promise<Paginatable<T>>;
-    streaming(options: FindOptions<T>): internal.PassThrough & AsyncIterable<T>;
-    streamAsync(options: FindOptions<T>, streamFn: StreamFunctions<T>): Promise<void>;
+    streaming(options: FindOptions<T>, trx?: TransactionScope): internal.PassThrough & AsyncIterable<T>;
+    streamAsync(options: FindOptions<T>, streamFn: StreamFunctions<T>, trx?: TransactionScope): Promise<void>;
     private prepareQuery;
     private select;
     count(options: CountOptions<T>, trx?: TransactionScope): Promise<bigint>;

@@ -1,4 +1,4 @@
-import { TransactionScope } from "./Model.connection";
+import { ConnectionManager, TransactionScope } from "./Model.connection";
 export declare enum ModelConnectivitySettingsDriver {
     MySQL = "mysql2"
 }
@@ -25,6 +25,8 @@ export interface ModelSettings extends ModelConnectivitySettings {
 export declare type TxDelegate<T> = (scope: TransactionScope) => Promise<T>;
 export declare abstract class Model {
     protected readonly settings: ModelSettings;
+    private readonly _connection;
     constructor(settings?: ModelSettings);
     transactionWith<T>(delegate: TxDelegate<T>, scope?: TransactionScope): Promise<T>;
+    protected get connection(): ConnectionManager;
 }

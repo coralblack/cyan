@@ -50,9 +50,9 @@ export class Repository<T> {
   private readonly repositoryInfo: RepositoryInfo<T>;
   private readonly kx: Knex;
 
-  constructor(scope: TransactionScope | Knex, entity: ClassType<T>) {
+  constructor(scopeOrKnex: TransactionScope | Knex, entity: ClassType<T>) {
     this.repositoryInfo = Repository.getRepositoryInfo(entity);
-    this.kx = scope instanceof TransactionScope ? scope.kx : scope;
+    this.kx = scopeOrKnex instanceof TransactionScope ? scopeOrKnex.kx : scopeOrKnex;
   }
 
   static getRepositoryInfo<T>(entity: ClassType<T>): RepositoryInfo<T> {

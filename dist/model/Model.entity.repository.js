@@ -11,9 +11,9 @@ const builtin_1 = require("../util/builtin");
 const joinSeparator = "_";
 exports.symRepositoryInfo = Symbol();
 class Repository {
-    constructor(scope, entity) {
+    constructor(scopeOrKnex, entity) {
         this.repositoryInfo = Repository.getRepositoryInfo(entity);
-        this.kx = scope instanceof Model_connection_1.TransactionScope ? scope.kx : scope;
+        this.kx = scopeOrKnex instanceof Model_connection_1.TransactionScope ? scopeOrKnex.kx : scopeOrKnex;
     }
     static getRepositoryInfo(entity) {
         if (entity[exports.symRepositoryInfo])

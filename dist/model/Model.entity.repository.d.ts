@@ -28,7 +28,7 @@ export declare const symRepositoryInfo: unique symbol;
 export declare class Repository<T> {
     private readonly repositoryInfo;
     private readonly kx;
-    constructor(scope: TransactionScope | Knex, entity: ClassType<T>);
+    constructor(scopeOrKnex: TransactionScope | Knex, entity: ClassType<T>);
     static getRepositoryInfo<T>(entity: ClassType<T>): RepositoryInfo<T>;
     save(entity: T, trx?: TransactionScope): Promise<InsertId>;
     saveBulk(entities: Array<T>, trx?: TransactionScope): Promise<InsertId[]>;

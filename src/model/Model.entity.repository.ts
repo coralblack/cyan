@@ -48,9 +48,11 @@ export const symRepositoryInfo = Symbol();
 
 export class Repository<T> {
   private readonly repositoryInfo: RepositoryInfo<T>;
+  private readonly kx: Knex;
 
-  constructor(private readonly scope: TransactionScope, entity: ClassType<T>) {
+  constructor(scopeOrKnex: TransactionScope | Knex, entity: ClassType<T>) {
     this.repositoryInfo = Repository.getRepositoryInfo(entity);
+    this.kx = scopeOrKnex instanceof TransactionScope ? scopeOrKnex.kx : scopeOrKnex;
   }
 
   static getRepositoryInfo<T>(entity: ClassType<T>): RepositoryInfo<T> {
@@ -97,9 +99,10 @@ export class Repository<T> {
     return info;
   }
 
-  async save(entity: T): Promise<InsertId> {
+  async save(entity: T, trx?: TransactionScope): Promise<InsertId> {
     try {
-      const [res] = await this.scope.kx
+      const kx = trx?.kx || this.kx;
+      const [res] = await kx
         .insert(
           this.repositoryInfo.columns.reduce((p, e) => {
             const [key, val] = (() => {
@@ -108,9 +111,9 @@ export class Repository<T> {
               if (hasOwnProperty(column, "name")) {
                 const key = column.name;
                 const val = ((v): any => {
-                  if (typeof v === "function") return this.scope.kx.raw(v(key));
+                  if (typeof v === "function") return kx.raw(v(key));
                   else if (v === undefined && column.default) {
-                    return this.scope.kx.raw(column.default(key));
+                    return kx.raw(column.default(key));
                   } else return v;
                 })(entity[e]);
 
@@ -140,7 +143,7 @@ export class Repository<T> {
         }
       }
 
-      const [[lid]] = await this.scope.kx.raw("SELECT LAST_INSERT_ID() AS seq");
+      const [[lid]] = await kx.raw("SELECT LAST_INSERT_ID() AS seq");
 
       return res || lid.seq;
     } catch (err) {
@@ -148,8 +151,10 @@ export class Repository<T> {
     }
   }
 
-  async saveBulk(entities: Array<T>): Promise<InsertId[]> {
+  async saveBulk(entities: Array<T>, trx?: TransactionScope): Promise<InsertId[]> {
     try {
+      const kx = trx?.kx || this.kx;
+
       if (this.repositoryInfo.primaryColumns.length !== 1) {
         throw new Error("Not Supprted: SaveBulk with multiple primary columns. ");
       } else if (entities.find(e => !e[this.repositoryInfo.primaryColumns[0]])) {
@@ -173,9 +178,9 @@ export class Repository<T> {
             } else if ("name" in field) {
               const key = field.name;
               const val = ((v): any => {
-                if (typeof v === "function") return this.scope.kx.raw(v(key));
+                if (typeof v === "function") return kx.raw(v(key));
                 else if (v === undefined && field.default) {
-                  return this.scope.kx.raw(field.default(key));
+                  return kx.raw(field.default(key));
                 } else return v;
               })(entity[column]);
 
@@ -200,7 +205,7 @@ export class Repository<T> {
         }, {});
       });
 
-      await this.scope.kx.insert(newEntities).into(this.repositoryInfo.tableName);
+      await kx.insert(newEntities).into(this.repositoryInfo.tableName);
 
       return insertedIds;
     } catch (err) {
@@ -208,9 +213,9 @@ export class Repository<T> {
     }
   }
 
-  async update(entity: T, options?: UpdateOptions<T>): Promise<number> {
+  async update(entity: T, options?: UpdateOptions<T>, trx?: TransactionScope): Promise<number> {
     try {
-      let kx = this.scope.kx.from(this.repositoryInfo.tableName);
+      let kx = (trx?.kx || this.kx).from(this.repositoryInfo.tableName);
 
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
@@ -245,8 +250,9 @@ export class Repository<T> {
     }
   }
 
-  async updateBulk(entities: Array<T>, options: UpdateBulkOptions<T>): Promise<number> {
+  async updateBulk(entities: Array<T>, options: UpdateBulkOptions<T>, trx?: TransactionScope): Promise<number> {
     try {
+      const kx = trx?.kx || this.kx;
       const primaryColumn = this.repositoryInfo.primaryColumns[0];
       const primaryField = this.repositoryInfo.fields[primaryColumn];
 
@@ -278,7 +284,9 @@ export class Repository<T> {
 
       findWhere[primaryColumn] = entityIds;
 
-      const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn as keyof T] })).map(e => e[primaryColumn]);
+      const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn as keyof T] }, trx)).map(
+        e => e[primaryColumn]
+      );
       const filteredEntities = entities.filter(e => ids.includes(e[primaryColumn]));
       const updatedEntities = filteredEntities.map(entity => {
         return this.repositoryInfo.columns.reduce(
@@ -302,7 +310,7 @@ export class Repository<T> {
         );
       });
 
-      await this.scope.kx.insert(updatedEntities).into(this.repositoryInfo.tableName).onConflict(primaryFieldName).merge(updateFieldNames);
+      await kx.insert(updatedEntities).into(this.repositoryInfo.tableName).onConflict(primaryFieldName).merge(updateFieldNames);
 
       return updatedEntities.length;
     } catch (err) {
@@ -310,9 +318,9 @@ export class Repository<T> {
     }
   }
 
-  async delete(entity: T, options?: DeleteOptions<T>): Promise<number> {
+  async delete(entity: T, options?: DeleteOptions<T>, trx?: TransactionScope): Promise<number> {
     try {
-      let kx = this.scope.kx.from(this.repositoryInfo.tableName);
+      let kx = (trx?.kx || this.kx).from(this.repositoryInfo.tableName);
 
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
@@ -336,9 +344,9 @@ export class Repository<T> {
     }
   }
 
-  async findOne(options?: FindOneOptions<T>): Promise<T> {
+  async findOne(options?: FindOneOptions<T>, trx?: TransactionScope): Promise<T> {
     try {
-      const [res] = await this.select({ ...options, limit: 1 });
+      const [res] = await this.select({ ...options, limit: 1 }, trx);
 
       return res || null;
     } catch (err) {
@@ -346,9 +354,9 @@ export class Repository<T> {
     }
   }
 
-  async find(options?: FindOptions<T>): Promise<T[]> {
+  async find(options?: FindOptions<T>, trx?: TransactionScope): Promise<T[]> {
     try {
-      const res = await this.select(options);
+      const res = await this.select(options, trx);
 
       return res;
     } catch (err) {
@@ -356,16 +364,17 @@ export class Repository<T> {
     }
   }
 
-  async pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>> {
+  async pagination(options?: PaginationOptions<T>, trx?: TransactionScope): Promise<Paginatable<T>> {
     try {
+      const kx = trx?.kx || this.kx;
       const page = Math.max(1, options && options.page ? options.page : 1);
       const rpp = Math.max(1, options && options.rpp ? options.rpp : 30);
       const limit = BigInt(rpp);
       const offset: bigint = (BigInt(page) - BigInt(1)) * limit;
 
-      const count = (await this.where(this.scope.kx.from(this.repositoryInfo.tableName), options.where || {}).count("* as cnt"))[0].cnt;
+      const count = (await this.where(kx.from(this.repositoryInfo.tableName), options.where || {}).count("* as cnt"))[0].cnt;
 
-      const items = await this.find({ ...options, limit, offset });
+      const items = await this.find({ ...options, limit, offset }, trx);
 
       return {
         page,
@@ -378,17 +387,17 @@ export class Repository<T> {
     }
   }
 
-  streaming(options: FindOptions<T>): internal.PassThrough & AsyncIterable<T> {
+  streaming(options: FindOptions<T>, trx?: TransactionScope): internal.PassThrough & AsyncIterable<T> {
     try {
-      return this.prepareQuery(options).stream();
+      return this.prepareQuery(options, trx).stream();
     } catch (err) {
       throw TraceableError(err);
     }
   }
 
-  async streamAsync(options: FindOptions<T>, streamFn: StreamFunctions<T>): Promise<void> {
+  async streamAsync(options: FindOptions<T>, streamFn: StreamFunctions<T>, trx?: TransactionScope): Promise<void> {
     try {
-      const kx = this.prepareQuery(options);
+      const kx = this.prepareQuery(options, trx);
 
       kx.stream(stream => {
         stream.on("data", row => streamFn.onData(this.mapping(row)));
@@ -402,10 +411,11 @@ export class Repository<T> {
     }
   }
 
-  private prepareQuery(options: FindOptions<T>): Knex.QueryBuilder {
+  private prepareQuery(options: FindOptions<T>, trx?: TransactionScope): Knex.QueryBuilder {
     try {
+      const knex = trx?.kx || this.kx;
       const joinAliases: { [key: string]: string } = {};
-      let kx = this.scope.kx.from(this.repositoryInfo.tableName);
+      let kx = knex.from(this.repositoryInfo.tableName);
 
       const selectColumns: any[] = options.select || this.repositoryInfo.columns;
       const select = selectColumns
@@ -416,7 +426,7 @@ export class Repository<T> {
           if (hasOwnProperty(column, "name")) {
             return `${this.repositoryInfo.tableName}.${column.name} as ${alias}`;
           } else {
-            kx.select(this.scope.kx.raw(`${column.raw(this.repositoryInfo.tableName)} as ${alias}`));
+            kx.select(knex.raw(`${column.raw(this.repositoryInfo.tableName)} as ${alias}`));
           }
         })
         .filter(x => x);
@@ -468,9 +478,9 @@ export class Repository<T> {
     }
   }
 
-  private async select(options: FindOptions<T>): Promise<T[]> {
+  private async select(options: FindOptions<T>, trx?: TransactionScope): Promise<T[]> {
     try {
-      const rows = await this.prepareQuery(options);
+      const rows = await this.prepareQuery(options, trx);
 
       if (!rows || !rows.length) return [];
 
@@ -480,9 +490,9 @@ export class Repository<T> {
     }
   }
 
-  async count(options: CountOptions<T>): Promise<bigint> {
+  async count(options: CountOptions<T>, trx?: TransactionScope): Promise<bigint> {
     try {
-      let kx = this.scope.kx.count("* AS cnt").from(this.repositoryInfo.tableName);
+      let kx = (trx?.kx || this.kx).count("* AS cnt").from(this.repositoryInfo.tableName);
 
       kx = this.join(kx, [], {});
 
@@ -688,7 +698,7 @@ export class Repository<T> {
             });
           });
         } else if (typeof v === "function") {
-          kxx[orWhere ? "orWhere" : "where"](this.scope.kx.raw(v(k)));
+          kxx[orWhere ? "orWhere" : "where"](kx.raw(v(k)));
         } else {
           if (!raw) {
             kxx[orWhere ? "orWhere" : "where"](k, v);

@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import internal from "stream";
+import { Knex } from "knex";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions } from "./Model.entity";
 import { EntityRelationColumnOptions } from "./Model.entity.relation";
@@ -25,23 +26,23 @@ export interface RepositoryInfo<T = any> {
 }
 export declare const symRepositoryInfo: unique symbol;
 export declare class Repository<T> {
-    private readonly scope;
     private readonly repositoryInfo;
-    constructor(scope: TransactionScope, entity: ClassType<T>);
+    private readonly kx;
+    constructor(scopeOrKnex: TransactionScope | Knex, entity: ClassType<T>);
     static getRepositoryInfo<T>(entity: ClassType<T>): RepositoryInfo<T>;
-    save(entity: T): Promise<InsertId>;
-    saveBulk(entities: Array<T>): Promise<InsertId[]>;
-    update(entity: T, options?: UpdateOptions<T>): Promise<number>;
-    updateBulk(entities: Array<T>, options: UpdateBulkOptions<T>): Promise<number>;
-    delete(entity: T, options?: DeleteOptions<T>): Promise<number>;
-    findOne(options?: FindOneOptions<T>): Promise<T>;
-    find(options?: FindOptions<T>): Promise<T[]>;
-    pagination(options?: PaginationOptions<T>): Promise<Paginatable<T>>;
-    streaming(options: FindOptions<T>): internal.PassThrough & AsyncIterable<T>;
-    streamAsync(options: FindOptions<T>, streamFn: StreamFunctions<T>): Promise<void>;
+    save(entity: T, trx?: TransactionScope): Promise<InsertId>;
+    saveBulk(entities: Array<T>, trx?: TransactionScope): Promise<InsertId[]>;
+    update(entity: T, options?: UpdateOptions<T>, trx?: TransactionScope): Promise<number>;
+    updateBulk(entities: Array<T>, options: UpdateBulkOptions<T>, trx?: TransactionScope): Promise<number>;
+    delete(entity: T, options?: DeleteOptions<T>, trx?: TransactionScope): Promise<number>;
+    findOne(options?: FindOneOptions<T>, trx?: TransactionScope): Promise<T>;
+    find(options?: FindOptions<T>, trx?: TransactionScope): Promise<T[]>;
+    pagination(options?: PaginationOptions<T>, trx?: TransactionScope): Promise<Paginatable<T>>;
+    streaming(options: FindOptions<T>, trx?: TransactionScope): internal.PassThrough & AsyncIterable<T>;
+    streamAsync(options: FindOptions<T>, streamFn: StreamFunctions<T>, trx?: TransactionScope): Promise<void>;
     private prepareQuery;
     private select;
-    count(options: CountOptions<T>): Promise<bigint>;
+    count(options: CountOptions<T>, trx?: TransactionScope): Promise<bigint>;
     private joinWith;
     private join;
     private where;

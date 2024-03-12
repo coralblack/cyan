@@ -357,9 +357,15 @@ export class HelloModel extends BaseModel {
         },
       });
 
+      const found2 = await repo.findOne({
+        where: { $AND: [{ $OR: [{ $AND: { createdAt: k => `${k} <= CURRENT_TIMESTAMP()` } }] }] },
+        order: { id: "ASC" },
+      });
+
       const founds = await repo.find({ limit: 3 });
 
       assert(!!found, "!!found");
+      assert(!!found2, "!!found2");
       assert(founds.length > 0, "founds.length");
 
       const updateName = "xxx";
@@ -438,7 +444,7 @@ export class HelloModel extends BaseModel {
       );
 
       assert(queryPagination1.items[0].id === queriesRaw[0][0].ID, "queryPagination1.items[0].id === queriesRaw[0][0].ID");
-      assert(queryPagination1.items[1].id === queriesRaw[1][0].ID, "queryPagination1.items[0].id === queriesRaw[1][0].ID");
+      assert(queryPagination1.items[1].id === queriesRaw[1][0].ID, "queryPagination1.items[1].id === queriesRaw[1][0].ID");
 
       const queryRaw = await scope.execute("SELECT ID FROM HELLO WHERE ID = ?", [queryPagination1.items[0].id]);
 

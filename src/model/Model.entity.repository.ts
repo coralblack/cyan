@@ -287,27 +287,25 @@ export class Repository<T> {
       const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn as keyof T] }, trx)).map(
         e => e[primaryColumn]
       );
+
       const filteredEntities = entities.filter(e => ids.includes(e[primaryColumn]));
       const updatedEntities = filteredEntities.map(entity => {
-        return this.repositoryInfo.columns.reduce(
-          (p, column) => {
-            const field = this.repositoryInfo.fields[column];
+        return this.repositoryInfo.columns.reduce((p, column) => {
+          const field = this.repositoryInfo.fields[column];
 
-            if (!field) {
-              throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) not allowed.`);
-            } else if ("name" in field) {
-              if (entity[column] === undefined) {
-                throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) is undefined.`);
-              }
-
-              p[field.name] = entity[column];
-            } else {
-              throw new Error(`Invalid Usage: UpdateBulk with raw column not allowed. (${field.raw(this.repositoryInfo.tableName)})`);
+          if (!field) {
+            throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) not allowed.`);
+          } else if ("name" in field) {
+            if (entity[column] === undefined) {
+              throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) is undefined.`);
             }
-            return p;
-          },
-          { [primaryColumn]: entity[primaryColumn] }
-        );
+
+            p[field.name] = entity[column];
+          } else {
+            throw new Error(`Invalid Usage: UpdateBulk with raw column not allowed. (${field.raw(this.repositoryInfo.tableName)})`);
+          }
+          return p;
+        }, {});
       });
 
       await kx.insert(updatedEntities).into(this.repositoryInfo.tableName).onConflict(primaryFieldName).merge(updateFieldNames);
@@ -698,7 +696,7 @@ export class Repository<T> {
             });
           });
         } else if (typeof v === "function") {
-          kxx[orWhere ? "orWhere" : "where"](kx.raw(v(k)));
+          kxx[orWhere ? "orWhere" : "where"](this.kx.raw(v(k)));
         } else {
           if (!raw) {
             kxx[orWhere ? "orWhere" : "where"](k, v);

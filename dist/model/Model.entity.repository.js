@@ -233,7 +233,7 @@ class Repository {
                         throw new Error(`Invalid Usage: UpdateBulk with raw column not allowed. (${field.raw(this.repositoryInfo.tableName)})`);
                     }
                     return p;
-                }, { [primaryColumn]: entity[primaryColumn] });
+                }, {});
             });
             await kx.insert(updatedEntities).into(this.repositoryInfo.tableName).onConflict(primaryFieldName).merge(updateFieldNames);
             return updatedEntities.length;
@@ -561,7 +561,7 @@ class Repository {
                     });
                 }
                 else if (typeof v === "function") {
-                    kxx[orWhere ? "orWhere" : "where"](kx.raw(v(k)));
+                    kxx[orWhere ? "orWhere" : "where"](this.kx.raw(v(k)));
                 }
                 else {
                     if (!raw) {

@@ -303,6 +303,9 @@ export class HelloModel extends BaseModel {
 
       assert(foundLikeBetween.id === BigInt(save1), "foundLikeBetween.id");
 
+      const foundNotIn = await repo.find({ where: { id: { NOT_IN: [found1.id] } } });
+      assert(foundNotIn.find(x => x.id === found1.id) === undefined, "foundNotIn.id");
+
       const save2Id = BigInt(new Date().getTime());
       const save2Name = `${new Date().getTime()}`;
       const save2 = await repo.save({

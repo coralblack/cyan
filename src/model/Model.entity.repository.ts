@@ -644,6 +644,7 @@ export class Repository<T> {
             v.hasOwnProperty("LIKE%") ||
             v.hasOwnProperty("%LIKE") ||
             v.hasOwnProperty("%LIKE%") ||
+            v.hasOwnProperty("NOT_IN") ||
             typeof v["IS_NULL"] === "boolean" ||
             typeof v["IS_NOT_NULL"] === "boolean");
 
@@ -682,6 +683,8 @@ export class Repository<T> {
                 else if (cond === "%LIKE") this[orWhere ? "orWhere" : "where"](k, "LIKE", `%${v[cond]}`);
                 else if (cond === "LIKE%") this[orWhere ? "orWhere" : "where"](k, "LIKE", `${v[cond]}%`);
                 else if (cond === "%LIKE%") this[orWhere ? "orWhere" : "where"](k, "LIKE", `%${v[cond]}%`);
+              } else if (cond === "NOT_IN") {
+                this[orWhere ? "orWhereNotIn" : "whereNotIn"](k, v[cond]);
               } else if (typeof v[cond] === "function") {
                 const res = v[cond](k);
 

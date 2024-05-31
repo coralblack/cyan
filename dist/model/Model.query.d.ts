@@ -15,6 +15,7 @@ declare type FindOperatorComp<T> = Partial<{
     "LIKE%": T;
     "%LIKE": T;
     "%LIKE%": T;
+    NOT_IN: Array<T>;
     IS_NULL: boolean;
     IS_NOT_NULL: boolean;
     $AND: Array<FindOperatorComp<T>>;

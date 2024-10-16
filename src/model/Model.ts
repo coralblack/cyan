@@ -28,6 +28,7 @@ export type TxDelegate<T> = (scope: TransactionScope) => Promise<T>;
 
 export abstract class Model {
   protected readonly settings: ModelSettings;
+  private readonly _connection: ConnectionManager;
 
   constructor(settings?: ModelSettings) {
     this.settings = Object.assign(
@@ -48,6 +49,8 @@ export abstract class Model {
       },
       settings
     );
+
+    this._connection = ConnectionManager.getConnectionManager(this.settings);
   }
 
   async transactionWith<T>(delegate: TxDelegate<T>, scope?: TransactionScope): Promise<T> {
@@ -61,12 +64,14 @@ export abstract class Model {
       }
     }
 
-    const manager = ConnectionManager.getConnectionManager(this.settings);
-
-    return manager.transaction(async scope => {
+    return this._connection.transaction(async scope => {
       const resp = await delegate(scope);
 
       return resp;
     });
+  }
+
+  protected get connection(): ConnectionManager {
+    return this._connection;
   }
 }

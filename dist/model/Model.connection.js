@@ -76,6 +76,9 @@ class ConnectionManager {
             return ctx(connectivity);
         });
     }
+    getRepository(entity) {
+        return new Model_entity_repository_1.Repository(this.kx, entity);
+    }
 }
 exports.ConnectionManager = ConnectionManager;
 //# sourceMappingURL=Model.connection.js.map

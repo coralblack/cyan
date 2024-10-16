@@ -113,4 +113,8 @@ export class ConnectionManager {
       return ctx(connectivity);
     });
   }
+
+  getRepository<T>(entity: ClassType<T>): Repository<T> {
+    return new Repository<T>(this.kx, entity);
+  }
 }

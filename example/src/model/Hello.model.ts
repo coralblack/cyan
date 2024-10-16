@@ -303,6 +303,9 @@ export class HelloModel extends BaseModel {
 
       assert(foundLikeBetween.id === BigInt(save1), "foundLikeBetween.id");
 
+      const foundNotIn = await repo.find({ where: { id: { NOT_IN: [found1.id] } } });
+      assert(foundNotIn.find(x => x.id === found1.id) === undefined, "foundNotIn.id");
+
       const save2Id = BigInt(new Date().getTime());
       const save2Name = `${new Date().getTime()}`;
       const save2 = await repo.save({
@@ -314,11 +317,40 @@ export class HelloModel extends BaseModel {
       assert(save2Id === save2, "save2Id === save2");
 
       const save3Id = BigInt(new Date().getTime() + 1234);
+
       const save3 = await repo.save({ id: save3Id } as any); // eslint-disable-line @typescript-eslint/no-unsafe-argument
       const found3 = await repo.findOne({ where: { id: save3 as bigint } });
 
       assert(found3.name.length === "2ca4d1cc-010c-11eb-8052-51e99d56d62f".length, "found3.name.length");
       assert(found3.createdAt.getTime() > 1000000, "found3.createdAt.getTime");
+
+      const saveBulkIds = Array.from(Array(5).keys()).map(e => BigInt(new Date().getTime() + 10000 + e));
+      const saveBulks = await repo.saveBulk(saveBulkIds.map(id => ({ id, worldId: BigInt(worldId) })) as any[]); // eslint-disable-line @typescript-eslint/no-unsafe-argument
+
+      const foundBulksForSave = await repo.find({ where: { id: saveBulks as bigint[] } });
+
+      assert(foundBulksForSave.length === saveBulkIds.length, "foundBulksForSave.length");
+      foundBulksForSave.forEach((e, i) => {
+        assert(e.name.length === "2ca4d1cc-010c-11eb-8052-51e99d56d62f".length, `foundBulksForSave[${i}].name.length`);
+        assert(e.worldId === BigInt(worldId), `foundBulksForSave[${i}].worldId`);
+        assert(e.createdAt.getTime() > 1000000, "foundBulksForSave[${i}].createdAt.getTime");
+      });
+
+      const updatedEntities = foundBulksForSave.map((e, i) => ({
+        ...e,
+        name: `updated ${i}`,
+        worldId: null,
+        createdAt: new Date("2010-01-01 00:00:00"),
+      }));
+      const updates = await repo.updateBulk(updatedEntities, { update: ["name", "createdAt", "worldId"] });
+      const foundBulksForUpdate = await repo.find({ where: { id: foundBulksForSave.map(e => e.id) } });
+
+      assert(updatedEntities.length === updates, "updatedEntities.length");
+      foundBulksForUpdate.forEach((e, i) => {
+        assert(e.name === updatedEntities[i].name, `foundBulksForUpdate[${i}].name`);
+        assert(e.worldId === null, `foundBulksForUpdate[${i}].worldId`);
+        assert(e.createdAt.getTime() === updatedEntities[i].createdAt.getTime(), `foundBulksForUpdate[${i}].createdAt`);
+      });
 
       const found = await repo.findOne({
         select: ["name"],
@@ -328,9 +360,15 @@ export class HelloModel extends BaseModel {
         },
       });
 
+      const found2 = await repo.findOne({
+        where: { $AND: [{ $OR: [{ $AND: { createdAt: k => `${k} <= CURRENT_TIMESTAMP()` } }] }] },
+        order: { id: "ASC" },
+      });
+
       const founds = await repo.find({ limit: 3 });
 
       assert(!!found, "!!found");
+      assert(!!found2, "!!found2");
       assert(founds.length > 0, "founds.length");
 
       const updateName = "xxx";
@@ -409,7 +447,7 @@ export class HelloModel extends BaseModel {
       );
 
       assert(queryPagination1.items[0].id === queriesRaw[0][0].ID, "queryPagination1.items[0].id === queriesRaw[0][0].ID");
-      assert(queryPagination1.items[0].id === queriesRaw[1][0].ID, "queryPagination1.items[0].id === queriesRaw[1][0].ID");
+      assert(queryPagination1.items[1].id === queriesRaw[1][0].ID, "queryPagination1.items[1].id === queriesRaw[1][0].ID");
 
       const queryRaw = await scope.execute("SELECT ID FROM HELLO WHERE ID = ?", [queryPagination1.items[0].id]);
 
@@ -842,13 +880,12 @@ export class HelloModel extends BaseModel {
 
     const startOfCurrentDay = new Date();
     const lastOfCurrentDay = new Date();
+
     startOfCurrentDay.setHours(0, 0, 0, 0);
     lastOfCurrentDay.setHours(23, 59, 59, 59);
 
     const select: Array<keyof HelloEntity> = ["id"];
-    const where: FindConditions<HelloEntity> = {
-      createdAt: { ">=": startOfCurrentDay, "<=": lastOfCurrentDay },
-    };
+    const where: FindConditions<HelloEntity> = { createdAt: { ">=": startOfCurrentDay, "<=": lastOfCurrentDay } };
 
     const repoId: Set<string> = new Set(
       (

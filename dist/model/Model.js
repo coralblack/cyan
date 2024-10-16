@@ -24,6 +24,7 @@ class Model {
             createConnectionTimeout: process.env.CYAN_DB_CREATE_CONNECTION_TIMEOUT || 30 * 1000,
             acquireConnectionTimeout: process.env.CYAN_DB_ACQUIRE_CONNECTION_TIMEOUT || 60 * 1000,
         }, settings);
+        this._connection = Model_connection_1.ConnectionManager.getConnectionManager(this.settings);
     }
     async transactionWith(delegate, scope) {
         if (scope) {
@@ -35,11 +36,13 @@ class Model {
                 throw (0, Error_1.TraceableError)(err);
             }
         }
-        const manager = Model_connection_1.ConnectionManager.getConnectionManager(this.settings);
-        return manager.transaction(async (scope) => {
+        return this._connection.transaction(async (scope) => {
             const resp = await delegate(scope);
             return resp;
         });
+    }
+    get connection() {
+        return this._connection;
     }
 }
 exports.Model = Model;

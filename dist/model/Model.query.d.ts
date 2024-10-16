@@ -15,6 +15,7 @@ declare type FindOperatorComp<T> = Partial<{
     "LIKE%": T;
     "%LIKE": T;
     "%LIKE%": T;
+    NOT_IN: Array<T>;
     IS_NULL: boolean;
     IS_NOT_NULL: boolean;
     $AND: Array<FindOperatorComp<T>>;
@@ -60,6 +61,10 @@ export interface Paginatable<T> {
 export interface UpdateOptions<T> {
     where?: FindConditions<T>;
     update?: (keyof T)[];
+    debug?: boolean;
+}
+export interface UpdateBulkOptions<T> {
+    update: (keyof T)[];
     debug?: boolean;
 }
 export interface DeleteOptions<T> {

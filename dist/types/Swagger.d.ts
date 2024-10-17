@@ -1,3 +1,4 @@
+import { Stage } from "src/core";
 import { ClassType } from ".";
 export interface ApiOperationOptions {
     summary?: string;
@@ -42,6 +43,7 @@ export interface ApiTagOptions {
     description?: string;
 }
 export interface SwaggerOptions {
+    targetEnvs: Stage[];
     info: {
         title: string;
         description?: string;

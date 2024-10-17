@@ -34,7 +34,7 @@ class Cyan {
         this.logger = (settings.logger || Logger_1.Logger).getInstance();
         this.logger.appName = this.settings.name;
         this.server = settings.server ? new settings.server(this) : new Server_1.Server(this);
-        if ([Stage.Local, Stage.Development].includes(this.settings.stage) && this.settings.swagger) {
+        if (this.settings.swagger && this.settings.swagger.targetEnvs.includes(this.settings.stage)) {
             this.swaggerGenerator = new SwaggerGenerator_1.SwaggerGenerator(this.settings.swagger);
         }
     }

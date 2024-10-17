@@ -228,10 +228,6 @@ export class SwaggerGenerator {
 
     if ("delimiter" in itemOptions) delete itemOptions.delimiter;
 
-    if (options.type?.name === "Array") {
-      itemOptions.type = options.type[0];
-    }
-
     return {
       type: "array",
       items: this.getSchemaType(itemOptions),

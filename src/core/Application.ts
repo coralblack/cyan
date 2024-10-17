@@ -72,7 +72,7 @@ export class Cyan {
 
     this.server = settings.server ? new settings.server(this) : new Server(this);
 
-    if ([Stage.Local, Stage.Development].includes(this.settings.stage) && this.settings.swagger) {
+    if (this.settings.swagger && this.settings.swagger.targetEnvs.includes(this.settings.stage)) {
       this.swaggerGenerator = new SwaggerGenerator(this.settings.swagger);
     }
   }

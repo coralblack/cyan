@@ -198,9 +198,8 @@ class SwaggerGenerator {
         const itemOptions = { ...options, array: false };
         if ("delimiter" in itemOptions)
             delete itemOptions.delimiter;
-        if (((_a = options.type) === null || _a === void 0 ? void 0 : _a.name) === "Array") {
-            itemOptions.type = options.type[0];
-        }
+        if (((_a = options.type) === null || _a === void 0 ? void 0 : _a.name) === "Array")
+            itemOptions.type = undefined;
         return {
             type: "array",
             items: this.getSchemaType(itemOptions),

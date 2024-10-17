@@ -1,4 +1,11 @@
 import {
+  ApiTagOptions,
+  SwaggerModelMetadata,
+  SwaggerOperationMetadata,
+  SwaggerPropertyMetadata,
+  SwaggerResponseMetadata,
+} from "src/types/Swagger";
+import {
   EntityColumnMetadataArgs,
   EntityMetadataArgs,
   EntityRelationMetadataArgs,
@@ -8,7 +15,7 @@ import {
   TaskMetadataArgs,
 } from "../types/MetadataArgs";
 
-class MetadataStorage {
+export class MetadataStorage {
   public readonly routes: RouteMetadataArgs[] = [];
   public readonly routeParams: RouteParamMetadataArgs[] = [];
   public readonly middlewares: MiddlewareMetadataArgs[] = [];
@@ -16,6 +23,13 @@ class MetadataStorage {
   public readonly entityColumns: EntityColumnMetadataArgs[] = [];
   public readonly entityRelations: EntityRelationMetadataArgs[] = [];
   public readonly tasks: TaskMetadataArgs[] = [];
+
+  // swagger
+  public readonly swaggerOperations: SwaggerOperationMetadata[] = [];
+  public readonly swaggerProperties: SwaggerPropertyMetadata[] = [];
+  public readonly swaggerModels: SwaggerModelMetadata[] = [];
+  public readonly swaggerResponses: SwaggerResponseMetadata[] = [];
+  public readonly swaggerControllerTags: { target: any; tags: ApiTagOptions[] }[] = [];
 }
 
 export class Metadata {

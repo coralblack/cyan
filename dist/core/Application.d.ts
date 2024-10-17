@@ -4,8 +4,10 @@ import * as bodyParser from "body-parser";
 import { CorsOptions, CorsOptionsDelegate } from "cors";
 import { Logger } from "./Logger";
 import { Server } from "./Server";
+import { SwaggerGenerator } from "./SwaggerGenerator";
 import { ClassType } from "../types";
 import { Controller as ControllerType } from "../types/Http";
+import { SwaggerOptions } from "../types/Swagger";
 export declare enum Stage {
     Local = "local",
     Development = "development",
@@ -21,6 +23,7 @@ export interface CyanSettings {
     server?: typeof Server;
     routes: Array<ControllerType>;
     tasks?: Array<ClassType<any>>;
+    swagger?: SwaggerOptions;
     options?: {
         accessLog?: boolean;
         cors?: boolean | CorsOptions | CorsOptionsDelegate;
@@ -33,6 +36,7 @@ export declare class Cyan {
     readonly settings: CyanSettings;
     readonly logger: Logger;
     readonly server: Server;
+    readonly swaggerGenerator: SwaggerGenerator;
     constructor(settings?: CyanSettings);
     start(): void;
     initialize(): Server;
@@ -42,4 +46,5 @@ export declare class Cyan {
     private initHandler;
     private initTasks;
     private initTask;
+    initSwagger(): void;
 }

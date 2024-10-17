@@ -4,11 +4,13 @@ import "source-map-support";
 
 import * as bodyParser from "body-parser";
 import { CorsOptions, CorsOptionsDelegate } from "cors";
+import swaggerUi from "swagger-ui-express";
 import { Metadata } from "./Decorator";
 import { Handler } from "./Handler";
 import { Injector } from "./Injector";
 import { Logger } from "./Logger";
 import { Server } from "./Server";
+import { SwaggerGenerator } from "./SwaggerGenerator";
 import { Controller as HttpController } from "../http/Http.controller";
 import { MIDDLEWARE_PRIORITY_ACTION_HANDLER, MIDDLEWARE_PRIORITY_AFTER_HANDLER, MIDDLEWARE_PRIORITY_BEFORE_HANDLER } from "../router";
 import { TaskInvoker } from "../task/Task.invoker";
@@ -17,6 +19,7 @@ import { ClassType } from "../types";
 import { HandlerFunction } from "../types/Handler";
 import { Controller as ControllerType } from "../types/Http";
 import { RouteMetadataArgs, TaskMetadataArgs } from "../types/MetadataArgs";
+import { SwaggerOptions } from "../types/Swagger";
 
 export enum Stage {
   Local = "local",
@@ -36,6 +39,7 @@ export interface CyanSettings {
 
   routes: Array<ControllerType>;
   tasks?: Array<ClassType<any>>;
+  swagger?: SwaggerOptions;
 
   options?: {
     accessLog?: boolean;
@@ -50,6 +54,7 @@ export class Cyan {
   public readonly settings: CyanSettings;
   public readonly logger: Logger;
   public readonly server: Server;
+  public readonly swaggerGenerator: SwaggerGenerator;
 
   constructor(settings?: CyanSettings) {
     this.settings = Object.assign(
@@ -66,6 +71,10 @@ export class Cyan {
     this.logger.appName = this.settings.name;
 
     this.server = settings.server ? new settings.server(this) : new Server(this);
+
+    if ([Stage.Local, Stage.Development].includes(this.settings.stage) && this.settings.swagger) {
+      this.swaggerGenerator = new SwaggerGenerator(this.settings.swagger);
+    }
   }
 
   public start(): void {
@@ -83,12 +92,14 @@ export class Cyan {
 
     this.server.beforeInitRoutes();
     this.initRoutes();
+    if (this.swaggerGenerator) {
+      this.initSwagger();
+    }
+    // Task
     this.server.afterInitRoutes();
-
     this.server.use(this.server.onPageNotFound);
     this.server.use(this.server.onError);
 
-    // Task
     this.initTasks();
 
     return this.server;
@@ -199,5 +210,29 @@ export class Cyan {
     const invoker = new TaskInvoker(task, meta.method, meta.options, this.logger);
 
     invoker.init();
+  }
+
+  public initSwagger(): void {
+    if (this.swaggerGenerator) {
+      const swaggerDocument = this.swaggerGenerator.generateSwaggerDocs();
+
+      // Validate swaggerDocument
+      if (!swaggerDocument || typeof swaggerDocument !== "object") {
+        this.logger.error("[swagger] Invalid Swagger document generated");
+        return;
+      }
+
+      const swaggerPath = this.settings.swagger?.uri || "/api-docs";
+
+      try {
+        this.server.use(swaggerPath, swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+        this.logger.info(`[swagger] Swagger UI available at ${swaggerPath}`);
+      } catch (error) {
+        this.logger.error(`[swagger] Error setting up Swagger UI: ${error.message}`);
+      }
+    } else {
+      this.logger.info("[swagger] Swagger documentation is disabled");
+    }
   }
 }

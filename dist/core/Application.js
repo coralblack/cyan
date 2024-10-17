@@ -1,13 +1,18 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Cyan = exports.Stage = void 0;
 require("reflect-metadata");
 require("source-map-support");
+const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const Decorator_1 = require("./Decorator");
 const Handler_1 = require("./Handler");
 const Injector_1 = require("./Injector");
 const Logger_1 = require("./Logger");
 const Server_1 = require("./Server");
+const SwaggerGenerator_1 = require("./SwaggerGenerator");
 const router_1 = require("../router");
 const Task_invoker_1 = require("../task/Task.invoker");
 const Task_types_1 = require("../task/Task.types");
@@ -29,6 +34,9 @@ class Cyan {
         this.logger = (settings.logger || Logger_1.Logger).getInstance();
         this.logger.appName = this.settings.name;
         this.server = settings.server ? new settings.server(this) : new Server_1.Server(this);
+        if ([Stage.Local, Stage.Development].includes(this.settings.stage) && this.settings.swagger) {
+            this.swaggerGenerator = new SwaggerGenerator_1.SwaggerGenerator(this.settings.swagger);
+        }
     }
     start() {
         this.initialize();
@@ -41,6 +49,9 @@ class Cyan {
         this.server.afterInitSys();
         this.server.beforeInitRoutes();
         this.initRoutes();
+        if (this.swaggerGenerator) {
+            this.initSwagger();
+        }
         this.server.afterInitRoutes();
         this.server.use(this.server.onPageNotFound);
         this.server.use(this.server.onError);
@@ -120,6 +131,27 @@ class Cyan {
         const task = Injector_1.Injector.resolve(meta.target);
         const invoker = new Task_invoker_1.TaskInvoker(task, meta.method, meta.options, this.logger);
         invoker.init();
+    }
+    initSwagger() {
+        var _a;
+        if (this.swaggerGenerator) {
+            const swaggerDocument = this.swaggerGenerator.generateSwaggerDocs();
+            if (!swaggerDocument || typeof swaggerDocument !== "object") {
+                this.logger.error("[swagger] Invalid Swagger document generated");
+                return;
+            }
+            const swaggerPath = ((_a = this.settings.swagger) === null || _a === void 0 ? void 0 : _a.uri) || "/api-docs";
+            try {
+                this.server.use(swaggerPath, swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerDocument));
+                this.logger.info(`[swagger] Swagger UI available at ${swaggerPath}`);
+            }
+            catch (error) {
+                this.logger.error(`[swagger] Error setting up Swagger UI: ${error.message}`);
+            }
+        }
+        else {
+            this.logger.info("[swagger] Swagger documentation is disabled");
+        }
     }
 }
 exports.Cyan = Cyan;

@@ -8,7 +8,7 @@ interface SwaggerSchemaOptions {
   typesPath?: string[];
 }
 
-export class SwaggerSchemaInitializer {
+export class DefaultSwaggerSchemaInitializer {
   constructor(private options: SwaggerSchemaOptions) {}
   private tsModule: typeof import("typescript") | undefined;
 

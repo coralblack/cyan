@@ -1,6 +1,6 @@
 import swaggerJsdoc, { Operation, Options, Parameter, Reference, RequestBody, Responses, Schema, SecurityScheme } from "swagger-jsdoc";
 import { Metadata } from "./Decorator";
-import { SwaggerSchemaInitializer } from "../helper/SchemaInitializer";
+import { DefaultSwaggerSchemaInitializer } from "../helper/SchemaInitializer";
 import { ParamOptions, ParamType, SystemParamOptions } from "../router";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
 import { ApiPropertyOptions, ApiTagOptions, SwaggerOperationMetadata, SwaggerOptions } from "../types/Swagger";
@@ -45,7 +45,7 @@ export class SwaggerGenerator {
   }
 
   private initializeSchemas(): void {
-    const defaultSchemas = new SwaggerSchemaInitializer({
+    const defaultSchemas = new DefaultSwaggerSchemaInitializer({
       schemaPath: this.options.schemaPath,
       typesPath: this.options.typesPath,
     }).initializeSchemas();

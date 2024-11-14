@@ -3,7 +3,7 @@ interface SwaggerSchemaOptions {
     schemaPath?: string;
     typesPath?: string[];
 }
-export declare class SwaggerSchemaInitializer {
+export declare class DefaultSwaggerSchemaInitializer {
     private options;
     constructor(options: SwaggerSchemaOptions);
     private tsModule;

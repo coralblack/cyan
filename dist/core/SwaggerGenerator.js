@@ -51,7 +51,7 @@ class SwaggerGenerator {
         return (0, swagger_jsdoc_1.default)(swaggerOptions);
     }
     initializeSchemas() {
-        const defaultSchemas = new SchemaInitializer_1.SwaggerSchemaInitializer({
+        const defaultSchemas = new SchemaInitializer_1.DefaultSwaggerSchemaInitializer({
             schemaPath: this.options.schemaPath,
             typesPath: this.options.typesPath,
         }).initializeSchemas();

@@ -3,11 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SwaggerSchemaInitializer = void 0;
+exports.DefaultSwaggerSchemaInitializer = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const TypescriptSwaggerGenerator_1 = require("../core/TypescriptSwaggerGenerator");
-class SwaggerSchemaInitializer {
+class DefaultSwaggerSchemaInitializer {
     constructor(options) {
         this.options = options;
     }
@@ -72,5 +72,5 @@ class SwaggerSchemaInitializer {
         throw new Error(`Schema initialization failed: ${errorMessage}`);
     }
 }
-exports.SwaggerSchemaInitializer = SwaggerSchemaInitializer;
+exports.DefaultSwaggerSchemaInitializer = DefaultSwaggerSchemaInitializer;
 //# sourceMappingURL=SchemaInitializer.js.map

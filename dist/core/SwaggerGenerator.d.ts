@@ -36,4 +36,5 @@ export declare class SwaggerGenerator {
     private generateSwaggerSchemas;
     private getPropertySchema;
     private getSecuritySchemes;
+    private saveSwaggerJsonSchema;
 }

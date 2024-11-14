@@ -30,10 +30,6 @@ export class DefaultSwaggerSchemaInitializer {
   }
 
   private loadSchemaFromFile(): RecordSchemaType {
-    if (!this.options.schemaPath) {
-      throw new Error("Schema path is not defined");
-    }
-
     const resolvedPath = path.resolve(this.options.schemaPath);
 
     if (!fs.existsSync(resolvedPath)) {

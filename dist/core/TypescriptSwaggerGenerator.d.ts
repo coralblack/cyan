@@ -1,10 +1,30 @@
-import { RecordSchemaType } from "./SwaggerGenerator";
+import type { Type } from "typescript";
+import { BaseSchemaType, RecordSchemaType } from "./SwaggerGenerator";
 export declare class TypescriptSchemaGenerator {
     private ts;
     private filePatterns;
     constructor(ts: typeof import("typescript"), filePatterns: string[]);
     private typeChecker;
     private schemas;
+    private maxDepth;
     generateSchema(): RecordSchemaType;
     private extractTypes;
+    getTypeDefinition(type: Type, depth?: number): BaseSchemaType;
+    private getUnionType;
+    private getIntersectionType;
+    private getObjectType;
+    private processProperties;
+    private getAnonymousObjectType;
+    private getArrayType;
+    private getPrimitiveType;
+    private getEnumType;
+    private getJsDocDescription;
+    private getJsDocExample;
+    private isGenericType;
+    private isAnonymousObjectType;
+    private isEnumType;
+    private isEnumMemberType;
+    private isUnionType;
+    private isDateType;
+    private isArrayType;
 }

@@ -5,20 +5,16 @@ export class TypeScriptFileResolver {
   constructor(private ts: typeof import("typescript"), public readonly filePatterns: string[]) {}
 
   getFilePaths(): string[] {
-    let includePatterns: string[] = [];
+    const includePatterns: string[] = [];
     const excludePatterns: string[] = [];
 
-    if (typeof this.filePatterns === "string") {
-      includePatterns = [this.filePatterns];
-    } else {
-      this.filePatterns.forEach(pattern => {
-        if (pattern.startsWith("!")) {
-          excludePatterns.push(pattern.slice(1));
-        } else {
-          includePatterns.push(pattern);
-        }
-      });
-    }
+    this.filePatterns.forEach(pattern => {
+      if (pattern.startsWith("!")) {
+        excludePatterns.push(pattern.slice(1));
+      } else {
+        includePatterns.push(pattern);
+      }
+    });
 
     let filePaths: string[] = [];
 

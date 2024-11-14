@@ -28,9 +28,6 @@ class DefaultSwaggerSchemaInitializer {
         }
     }
     loadSchemaFromFile() {
-        if (!this.options.schemaPath) {
-            throw new Error("Schema path is not defined");
-        }
         const resolvedPath = path_1.default.resolve(this.options.schemaPath);
         if (!fs_1.default.existsSync(resolvedPath)) {
             throw new Error(`Schema file not found at path: ${resolvedPath}`);

@@ -12,21 +12,16 @@ class TypeScriptFileResolver {
         this.filePatterns = filePatterns;
     }
     getFilePaths() {
-        let includePatterns = [];
+        const includePatterns = [];
         const excludePatterns = [];
-        if (typeof this.filePatterns === "string") {
-            includePatterns = [this.filePatterns];
-        }
-        else {
-            this.filePatterns.forEach(pattern => {
-                if (pattern.startsWith("!")) {
-                    excludePatterns.push(pattern.slice(1));
-                }
-                else {
-                    includePatterns.push(pattern);
-                }
-            });
-        }
+        this.filePatterns.forEach(pattern => {
+            if (pattern.startsWith("!")) {
+                excludePatterns.push(pattern.slice(1));
+            }
+            else {
+                includePatterns.push(pattern);
+            }
+        });
         let filePaths = [];
         includePatterns.forEach(pattern => {
             const matchedPaths = glob_1.glob.sync(pattern);

@@ -13,10 +13,50 @@ import type {
 import { BaseSchemaType, RecordSchemaType } from "./SwaggerGenerator";
 import { TypeScriptFileResolver } from "../helper/TypescriptFileResolver";
 
-class TypeDefinitionGenerator {
+export class TypescriptSchemaGenerator {
+  constructor(private ts: typeof import("typescript"), private filePatterns: string[]) {}
+
+  private typeChecker: TypeChecker;
+  private schemas: RecordSchemaType = {};
   private maxDepth = 5;
 
-  constructor(private ts: typeof import("typescript"), private typeChecker: TypeChecker, private schemas: RecordSchemaType = {}) {}
+  public generateSchema(): RecordSchemaType {
+    const fileResolver = new TypeScriptFileResolver(this.ts, this.filePatterns);
+    const filePaths = fileResolver.getFilePaths();
+
+    const tsconfig = fileResolver.readTsConfig();
+
+    const program = this.ts.createProgram(filePaths, tsconfig.options);
+
+    this.typeChecker = program.getTypeChecker();
+
+    filePaths.forEach(filePath => {
+      const sourceFile = program.getSourceFile(filePath);
+
+      if (sourceFile) {
+        this.extractTypes(sourceFile);
+      }
+    });
+
+    return this.schemas;
+  }
+
+  private extractTypes(sourceFile: SourceFile): void {
+    this.ts.forEachChild(sourceFile, node => {
+      if (this.ts.isInterfaceDeclaration(node) || this.ts.isClassDeclaration(node) || this.ts.isTypeAliasDeclaration(node)) {
+        const symbol = this.typeChecker.getSymbolAtLocation(node.name);
+
+        if (symbol) {
+          const type = this.typeChecker.getDeclaredTypeOfSymbol(symbol);
+          const name = symbol.getName();
+
+          if (!this.schemas[name]) {
+            this.schemas[name] = this.getTypeDefinition(type);
+          }
+        }
+      }
+    });
+  }
 
   getTypeDefinition(type: Type, depth = 0): BaseSchemaType {
     const typeName = this.typeChecker.typeToString(type);
@@ -303,52 +343,5 @@ class TypeDefinitionGenerator {
 
   private isArrayType(type: Type): boolean {
     return type.getSymbol()?.getName() === "Array";
-  }
-}
-
-export class TypescriptSchemaGenerator {
-  constructor(private ts: typeof import("typescript"), private filePatterns: string[]) {}
-
-  private typeChecker: TypeChecker;
-  private schemas: RecordSchemaType = {};
-
-  public generateSchema(): RecordSchemaType {
-    const fileResolver = new TypeScriptFileResolver(this.ts, this.filePatterns);
-    const filePaths = fileResolver.getFilePaths();
-
-    const tsconfig = fileResolver.readTsConfig();
-
-    const program = this.ts.createProgram(filePaths, tsconfig.options);
-
-    this.typeChecker = program.getTypeChecker();
-
-    const typeDefinitionGenerator = new TypeDefinitionGenerator(this.ts, this.typeChecker, this.schemas);
-
-    filePaths.forEach(filePath => {
-      const sourceFile = program.getSourceFile(filePath);
-
-      if (sourceFile) {
-        this.extractTypes(sourceFile, typeDefinitionGenerator);
-      }
-    });
-
-    return this.schemas;
-  }
-
-  private extractTypes(sourceFile: SourceFile, typeDefinitionGenerator: TypeDefinitionGenerator): void {
-    this.ts.forEachChild(sourceFile, node => {
-      if (this.ts.isInterfaceDeclaration(node) || this.ts.isClassDeclaration(node) || this.ts.isTypeAliasDeclaration(node)) {
-        const symbol = this.typeChecker.getSymbolAtLocation(node.name);
-
-        if (symbol) {
-          const type = this.typeChecker.getDeclaredTypeOfSymbol(symbol);
-          const name = symbol.getName();
-
-          if (!this.schemas[name]) {
-            this.schemas[name] = typeDefinitionGenerator.getTypeDefinition(type);
-          }
-        }
-      }
-    });
   }
 }

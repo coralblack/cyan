@@ -16,4 +16,5 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./Http.helper"), exports);
 __exportStar(require("./TypescriptFileResolver"), exports);
+__exportStar(require("./SchemaInitializer"), exports);
 //# sourceMappingURL=index.js.map

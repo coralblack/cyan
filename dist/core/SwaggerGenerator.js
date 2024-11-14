@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SwaggerGenerator = void 0;
 const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const Decorator_1 = require("./Decorator");
-const TypescriptSwaggerGenerator_1 = require("./TypescriptSwaggerGenerator");
+const SchemaInitializer_1 = require("../helper/SchemaInitializer");
 const router_1 = require("../router");
 var SwaggerParameterType;
 (function (SwaggerParameterType) {
@@ -51,7 +51,10 @@ class SwaggerGenerator {
         return (0, swagger_jsdoc_1.default)(swaggerOptions);
     }
     initializeSchemas() {
-        const defaultSchemas = this.options.typesPath ? new TypescriptSwaggerGenerator_1.TypescriptSchemaGenerator(this.options.typesPath).generateSchema() : {};
+        const defaultSchemas = new SchemaInitializer_1.SwaggerSchemaInitializer({
+            schemaPath: this.options.schemaPath,
+            typesPath: this.options.typesPath,
+        }).initializeSchemas();
         this.schemas = this.generateSwaggerSchemas(defaultSchemas);
     }
     getTags() {

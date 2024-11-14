@@ -1,7 +1,7 @@
-import ts from "typescript";
 export declare class TypeScriptFileResolver {
-    private filePatterns;
-    constructor(filePatterns: string[]);
+    private ts;
+    readonly filePatterns: string[];
+    constructor(ts: typeof import("typescript"), filePatterns: string[]);
     getFilePaths(): string[];
-    readTsConfig(): ts.ParsedCommandLine;
+    readTsConfig(): any;
 }

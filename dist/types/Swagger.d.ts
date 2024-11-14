@@ -60,4 +60,5 @@ export interface SwaggerOptions {
     };
     uri?: string;
     typesPath?: string[];
+    schemaPath?: string;
 }

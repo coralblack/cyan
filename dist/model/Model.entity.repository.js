@@ -245,6 +245,68 @@ class Repository {
             throw (0, Error_1.TraceableError)(err);
         }
     }
+    async upsert(entity, options, trx) {
+        try {
+            const kx = (trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx;
+            const primaryColumn = this.repositoryInfo.primaryColumns[0];
+            const newEntity = this.repositoryInfo.columns.reduce((p, column) => {
+                const field = this.repositoryInfo.fields[column];
+                const [key, val] = (() => {
+                    if (!field) {
+                        return [null, null];
+                    }
+                    else if ("name" in field) {
+                        const key = field.name;
+                        const val = ((v) => {
+                            if (typeof v === "function")
+                                return kx.raw(v(key));
+                            else if (v === undefined && field.default) {
+                                return kx.raw(field.default(key));
+                            }
+                            else
+                                return v;
+                        })(entity[column]);
+                        return [key, val];
+                    }
+                    else {
+                        if ((0, builtin_1.hasOwnProperty)(entity, column)) {
+                            throw new Error(`Invalid Usage: Save with raw column not allowed. (${field.raw(this.repositoryInfo.tableName)})`);
+                        }
+                        else {
+                            return [null, null];
+                        }
+                    }
+                })();
+                if (key === null)
+                    return p;
+                p[key] = val;
+                return p;
+            }, {});
+            const updateFieldNames = (() => {
+                const getFieldName = (fieldKey) => {
+                    const field = this.repositoryInfo.fields[fieldKey];
+                    return field && "name" in field ? field.name : null;
+                };
+                return options.update.map(getFieldName).filter((name) => name !== null);
+            })();
+            const kxQuery = kx.insert(newEntity).into(this.repositoryInfo.tableName).onConflict().merge(updateFieldNames);
+            const [res] = await kxQuery;
+            if (options === null || options === void 0 ? void 0 : options.debug) {
+                console.log(">", kxQuery.toSQL());
+            }
+            if (this.repositoryInfo.primaryColumns.length === 1) {
+                const id = entity[primaryColumn];
+                if (id && typeof id !== "function") {
+                    return entity[primaryColumn];
+                }
+            }
+            const [[lid]] = await kx.raw("SELECT LAST_INSERT_ID() AS seq");
+            return res || lid.seq;
+        }
+        catch (err) {
+            throw (0, Error_1.TraceableError)(err);
+        }
+    }
     async delete(entity, options, trx) {
         try {
             let kx = ((trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx).from(this.repositoryInfo.tableName);

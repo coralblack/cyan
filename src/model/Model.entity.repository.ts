@@ -20,6 +20,7 @@ import {
   StreamFunctions,
   UpdateBulkOptions,
   UpdateOptions,
+  UpsertOptions,
 } from "./Model.query";
 import { Metadata } from "../core/Decorator";
 import { TraceableError } from "../core/Error";
@@ -311,6 +312,76 @@ export class Repository<T> {
       await kx.insert(updatedEntities).into(this.repositoryInfo.tableName).onConflict(primaryFieldName).merge(updateFieldNames);
 
       return updatedEntities.length;
+    } catch (err) {
+      throw TraceableError(err);
+    }
+  }
+
+  async upsert(entity: T, options: UpsertOptions<T>, trx?: TransactionScope): Promise<InsertId> {
+    try {
+      const kx = trx?.kx || this.kx;
+      const primaryColumn = this.repositoryInfo.primaryColumns[0];
+
+      const newEntity = this.repositoryInfo.columns.reduce((p, column) => {
+        const field = this.repositoryInfo.fields[column];
+
+        const [key, val] = (() => {
+          if (!field) {
+            return [null, null];
+          } else if ("name" in field) {
+            const key = field.name;
+            const val = ((v): any => {
+              if (typeof v === "function") return kx.raw(v(key));
+              else if (v === undefined && field.default) {
+                return kx.raw(field.default(key));
+              } else return v;
+            })(entity[column]);
+
+            return [key, val];
+          } else {
+            if (hasOwnProperty(entity, column)) {
+              throw new Error(`Invalid Usage: Save with raw column not allowed. (${field.raw(this.repositoryInfo.tableName)})`);
+            } else {
+              return [null, null];
+            }
+          }
+        })();
+
+        if (key === null) return p;
+        p[key] = val;
+
+        return p;
+      }, {} as Record<string, any>);
+
+      const updateFieldNames = (() => {
+        const getFieldName = (fieldKey: string): string | null => {
+          const field = this.repositoryInfo.fields[fieldKey];
+
+          return field && "name" in field ? field.name : null;
+        };
+
+        return (options.update as string[]).map(getFieldName).filter((name): name is string => name !== null);
+      })();
+
+      const kxQuery = kx.insert(newEntity).into(this.repositoryInfo.tableName).onConflict().merge(updateFieldNames);
+      const [res] = await kxQuery;
+
+      if (options?.debug) {
+        // eslint-disable-next-line no-console
+        console.log(">", kxQuery.toSQL());
+      }
+
+      if (this.repositoryInfo.primaryColumns.length === 1) {
+        const id = entity[primaryColumn];
+
+        if (id && typeof id !== "function") {
+          return entity[primaryColumn];
+        }
+      }
+
+      const [[lid]] = await kx.raw("SELECT LAST_INSERT_ID() AS seq");
+
+      return res || lid.seq;
     } catch (err) {
       throw TraceableError(err);
     }

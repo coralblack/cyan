@@ -72,6 +72,11 @@ export interface UpdateBulkOptions<T> {
   debug?: boolean;
 }
 
+export interface UpsertOptions<T> {
+  update: (keyof T)[];
+  debug?: boolean;
+}
+
 export interface DeleteOptions<T> {
   where?: FindConditions<T>;
   debug?: boolean;

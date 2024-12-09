@@ -160,6 +160,30 @@ class TestRawColEntity {
   createdAt?: Date;
 }
 
+@Entity({ name: "HELLO_UNIQUE" })
+class HelloUniqueEntity {
+  @PrimaryColumn({ name: "ID" })
+  id: bigint;
+
+  @Column({ name: "NAME1" })
+  name1: string;
+
+  @Column({ name: "NAME2" })
+  name2: string;
+
+  @Column({ name: "NAME3" })
+  name3: string;
+
+  @Column({ name: "WORLD_ID" })
+  worldId?: bigint;
+
+  @OneToOne({ name: "WORLD_ID", target: WorldEntity })
+  world?: WorldEntity;
+
+  @Column({ name: "CREATED_AT", default: () => "CURRENT_TIMESTAMP()" })
+  createdAt: Date;
+}
+
 export class HelloModel extends BaseModel {
   async test(): Promise<void> {
     await this.transactionWith<HelloEntity>(async scope => {
@@ -170,6 +194,20 @@ export class HelloModel extends BaseModel {
             NAME VARCHAR(128) DEFAULT NULL,
             CREATED_AT DATETIME DEFAULT NULL,
             PRIMARY KEY (ID)
+        )
+      `);
+
+      await scope.execute(`
+        CREATE TABLE IF NOT EXISTS HELLO_UNIQUE (
+            ID BIGINT(20) NOT NULL AUTO_INCREMENT,
+            WORLD_ID BIGINT(20) DEFAULT NULL,
+            NAME1 VARCHAR(128) DEFAULT NULL,
+            NAME2 VARCHAR(128) DEFAULT NULL,
+            NAME3 varchar(128) DEFAULT NULL,
+            CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (ID),
+            UNIQUE KEY uk_name1 (NAME1),
+            UNIQUE KEY uk_name2 (NAME2, NAME3)
         )
       `);
 
@@ -304,6 +342,7 @@ export class HelloModel extends BaseModel {
       assert(foundLikeBetween.id === BigInt(save1), "foundLikeBetween.id");
 
       const foundNotIn = await repo.find({ where: { id: { NOT_IN: [found1.id] } } });
+
       assert(foundNotIn.find(x => x.id === found1.id) === undefined, "foundNotIn.id");
 
       const save2Id = BigInt(new Date().getTime());
@@ -596,7 +635,7 @@ export class HelloModel extends BaseModel {
       assert(latestFoo.bar.baz.foz.id === latestFoz.id, "latestFoo.bar.baz.foz.id");
       assert(typeof latestFoo.bar.baz.foz.id === "bigint", "typeof latestFoo.bar.baz.foz.id");
 
-      const helloEntities = await repo.find({ limit: 2 });
+      const helloEntities = await repo.find({ order: { createdAt: "ASC" }, limit: 2 });
       const orWhere1 = await repo.find({ where: { $OR: { id: helloEntities[0].id, name: helloEntities[1].name } } });
       const orWhere2 = await repo.find({ where: { name: { $OR: [{ LIKE: helloEntities[0].name }, { LIKE: helloEntities[1].name }] } } });
       const andWhere1 = await repo.find({ where: { $AND: { id: helloEntities[0].id, name: helloEntities[0].name } } });
@@ -692,7 +731,7 @@ export class HelloModel extends BaseModel {
       await this.testSort2(scope);
       await this.testStreaming(scope);
       await this.testDistinct(scope);
-
+      await this.testUpsert(scope);
       return null;
     });
 
@@ -932,5 +971,141 @@ export class HelloModel extends BaseModel {
     const distinctRecord = await repo.find({ select, distinct: true });
 
     assert(uniqRecord.size === distinctRecord?.length, "uniqRecord.size === distinctRecord?.length");
+  }
+
+  private async testUpsert(trx: TransactionScope) {
+    const worldRepo = trx.getRepository(WorldEntity);
+    const worldId = await worldRepo.save({
+      id: (() => "UUID_SHORT()") as any,
+      name: "world",
+      createdAt: null,
+    });
+
+    const repo = trx.getRepository(HelloUniqueEntity);
+
+    await trx.execute("TRUNCATE `cyan`.`HELLO_UNIQUE`;");
+
+    // 1. id duplicate key update check
+    const pkBeforeDate = new Date(Date.now() - (Date.now() % 60000)); // 분단위로 계산
+    const pkBefore = await repo.save({
+      id: (() => "UUID_SHORT()") as any,
+      worldId: BigInt(worldId),
+      name1: "NAME1",
+      name2: "NAME2",
+      name3: "NAME3",
+      createdAt: pkBeforeDate,
+    });
+
+    assert(pkBefore > 100000000, "pkBefore > 100000000");
+
+    const pkBeforeFound = await repo.findOne({ where: { id: pkBefore as bigint } });
+
+    assert(pkBeforeFound.name1 === "NAME1", "pkBeforeFound.name1 === 'NAME1'");
+
+    const pkAfter = await repo.upsert(
+      {
+        id: pkBefore as bigint,
+        worldId: BigInt(worldId),
+        name1: "UPSERT1-NAME1",
+        name2: "UPSERT1-NAME2",
+        name3: "UPSERT1-NAME3",
+        createdAt: new Date(),
+      },
+      { update: ["name1", "name2", "name3"] }
+    );
+
+    assert(pkAfter > 100000000, "pkAfter > 100000000");
+
+    const pkCount = await repo.count({});
+
+    assert(pkCount === BigInt(1), "pkCount === BigInt(1)");
+
+    const pkAfterFound = await repo.findOne({ where: { id: pkAfter as bigint } });
+
+    assert(
+      pkAfterFound.id === BigInt(pkBefore),
+      "pkAfterFound.id === pkBefore",
+      `pkAfterFound.id: ${pkAfterFound.id}, pkBefore: ${pkBefore as bigint}`
+    );
+    assert(pkAfterFound.name1 === "UPSERT1-NAME1", "pkAfterFound.name1 === 'UPSERT1-NAME1'");
+    assert(pkAfterFound.name2 === "UPSERT1-NAME2", "pkAfterFound.name2 === 'UPSERT1-NAME2'");
+    assert(pkAfterFound.name3 === "UPSERT1-NAME3", "pkAfterFound.name3 === 'UPSERT1-NAME3'");
+    assert(pkAfterFound.createdAt.getTime() === pkBeforeDate.getTime(), "pkAfterFound.createdAt === pkBeforeDate");
+
+    // 2. unique key duplicate update check
+    const ukBeforeDate = new Date(Date.now() - (Date.now() % 60000));
+    const ukBefore = await repo.save({
+      id: (() => "UUID_SHORT()") as any,
+      worldId: BigInt(worldId),
+      name1: "NAME1",
+      name2: "NAME2",
+      name3: "NAME3",
+      createdAt: ukBeforeDate,
+    });
+
+    assert(ukBefore > 100000000, "ukBefore > 100000000");
+
+    const ukAfter = await repo.upsert(
+      {
+        id: (() => "UUID_SHORT()") as any,
+        worldId: BigInt(worldId),
+        name1: "NAME1",
+        name2: "UPSERT2-NAME2",
+        name3: "UPSERT2-NAME3",
+        createdAt: new Date(),
+      },
+      { update: ["name2"] }
+    );
+
+    assert(ukAfter > 100000000, "ukAfter > 100000000");
+
+    const ukAfterCount = await repo.count({});
+
+    assert(ukAfterCount === BigInt(2), "ukAfterCount === BigInt(2)");
+
+    const ukAfterFound = await repo.findOne({ where: { id: ukAfter as bigint } });
+
+    assert(ukAfterFound.name1 === "NAME1", "ukAfterFound.name1 === 'NAME1'");
+    assert(ukAfterFound.name2 === "UPSERT2-NAME2", "ukAfterFound.name2 === 'UPSERT2-NAME2'");
+    assert(ukAfterFound.name3 === "NAME3", "ukAfterFound.name3 === 'NAME3'");
+    assert(ukAfterFound.createdAt.getTime() === ukBeforeDate.getTime(), "ukAfterFound.createdAt === ukBeforeDate");
+
+    // 3. composite unique key duplicate update check
+    const uckBeforeDate = new Date(Date.now() - (Date.now() % 60000));
+    const uckBefore = await repo.save({
+      id: (() => "UUID_SHORT()") as any,
+      worldId: BigInt(worldId),
+      name1: "NAME1-1",
+      name2: "NAME2",
+      name3: "NAME3",
+      createdAt: uckBeforeDate,
+    });
+
+    assert(uckBefore > 100000000, "uckBefore > 100000000");
+
+    const uckAfter = await repo.upsert(
+      {
+        id: (() => "UUID_SHORT()") as any,
+        worldId: BigInt(worldId),
+        name1: "UPSERT3-NAME1",
+        name2: "NAME2",
+        name3: "NAME3",
+        createdAt: new Date(),
+      },
+      { update: ["name1"] }
+    );
+
+    assert(uckAfter > 100000000, "uckAfter > 100000000");
+
+    const uckAfterCount = await repo.count({});
+
+    assert(uckAfterCount === BigInt(3), "uckAfterCount === BigInt(2)");
+
+    const uckAfterFound = await repo.findOne({ where: { id: uckAfter as bigint } });
+
+    assert(uckAfterFound.name1 === "UPSERT3-NAME1", "uckAfterFound.name1 === 'UPSERT3-NAME1'");
+    assert(uckAfterFound.name2 === "NAME2", "uckAfterFound.name2 === 'NAME2'");
+    assert(uckAfterFound.name3 === "NAME3", "uckAfterFound.name3 === 'NAME3'");
+    assert(uckAfterFound.createdAt.getTime() === uckBeforeDate.getTime(), "uckAfterFound.createdAt === uckBeforeDate");
   }
 }

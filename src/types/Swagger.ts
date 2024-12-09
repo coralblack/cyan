@@ -70,4 +70,10 @@ export interface SwaggerOptions {
   };
   uri?: string;
   typesPath?: string[];
+  schemaPath?: string;
+  schemaOutput?: {
+    enabled: boolean;
+    outputPath: string;
+    fileName?: string;
+  };
 }

@@ -6,27 +6,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TypeScriptFileResolver = void 0;
 const path_1 = __importDefault(require("path"));
 const glob_1 = require("glob");
-const typescript_1 = __importDefault(require("typescript"));
 class TypeScriptFileResolver {
-    constructor(filePatterns) {
+    constructor(ts, filePatterns) {
+        this.ts = ts;
         this.filePatterns = filePatterns;
     }
     getFilePaths() {
-        let includePatterns = [];
+        const includePatterns = [];
         const excludePatterns = [];
-        if (typeof this.filePatterns === "string") {
-            includePatterns = [this.filePatterns];
-        }
-        else {
-            this.filePatterns.forEach(pattern => {
-                if (pattern.startsWith("!")) {
-                    excludePatterns.push(pattern.slice(1));
-                }
-                else {
-                    includePatterns.push(pattern);
-                }
-            });
-        }
+        this.filePatterns.forEach(pattern => {
+            if (pattern.startsWith("!")) {
+                excludePatterns.push(pattern.slice(1));
+            }
+            else {
+                includePatterns.push(pattern);
+            }
+        });
         let filePaths = [];
         includePatterns.forEach(pattern => {
             const matchedPaths = glob_1.glob.sync(pattern);
@@ -41,13 +36,16 @@ class TypeScriptFileResolver {
         return filePaths;
     }
     readTsConfig() {
+        if (!this.ts) {
+            throw new Error("TypeScriptFileResolver not initialized. Call initialize() first.");
+        }
         const basePath = process.cwd();
         const configPath = path_1.default.join(basePath, "tsconfig.json");
-        const configFile = typescript_1.default.readConfigFile(configPath, typescript_1.default.sys.readFile);
+        const configFile = this.ts.readConfigFile(configPath, this.ts.sys.readFile);
         if (configFile.error) {
             throw new Error(`Error reading tsconfig.json: ${configFile.error.messageText}`);
         }
-        return typescript_1.default.parseJsonConfigFileContent(configFile.config, typescript_1.default.sys, basePath);
+        return this.ts.parseJsonConfigFileContent(configFile.config, this.ts.sys, basePath);
     }
 }
 exports.TypeScriptFileResolver = TypeScriptFileResolver;

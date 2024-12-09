@@ -69,6 +69,11 @@
   "peerDependencies": {
     "typescript": ">=4.x"
   },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"

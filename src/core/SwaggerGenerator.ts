@@ -1,6 +1,8 @@
+import * as fs from "fs";
+import * as path from "path";
 import swaggerJsdoc, { Operation, Options, Parameter, Reference, RequestBody, Responses, Schema, SecurityScheme } from "swagger-jsdoc";
 import { Metadata } from "./Decorator";
-import { TypescriptSchemaGenerator } from "./TypescriptSwaggerGenerator";
+import { DefaultSwaggerSchemaInitializer } from "../helper/SchemaInitializer";
 import { ParamOptions, ParamType, SystemParamOptions } from "../router";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
 import { ApiPropertyOptions, ApiTagOptions, SwaggerOperationMetadata, SwaggerOptions } from "../types/Swagger";
@@ -41,11 +43,18 @@ export class SwaggerGenerator {
       apis: [],
     };
 
+    if (this.options.schemaOutput?.enabled) {
+      this.saveSwaggerJsonSchema();
+    }
+
     return swaggerJsdoc(swaggerOptions);
   }
 
   private initializeSchemas(): void {
-    const defaultSchemas = this.options.typesPath ? new TypescriptSchemaGenerator(this.options.typesPath).generateSchema() : {};
+    const defaultSchemas = new DefaultSwaggerSchemaInitializer({
+      schemaPath: this.options.schemaPath,
+      typesPath: this.options.typesPath,
+    }).initializeSchemas();
 
     this.schemas = this.generateSwaggerSchemas(defaultSchemas);
   }
@@ -411,5 +420,27 @@ export class SwaggerGenerator {
         name: "Authorization",
       },
     };
+  }
+
+  private saveSwaggerJsonSchema(): void {
+    try {
+      const outputPath = this.options.schemaOutput.outputPath;
+      const fileName = this.options.schemaOutput.fileName || "swagger-schema.json";
+
+      // 파일 확장자가 .json이 아니면 추가
+      const finalFileName = fileName.endsWith(".json") ? fileName : `${fileName}.json`;
+      const fullPath = path.join(outputPath, finalFileName);
+
+      if (!fs.existsSync(outputPath)) {
+        fs.mkdirSync(outputPath, { recursive: true });
+      }
+
+      // JSON 형식으로 변환하여 파일 생성
+      const jsonContent = JSON.stringify(this.schemas, null, 2);
+
+      fs.writeFileSync(fullPath, jsonContent, "utf8");
+    } catch (error) {
+      throw new Error("Error generating Swagger JSON schema");
+    }
   }
 }

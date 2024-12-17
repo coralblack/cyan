@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+import { ClassType } from "src/types";
 import * as bodyParser from "body-parser";
 import cors, { CorsOptions, CorsOptionsDelegate } from "cors";
 import { NextFunction } from "express";
@@ -90,6 +91,7 @@ export class Handler {
         if (type === ParamType.Path) return req.params[name];
         if (type === ParamType.Header) return req.headers[name];
         if (type === ParamType.Body) return get(req.body, name); // eslint-disable-line @typescript-eslint/no-unsafe-return
+        if (type === ParamType.Context) return req.executionContext;
       })(actionParam.type, actionParam.name);
 
       try {
@@ -157,6 +159,12 @@ export class Handler {
               throw new Error("Validation Failed.");
             }
           }
+
+          if (actionParam.type === ParamType.Context) {
+            if (!(value instanceof (actionParam.options.type as ClassType<any>))) {
+              throw new Error("Middleware Type Validation Failed");
+            }
+          }
         }
       } catch (err) {
         if (err instanceof HttpError) {
@@ -171,6 +179,8 @@ export class Handler {
           throw invalid instanceof HttpError
             ? invalid
             : HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
+        } else if (err.message.includes("Middleware")) {
+          throw HttpResponder.badRequest.message(`BadRequest (Invalid Middleware ${actionParam.type.toString()}: ${actionParam.name})`)();
         } else {
           throw HttpResponder.badRequest.message(
             actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`

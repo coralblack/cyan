@@ -10,6 +10,7 @@ enum SwaggerParameterType {
   Query = "query",
   Path = "path",
   Body = "body",
+  ExecutionContext = "executionContext",
 }
 
 export type RecordSchemaType = { [key: string]: Schema | Reference } | undefined;
@@ -161,6 +162,7 @@ export class SwaggerGenerator {
       [ParamType.Query]: SwaggerParameterType.Query,
       [ParamType.Path]: SwaggerParameterType.Path,
       [ParamType.Body]: SwaggerParameterType.Body,
+      [ParamType.Context]: SwaggerParameterType.ExecutionContext,
     };
 
     const location = locationMap[paramType];

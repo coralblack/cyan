@@ -30,6 +30,7 @@ export enum ParamType {
   Body = "BODY",
   Path = "PATH",
   System = "SYSTEM",
+  Context = "CONTEXT",
 }
 
 export type SystemParamOptions = SystemRequestParamOptions;
@@ -37,6 +38,12 @@ export type SystemParamOptions = SystemRequestParamOptions;
 export interface SystemRequestParamOptions {
   type: "REQ";
   attr: keyof HttpRequest;
+}
+
+export type ContextParamOptions = CyanRequestContextParamOptions;
+
+export interface CyanRequestContextParamOptions {
+  type: ClassType<any>;
 }
 
 function Param(type: ParamType, name: string, options: ParamOptions | SystemParamOptions): ParameterDecorator {
@@ -70,4 +77,8 @@ export function QueryParam(name: string, options?: ParamOptions): ParameterDecor
 
 export function SystemParam(options: SystemParamOptions): ParameterDecorator {
   return Param(ParamType.System, null, options);
+}
+
+export function ContextParam(name: string, options?: ParamOptions): ParameterDecorator {
+  return Param(ParamType.Context, name, options || {});
 }

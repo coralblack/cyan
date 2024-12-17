@@ -14,6 +14,7 @@ var SwaggerParameterType;
     SwaggerParameterType["Query"] = "query";
     SwaggerParameterType["Path"] = "path";
     SwaggerParameterType["Body"] = "body";
+    SwaggerParameterType["ExecutionContext"] = "executionContext";
 })(SwaggerParameterType || (SwaggerParameterType = {}));
 class SwaggerGenerator {
     constructor(options) {
@@ -143,6 +144,7 @@ class SwaggerGenerator {
             [router_1.ParamType.Query]: SwaggerParameterType.Query,
             [router_1.ParamType.Path]: SwaggerParameterType.Path,
             [router_1.ParamType.Body]: SwaggerParameterType.Body,
+            [router_1.ParamType.Context]: SwaggerParameterType.ExecutionContext,
         };
         const location = locationMap[paramType];
         if (!location) {

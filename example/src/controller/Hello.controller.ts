@@ -4,7 +4,17 @@ import { Inject } from "@coralblack/cyan/dist/core";
 import { HttpHelper } from "@coralblack/cyan/dist/helper";
 import { HttpMethod } from "@coralblack/cyan/dist/http";
 import { HttpResponder } from "@coralblack/cyan/dist/http/Http.response";
-import { BodyParam, Get, HeaderParam, PathParam, Post, QueryParam, SystemParam } from "@coralblack/cyan/dist/router";
+import {
+  BodyParam,
+  ContextParam,
+  Get,
+  HeaderParam,
+  Middleware,
+  PathParam,
+  Post,
+  QueryParam,
+  SystemParam,
+} from "@coralblack/cyan/dist/router";
 import { BaseController } from "./Base.controller";
 import { HttpError } from "../../../dist/http/Http.error";
 import { HelloService } from "../service/Hello.service";
@@ -34,6 +44,35 @@ enum FooBarMix {
 
 class CustomClass {
   constructor(public readonly message: string) {}
+}
+
+class CyanRequestContext {
+  foo: string;
+  bar: number;
+  boo: {
+    innerFoo: string;
+    innerBar?: number;
+  };
+
+  constructor(foo: string, bar: number, boo?: { innerFoo: string; innerBar?: number }) {
+    this.foo = foo;
+    this.bar = bar;
+    this.boo = boo || { innerFoo: "init" };
+  }
+}
+
+class SameFieldWithValidRequestContext {
+  foo: string;
+  bar: number;
+  boo: {
+    innerFoo: string;
+    innerBar?: number;
+  };
+}
+
+class InvalidCyanRequestContext {
+  notFoo: string;
+  notBar: number;
 }
 
 const DEFAULT_VAL = "DEFAULT_VAL";
@@ -351,5 +390,63 @@ export class HelloController extends BaseController {
     @SystemParam({ type: "REQ", attr: "remoteAddress" }) remoteAddress: string
   ): string {
     return `RES:${reqMethod}:${remoteAddress}`;
+  }
+
+  @Get("/test/middleware/class/instance")
+  @Middleware((req, res, next) => {
+    req.executionContext = new CyanRequestContext("test", 88);
+    return next();
+  })
+  testMiddlewareTypeValidation(@ContextParam("myContext", { type: CyanRequestContext }) myContext: CyanRequestContext): {
+    context: CyanRequestContext;
+  } {
+    return { context: myContext };
+  }
+
+  @Get("/test/middleware/class/instance/invalid")
+  @Middleware((req, res, next) => {
+    const invalidContext = new InvalidCyanRequestContext();
+
+    req.executionContext = invalidContext;
+    return next();
+  })
+  testInvalidMiddlewareTypeValidation1(@ContextParam("myContext", { type: CyanRequestContext }) myContext: CyanRequestContext): never {
+    throw Error("this controller should not reach to this point. it must end at middleware layer");
+  }
+
+  @Get("/test/middleware/class/instance/same")
+  @Middleware((req, res, next) => {
+    const sameFieldContext = new SameFieldWithValidRequestContext();
+
+    req.executionContext = sameFieldContext;
+    return next();
+  })
+  testInvalidMiddlewareTypeValidation2(@ContextParam("myContext", { type: CyanRequestContext }) myContext: CyanRequestContext): never {
+    throw Error("this controller should not reach to this point. it must end at middleware layer");
+  }
+
+  @Get("/test/middleware/class/instance/obj")
+  @Middleware((req, res, next) => {
+    req.executionContext = {
+      dummy: "string",
+      foo: 50,
+      notThis: { otherDummy: "su" },
+    };
+    return next();
+  })
+  testInvalidMiddlewareTypeValidation3(@ContextParam("myContext", { type: CyanRequestContext }) myContext: CyanRequestContext): never {
+    throw Error("this controller should not reach to this point. it must end at middleware layer");
+  }
+
+  @Get("/test/middleware/class/instance/same/obj")
+  @Middleware((req, res, next) => {
+    req.executionContext = {
+      foo: "test",
+      bar: 50,
+    };
+    return next();
+  })
+  testInvalidMiddlewareTypeValidation4(@ContextParam("myContext", { type: CyanRequestContext }) myContext: CyanRequestContext): never {
+    throw Error("this controller should not reach to this point. it must end at middleware layer");
   }
 }

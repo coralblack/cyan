@@ -205,7 +205,7 @@ class Handler {
                         : Http_response_1.HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
                 }
                 else if (err.message.includes("Middleware")) {
-                    throw Http_response_1.HttpResponder.badRequest.message(`BadRequest (Invalid Middleware ${actionParam.type.toString()}: ${actionParam.name})`)();
+                    throw Http_response_1.HttpResponder.badRequest.message(`BadRequest (Invalid Middleware ${actionParam.type.toString()})`)();
                 }
                 else {
                     throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();

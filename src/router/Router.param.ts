@@ -46,7 +46,7 @@ export interface CyanRequestContextParamOptions {
   type: ClassType<any>;
 }
 
-function Param(type: ParamType, name: string, options: ParamOptions | SystemParamOptions): ParameterDecorator {
+function Param(type: ParamType, name: string, options: ParamOptions | SystemParamOptions | ContextParamOptions): ParameterDecorator {
   return function ParamInner(target: any, method: string, index: number) {
     Metadata.getStorage().routeParams.push({
       target: target.constructor,
@@ -79,6 +79,6 @@ export function SystemParam(options: SystemParamOptions): ParameterDecorator {
   return Param(ParamType.System, null, options);
 }
 
-export function ContextParam(name: string, options?: ParamOptions): ParameterDecorator {
-  return Param(ParamType.Context, name, options || {});
+export function ContextParam(options: ParamOptions): ParameterDecorator {
+  return Param(ParamType.Context, null, options);
 }

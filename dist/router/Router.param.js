@@ -43,8 +43,8 @@ function SystemParam(options) {
     return Param(ParamType.System, null, options);
 }
 exports.SystemParam = SystemParam;
-function ContextParam(name, options) {
-    return Param(ParamType.Context, name, options || {});
+function ContextParam(options) {
+    return Param(ParamType.Context, null, options);
 }
 exports.ContextParam = ContextParam;
 //# sourceMappingURL=Router.param.js.map

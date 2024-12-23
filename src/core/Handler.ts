@@ -180,7 +180,7 @@ export class Handler {
             ? invalid
             : HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
         } else if (err.message.includes("Middleware")) {
-          throw HttpResponder.badRequest.message(`BadRequest (Invalid Middleware ${actionParam.type.toString()}: ${actionParam.name})`)();
+          throw HttpResponder.badRequest.message(`BadRequest (Invalid Middleware ${actionParam.type.toString()})`)();
         } else {
           throw HttpResponder.badRequest.message(
             actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`

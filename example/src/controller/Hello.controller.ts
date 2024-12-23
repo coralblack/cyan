@@ -397,7 +397,7 @@ export class HelloController extends BaseController {
     req.executionContext = new CyanRequestContext("test", 88);
     return next();
   })
-  testMiddlewareTypeValidation(@ContextParam("myContext", { type: CyanRequestContext }) myContext: CyanRequestContext): {
+  testMiddlewareTypeValidation(@ContextParam({ type: CyanRequestContext }) myContext: CyanRequestContext): {
     context: CyanRequestContext;
   } {
     return { context: myContext };
@@ -410,7 +410,7 @@ export class HelloController extends BaseController {
     req.executionContext = invalidContext;
     return next();
   })
-  testInvalidMiddlewareTypeValidation1(@ContextParam("myContext", { type: CyanRequestContext }) myContext: CyanRequestContext): never {
+  testInvalidMiddlewareTypeValidation1(@ContextParam({ type: CyanRequestContext }) myContext: CyanRequestContext): never {
     throw Error("this controller should not reach to this point. it must end at middleware layer");
   }
 
@@ -421,7 +421,7 @@ export class HelloController extends BaseController {
     req.executionContext = sameFieldContext;
     return next();
   })
-  testInvalidMiddlewareTypeValidation2(@ContextParam("myContext", { type: CyanRequestContext }) myContext: CyanRequestContext): never {
+  testInvalidMiddlewareTypeValidation2(@ContextParam({ type: CyanRequestContext }) myContext: CyanRequestContext): never {
     throw Error("this controller should not reach to this point. it must end at middleware layer");
   }
 
@@ -434,7 +434,7 @@ export class HelloController extends BaseController {
     };
     return next();
   })
-  testInvalidMiddlewareTypeValidation3(@ContextParam("myContext", { type: CyanRequestContext }) myContext: CyanRequestContext): never {
+  testInvalidMiddlewareTypeValidation3(@ContextParam({ type: CyanRequestContext }) myContext: CyanRequestContext): never {
     throw Error("this controller should not reach to this point. it must end at middleware layer");
   }
 
@@ -446,7 +446,7 @@ export class HelloController extends BaseController {
     };
     return next();
   })
-  testInvalidMiddlewareTypeValidation4(@ContextParam("myContext", { type: CyanRequestContext }) myContext: CyanRequestContext): never {
+  testInvalidMiddlewareTypeValidation4(@ContextParam({ type: CyanRequestContext }) myContext: CyanRequestContext): never {
     throw Error("this controller should not reach to this point. it must end at middleware layer");
   }
 }

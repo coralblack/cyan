@@ -44,4 +44,4 @@ export declare function BodyParam(name: string, options?: ParamOptions): Paramet
 export declare function PathParam(name: string, options?: ParamOptions): ParameterDecorator;
 export declare function QueryParam(name: string, options?: ParamOptions): ParameterDecorator;
 export declare function SystemParam(options: SystemParamOptions): ParameterDecorator;
-export declare function ContextParam(name: string, options?: ParamOptions): ParameterDecorator;
+export declare function ContextParam(options: ParamOptions): ParameterDecorator;

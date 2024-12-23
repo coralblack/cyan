@@ -14,7 +14,6 @@ var SwaggerParameterType;
     SwaggerParameterType["Query"] = "query";
     SwaggerParameterType["Path"] = "path";
     SwaggerParameterType["Body"] = "body";
-    SwaggerParameterType["ExecutionContext"] = "executionContext";
 })(SwaggerParameterType || (SwaggerParameterType = {}));
 class SwaggerGenerator {
     constructor(options) {
@@ -110,17 +109,23 @@ class SwaggerGenerator {
             .replace(/\/$/, "");
     }
     getSwaggerParameters(route) {
-        return this.storage.routeParams.filter(param => this.isValidRouteParam(param, route)).map(param => this.createParameterObject(param));
+        return this.storage.routeParams
+            .filter(param => this.isValidRouteParam(param, route))
+            .map(param => this.createParameterObject(param))
+            .filter(param => param !== undefined);
     }
     isValidRouteParam(param, route) {
         return (param.target === route.target &&
             param.method === route.method &&
             param.type !== router_1.ParamType.Body &&
             param.type !== router_1.ParamType.System &&
+            param.type !== router_1.ParamType.Context &&
             param.name !== "authorization" &&
             param.name !== "user-agent");
     }
     createParameterObject(param) {
+        if (param.type === router_1.ParamType.Context)
+            return undefined;
         const schema = this.getSchemaType(param.options);
         const description = this.getParamDescription(param.options);
         return {
@@ -144,7 +149,6 @@ class SwaggerGenerator {
             [router_1.ParamType.Query]: SwaggerParameterType.Query,
             [router_1.ParamType.Path]: SwaggerParameterType.Path,
             [router_1.ParamType.Body]: SwaggerParameterType.Body,
-            [router_1.ParamType.Context]: SwaggerParameterType.ExecutionContext,
         };
         const location = locationMap[paramType];
         if (!location) {

@@ -18,5 +18,4 @@ __exportStar(require("./Application"), exports);
 __exportStar(require("./Logger"), exports);
 __exportStar(require("./Server"), exports);
 __exportStar(require("./Injector"), exports);
-__exportStar(require("./SwaggerGenerator"), exports);
 //# sourceMappingURL=index.js.map

@@ -10,22 +10,23 @@ import { Handler } from "./Handler";
 import { Injector } from "./Injector";
 import { Logger } from "./Logger";
 import { Server } from "./Server";
-import { SwaggerGenerator } from "./SwaggerGenerator";
 import { Controller as HttpController } from "../http/Http.controller";
 import { MIDDLEWARE_PRIORITY_ACTION_HANDLER, MIDDLEWARE_PRIORITY_AFTER_HANDLER, MIDDLEWARE_PRIORITY_BEFORE_HANDLER } from "../router";
+import { SwaggerGenerator, SwaggerOptions } from "../swagger";
 import { TaskInvoker } from "../task/Task.invoker";
 import { TaskType } from "../task/Task.types";
 import { ClassType } from "../types";
 import { HandlerFunction } from "../types/Handler";
 import { Controller as ControllerType } from "../types/Http";
 import { RouteMetadataArgs, TaskMetadataArgs } from "../types/MetadataArgs";
-import { SwaggerOptions } from "../types/Swagger";
 
 export enum Stage {
   Local = "local",
   Development = "development",
   Staging = "staging",
   Production = "production",
+  Develop = "develop",
+  Demo = "demo",
 }
 
 export interface CyanSettings {

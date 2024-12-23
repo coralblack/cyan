@@ -12,8 +12,8 @@ const Handler_1 = require("./Handler");
 const Injector_1 = require("./Injector");
 const Logger_1 = require("./Logger");
 const Server_1 = require("./Server");
-const SwaggerGenerator_1 = require("./SwaggerGenerator");
 const router_1 = require("../router");
+const swagger_1 = require("../swagger");
 const Task_invoker_1 = require("../task/Task.invoker");
 const Task_types_1 = require("../task/Task.types");
 var Stage;
@@ -22,6 +22,8 @@ var Stage;
     Stage["Development"] = "development";
     Stage["Staging"] = "staging";
     Stage["Production"] = "production";
+    Stage["Develop"] = "develop";
+    Stage["Demo"] = "demo";
 })(Stage = exports.Stage || (exports.Stage = {}));
 class Cyan {
     constructor(settings) {
@@ -35,7 +37,7 @@ class Cyan {
         this.logger.appName = this.settings.name;
         this.server = settings.server ? new settings.server(this) : new Server_1.Server(this);
         if (this.settings.swagger && this.settings.swagger.targetEnvs.includes(this.settings.stage)) {
-            this.swaggerGenerator = new SwaggerGenerator_1.SwaggerGenerator(this.settings.swagger);
+            this.swaggerGenerator = new swagger_1.SwaggerGenerator(this.settings.swagger);
         }
     }
     start() {

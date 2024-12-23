@@ -4,15 +4,16 @@ import * as bodyParser from "body-parser";
 import { CorsOptions, CorsOptionsDelegate } from "cors";
 import { Logger } from "./Logger";
 import { Server } from "./Server";
-import { SwaggerGenerator } from "./SwaggerGenerator";
+import { SwaggerGenerator, SwaggerOptions } from "../swagger";
 import { ClassType } from "../types";
 import { Controller as ControllerType } from "../types/Http";
-import { SwaggerOptions } from "../types/Swagger";
 export declare enum Stage {
     Local = "local",
     Development = "development",
     Staging = "staging",
-    Production = "production"
+    Production = "production",
+    Develop = "develop",
+    Demo = "demo"
 }
 export interface CyanSettings {
     stage?: Stage;

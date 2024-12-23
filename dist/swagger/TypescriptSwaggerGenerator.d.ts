@@ -1,5 +1,5 @@
 import type { Type } from "typescript";
-import { BaseSchemaType, RecordSchemaType } from "./SwaggerGenerator";
+import { BaseSchemaType, RecordSchemaType } from "../swagger/SwaggerGenerator";
 export declare class TypescriptSchemaGenerator {
     private ts;
     private filePatterns;

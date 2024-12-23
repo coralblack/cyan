@@ -1,5 +1,5 @@
 import { Options, Reference, Schema } from "swagger-jsdoc";
-import { SwaggerOptions } from "../types/Swagger";
+import { SwaggerOptions } from "./Swagger";
 export declare type RecordSchemaType = {
     [key: string]: Schema | Reference;
 } | undefined;

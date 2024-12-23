@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TypescriptSchemaGenerator = void 0;
-const TypescriptFileResolver_1 = require("../helper/TypescriptFileResolver");
+const TypescriptFileResolver_1 = require("../swagger/TypescriptFileResolver");
 class TypescriptSchemaGenerator {
     constructor(ts, filePatterns) {
         this.ts = ts;

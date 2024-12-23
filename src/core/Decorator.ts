@@ -4,7 +4,7 @@ import {
   SwaggerOperationMetadata,
   SwaggerPropertyMetadata,
   SwaggerResponseMetadata,
-} from "src/types/Swagger";
+} from "src/swagger";
 import {
   EntityColumnMetadataArgs,
   EntityMetadataArgs,

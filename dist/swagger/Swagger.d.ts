@@ -1,5 +1,5 @@
 import { Stage } from "src/core";
-import { ClassType } from ".";
+import { ClassType } from "src/types";
 export interface ApiOperationOptions {
     summary?: string;
     description?: string;
@@ -44,6 +44,10 @@ export interface ApiTagOptions {
 }
 export interface SwaggerOptions {
     targetEnvs: Stage[];
+    servers: Array<{
+        url: string;
+        description?: string;
+    }>;
     info: {
         title: string;
         description?: string;
@@ -59,11 +63,15 @@ export interface SwaggerOptions {
         };
     };
     uri?: string;
-    typesPath?: string[];
-    schemaPath?: string;
+    path: SwaggerPathType;
     schemaOutput?: {
         enabled: boolean;
         outputPath: string;
         fileName?: string;
     };
 }
+export declare type SwaggerPathType = {
+    schema: string;
+} | {
+    types: string[];
+};

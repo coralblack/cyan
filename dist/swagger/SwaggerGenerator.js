@@ -30,8 +30,8 @@ exports.SwaggerGenerator = void 0;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
-const Decorator_1 = require("./Decorator");
-const SchemaInitializer_1 = require("../helper/SchemaInitializer");
+const SchemaInitializer_1 = require("./SchemaInitializer");
+const Decorator_1 = require("../core/Decorator");
 const router_1 = require("../router");
 var SwaggerParameterType;
 (function (SwaggerParameterType) {
@@ -65,6 +65,7 @@ class SwaggerGenerator {
             swaggerDefinition: {
                 openapi: "3.1.0",
                 info: this.options.info,
+                servers: this.options.servers,
                 tags,
                 paths,
                 components: {
@@ -80,10 +81,7 @@ class SwaggerGenerator {
         return (0, swagger_jsdoc_1.default)(swaggerOptions);
     }
     initializeSchemas() {
-        const defaultSchemas = new SchemaInitializer_1.DefaultSwaggerSchemaInitializer({
-            schemaPath: this.options.schemaPath,
-            typesPath: this.options.typesPath,
-        }).initializeSchemas();
+        const defaultSchemas = new SchemaInitializer_1.DefaultSwaggerSchemaInitializer({ ...this.options.path }).initializeSchemas();
         this.schemas = this.generateSwaggerSchemas(defaultSchemas);
     }
     getTags() {
@@ -209,6 +207,8 @@ class SwaggerGenerator {
         const schema = {
             type: "object",
             properties: {},
+            description: "",
+            example: "",
         };
         for (const [key, value] of Object.entries(type)) {
             schema.properties[key] = this.getSchemaType({ type: value });
@@ -250,11 +250,14 @@ class SwaggerGenerator {
         }
         const schema = { type: "object" };
         if (typeof type === "function") {
-            const instance = new type();
             schema.properties = {};
-            for (const key in instance) {
-                if (Object.prototype.hasOwnProperty.call(instance, key)) {
-                    schema.properties[key] = { type: "object" };
+            const instance = new type();
+            for (const key of Object.getOwnPropertyNames(instance)) {
+                if (Reflect && Reflect.getMetadata) {
+                    const propertyType = Reflect.getMetadata("design:type", type.prototype, key);
+                    if (propertyType) {
+                        schema.properties[key] = this.getSchemaType({ type: propertyType });
+                    }
                 }
             }
         }

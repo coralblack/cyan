@@ -10,8 +10,8 @@ import type {
   TypeReference,
   UnionType,
 } from "typescript";
-import { BaseSchemaType, RecordSchemaType } from "./SwaggerGenerator";
-import { TypeScriptFileResolver } from "../helper/TypescriptFileResolver";
+import { BaseSchemaType, RecordSchemaType } from "../swagger/SwaggerGenerator";
+import { TypeScriptFileResolver } from "../swagger/TypescriptFileResolver";
 
 export class TypescriptSchemaGenerator {
   constructor(private ts: typeof import("typescript"), private filePatterns: string[]) {}

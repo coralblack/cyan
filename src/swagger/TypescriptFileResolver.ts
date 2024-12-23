@@ -1,5 +1,6 @@
 import path from "path";
 import { glob } from "glob";
+import type { ParsedCommandLine } from "typescript";
 
 export class TypeScriptFileResolver {
   constructor(private ts: typeof import("typescript"), public readonly filePatterns: string[]) {}
@@ -35,7 +36,7 @@ export class TypeScriptFileResolver {
     return filePaths;
   }
 
-  readTsConfig(): any {
+  readTsConfig(): ParsedCommandLine {
     if (!this.ts) {
       throw new Error("TypeScriptFileResolver not initialized. Call initialize() first.");
     }

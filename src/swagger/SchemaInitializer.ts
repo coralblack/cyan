@@ -1,36 +1,33 @@
 import fs from "fs";
 import path from "path";
-import { RecordSchemaType } from "src/core";
-import { TypescriptSchemaGenerator } from "../core/TypescriptSwaggerGenerator";
-
-interface SwaggerSchemaOptions {
-  schemaPath?: string;
-  typesPath?: string[];
-}
+import { SwaggerPathType } from "./Swagger";
+import { RecordSchemaType } from "./SwaggerGenerator";
+import { TypescriptSchemaGenerator } from "./TypescriptSwaggerGenerator";
 
 export class DefaultSwaggerSchemaInitializer {
-  constructor(private options: SwaggerSchemaOptions) {}
+  constructor(private path: SwaggerPathType) {}
   private tsModule: typeof import("typescript") | undefined;
 
   public initializeSchemas(): RecordSchemaType {
     try {
-      if (this.options.schemaPath) {
-        return this.loadSchemaFromFile();
+      if ("schema" in this.path && this.path.schema) {
+        return this.loadSchemaFromFile(this.path.schema);
       }
 
-      if (this.options.typesPath?.length) {
-        return this.generateSchemaFromTypes();
+      if ("types" in this.path && this.path.types?.length) {
+        return this.generateSchemaFromTypes(this.path.types);
       }
 
       return {};
     } catch (error) {
-      this.handleError(error);
-      return {};
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred during schema initialization";
+
+      throw new Error(`Schema initialization failed: ${errorMessage}`);
     }
   }
 
-  private loadSchemaFromFile(): RecordSchemaType {
-    const resolvedPath = path.resolve(this.options.schemaPath);
+  private loadSchemaFromFile(schemaPath: string): RecordSchemaType {
+    const resolvedPath = path.resolve(schemaPath);
 
     if (!fs.existsSync(resolvedPath)) {
       throw new Error(`Schema file not found at path: ${resolvedPath}`);
@@ -45,15 +42,15 @@ export class DefaultSwaggerSchemaInitializer {
     }
   }
 
-  private generateSchemaFromTypes(): RecordSchemaType {
-    if (!this.options.typesPath?.length) {
+  private generateSchemaFromTypes(typesPath: string[]): RecordSchemaType {
+    if (!typesPath.length) {
       throw new Error("Types path array is empty or not defined");
     }
 
     this.loadTypeScriptModule();
 
     try {
-      const schemaGenerator = new TypescriptSchemaGenerator(this.tsModule, this.options.typesPath);
+      const schemaGenerator = new TypescriptSchemaGenerator(this.tsModule, typesPath);
 
       return schemaGenerator.generateSchema();
     } catch (error) {
@@ -71,11 +68,5 @@ export class DefaultSwaggerSchemaInitializer {
         );
       }
     }
-  }
-
-  private handleError(error: unknown): void {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred during schema initialization";
-
-    throw new Error(`Schema initialization failed: ${errorMessage}`);
   }
 }

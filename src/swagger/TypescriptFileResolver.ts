@@ -1,25 +1,21 @@
 import path from "path";
 import { glob } from "glob";
-import ts from "typescript";
+import type { ParsedCommandLine } from "typescript";
 
 export class TypeScriptFileResolver {
-  constructor(private filePatterns: string[]) {}
+  constructor(private ts: typeof import("typescript"), public readonly filePatterns: string[]) {}
 
   getFilePaths(): string[] {
-    let includePatterns: string[] = [];
+    const includePatterns: string[] = [];
     const excludePatterns: string[] = [];
 
-    if (typeof this.filePatterns === "string") {
-      includePatterns = [this.filePatterns];
-    } else {
-      this.filePatterns.forEach(pattern => {
-        if (pattern.startsWith("!")) {
-          excludePatterns.push(pattern.slice(1));
-        } else {
-          includePatterns.push(pattern);
-        }
-      });
-    }
+    this.filePatterns.forEach(pattern => {
+      if (pattern.startsWith("!")) {
+        excludePatterns.push(pattern.slice(1));
+      } else {
+        includePatterns.push(pattern);
+      }
+    });
 
     let filePaths: string[] = [];
 
@@ -40,15 +36,19 @@ export class TypeScriptFileResolver {
     return filePaths;
   }
 
-  readTsConfig(): ts.ParsedCommandLine {
+  readTsConfig(): ParsedCommandLine {
+    if (!this.ts) {
+      throw new Error("TypeScriptFileResolver not initialized. Call initialize() first.");
+    }
+
     const basePath = process.cwd();
     const configPath = path.join(basePath, "tsconfig.json");
-    const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
+    const configFile = this.ts.readConfigFile(configPath, this.ts.sys.readFile);
 
     if (configFile.error) {
       throw new Error(`Error reading tsconfig.json: ${configFile.error.messageText}`);
     }
 
-    return ts.parseJsonConfigFileContent(configFile.config, ts.sys, basePath);
+    return this.ts.parseJsonConfigFileContent(configFile.config, this.ts.sys, basePath);
   }
 }

@@ -1,9 +1,11 @@
+import * as fs from "fs";
+import * as path from "path";
 import swaggerJsdoc, { Operation, Options, Parameter, Reference, RequestBody, Responses, Schema, SecurityScheme } from "swagger-jsdoc";
-import { Metadata } from "./Decorator";
-import { TypescriptSchemaGenerator } from "./TypescriptSwaggerGenerator";
+import { DefaultSwaggerSchemaInitializer } from "./SchemaInitializer";
+import { ApiPropertyOptions, ApiTagOptions, SwaggerOperationMetadata, SwaggerOptions } from "./Swagger";
+import { Metadata } from "../core/Decorator";
 import { ParamOptions, ParamType, SystemParamOptions } from "../router";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
-import { ApiPropertyOptions, ApiTagOptions, SwaggerOperationMetadata, SwaggerOptions } from "../types/Swagger";
 
 enum SwaggerParameterType {
   Header = "header",
@@ -31,6 +33,7 @@ export class SwaggerGenerator {
       swaggerDefinition: {
         openapi: "3.1.0",
         info: this.options.info,
+        servers: this.options.servers,
         tags,
         paths,
         components: {
@@ -41,11 +44,15 @@ export class SwaggerGenerator {
       apis: [],
     };
 
+    if (this.options.schemaOutput?.enabled) {
+      this.saveSwaggerJsonSchema();
+    }
+
     return swaggerJsdoc(swaggerOptions);
   }
 
   private initializeSchemas(): void {
-    const defaultSchemas = this.options.typesPath ? new TypescriptSchemaGenerator(this.options.typesPath).generateSchema() : {};
+    const defaultSchemas = new DefaultSwaggerSchemaInitializer({ ...this.options.path }).initializeSchemas();
 
     this.schemas = this.generateSwaggerSchemas(defaultSchemas);
   }
@@ -202,6 +209,8 @@ export class SwaggerGenerator {
     const schema: Schema = {
       type: "object",
       properties: {},
+      description: "",
+      example: "",
     };
 
     for (const [key, value] of Object.entries(type)) {
@@ -253,12 +262,16 @@ export class SwaggerGenerator {
     const schema: Schema = { type: "object" };
 
     if (typeof type === "function") {
+      schema.properties = {};
       const instance = new type();
 
-      schema.properties = {};
-      for (const key in instance) {
-        if (Object.prototype.hasOwnProperty.call(instance, key)) {
-          schema.properties[key] = { type: "object" };
+      for (const key of Object.getOwnPropertyNames(instance)) {
+        if (Reflect && Reflect.getMetadata) {
+          const propertyType = Reflect.getMetadata("design:type", type.prototype, key);
+
+          if (propertyType) {
+            schema.properties[key] = this.getSchemaType({ type: propertyType });
+          }
         }
       }
     }
@@ -411,5 +424,27 @@ export class SwaggerGenerator {
         name: "Authorization",
       },
     };
+  }
+
+  private saveSwaggerJsonSchema(): void {
+    try {
+      const outputPath = this.options.schemaOutput.outputPath;
+      const fileName = this.options.schemaOutput.fileName || "swagger-schema.json";
+
+      // 파일 확장자가 .json이 아니면 추가
+      const finalFileName = fileName.endsWith(".json") ? fileName : `${fileName}.json`;
+      const fullPath = path.join(outputPath, finalFileName);
+
+      if (!fs.existsSync(outputPath)) {
+        fs.mkdirSync(outputPath, { recursive: true });
+      }
+
+      // JSON 형식으로 변환하여 파일 생성
+      const jsonContent = JSON.stringify(this.schemas, null, 2);
+
+      fs.writeFileSync(fullPath, jsonContent, "utf8");
+    } catch (error) {
+      throw new Error("Error generating Swagger JSON schema");
+    }
   }
 }

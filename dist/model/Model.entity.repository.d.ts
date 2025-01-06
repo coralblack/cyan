@@ -4,7 +4,7 @@ import { Knex } from "knex";
 import { TransactionScope } from "./Model.connection";
 import { EntityColumnOptions } from "./Model.entity";
 import { EntityRelationColumnOptions } from "./Model.entity.relation";
-import { CountOptions, DeleteOptions, FindOneOptions, FindOptions, InsertId, Paginatable, PaginationOptions, StreamFunctions, UpdateBulkOptions, UpdateOptions } from "./Model.query";
+import { CountOptions, DeleteOptions, FindOneOptions, FindOptions, InsertId, Paginatable, PaginationOptions, StreamFunctions, UpdateBulkOptions, UpdateOptions, UpsertOptions } from "./Model.query";
 import { ClassType } from "../types";
 interface RelationalRepositoryInfo<T = any> {
     options: EntityRelationColumnOptions;
@@ -34,6 +34,7 @@ export declare class Repository<T> {
     saveBulk(entities: Array<T>, trx?: TransactionScope): Promise<InsertId[]>;
     update(entity: T, options?: UpdateOptions<T>, trx?: TransactionScope): Promise<number>;
     updateBulk(entities: Array<T>, options: UpdateBulkOptions<T>, trx?: TransactionScope): Promise<number>;
+    upsert(entity: T, options: UpsertOptions<T>, trx?: TransactionScope): Promise<InsertId>;
     delete(entity: T, options?: DeleteOptions<T>, trx?: TransactionScope): Promise<number>;
     findOne(options?: FindOneOptions<T>, trx?: TransactionScope): Promise<T>;
     find(options?: FindOptions<T>, trx?: TransactionScope): Promise<T[]>;

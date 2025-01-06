@@ -12,8 +12,9 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "paths": {}
+    "paths": {},
+    "types": ["jest"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "test", "dist"]
 }

@@ -61,7 +61,9 @@ export class DefaultSwaggerSchemaInitializer {
   private loadTypeScriptModule() {
     if (!this.tsModule) {
       try {
-        this.tsModule = require("typescript");
+        const moduleName = "typescript";
+
+        this.tsModule = require(moduleName);
       } catch (e) {
         throw new Error(
           "TypeScript is required to generate schemas from TypeScript files. Please install the required packages: npm install typescript"

@@ -79,6 +79,6 @@ export function SystemParam(options: SystemParamOptions): ParameterDecorator {
   return Param(ParamType.System, null, options);
 }
 
-export function ContextParam(options: ParamOptions): ParameterDecorator {
+export function ContextParam(options: ContextParamOptions): ParameterDecorator {
   return Param(ParamType.Context, null, options);
 }

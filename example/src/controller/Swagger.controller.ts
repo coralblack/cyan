@@ -1,21 +1,17 @@
-import { Get, Post, Put, Delete } from "../../../dist/router";
+import { AuditedEntity, Department, GetUsersResponse, ProjectStructure, UserRole } from "src/types/swaggerTestType";
 import { BaseController } from "./Base.controller";
-import { QueryParam, BodyParam, PathParam } from "../../../dist/router";
-import { IsString, IsNumber, IsOptional } from "class-validator";
-import { ApiTags, ApiOperation, ApiResponse, ApiProperty, ApiModel } from "../../../dist/swagger";
-import { UserRole, Department, ProjectStructure, AuditedEntity, GetUsersResponse } from "src/types/swaggerTestType";
+import { BodyParam, Delete, Get, PathParam, Post, Put, QueryParam } from "../../../dist/router";
+
+import { ApiModel, ApiOperation, ApiProperty, ApiResponse, ApiTags } from "../../../dist/swagger";
 
 // DTO Models
-@ApiModel({
-  description: "Create user request model",
-})
+@ApiModel({ description: "Create user request model" })
 export class CreateUserDto {
   @ApiProperty({
     description: "User's email address",
     example: "user@example.com",
     required: true,
   })
-  @IsString()
   email: string;
 
   @ApiProperty({
@@ -23,7 +19,6 @@ export class CreateUserDto {
     example: "John Doe",
     required: true,
   })
-  @IsString()
   name: string;
 
   @ApiProperty({
@@ -31,14 +26,10 @@ export class CreateUserDto {
     example: 25,
     required: false,
   })
-  @IsNumber()
-  @IsOptional()
   age?: number;
 }
 
-@ApiModel({
-  description: "User response model",
-})
+@ApiModel({ description: "User response model" })
 export class UserResponse {
   @ApiProperty({
     description: "Unique identifier",

@@ -193,7 +193,8 @@ export class HelloModel extends BaseModel {
             WORLD_ID BIGINT(20) DEFAULT NULL,
             NAME VARCHAR(128) DEFAULT NULL,
             CREATED_AT DATETIME DEFAULT NULL,
-            PRIMARY KEY (ID)
+            PRIMARY KEY (ID),
+            FULLTEXT KEY ft_idx_hello_name (NAME)
         )
       `);
 
@@ -583,6 +584,19 @@ export class HelloModel extends BaseModel {
       const found7 = await repo.findOne({ where: { id: save2Id } });
 
       assert(found7 === null, "found7 failed");
+
+      const searchKeyword = "\"updated\"";
+
+      const found8 = await repo.find({
+        where: {
+          name: (k) => ({
+            query: `MATCH(${k}) AGAINST(? IN BOOLEAN MODE)`,
+            bindings: [searchKeyword]
+          })
+        },
+      });
+
+      assert(found8.every(e => e.name.includes(searchKeyword)));
 
       // Relations
 

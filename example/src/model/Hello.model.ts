@@ -585,13 +585,13 @@ export class HelloModel extends BaseModel {
 
       assert(found7 === null, "found7 failed");
 
-      const searchKeyword = "\"updated\"";
+      const searchKeyword = "updated";
 
       const found8 = await repo.find({
         where: {
           name: (k) => ({
             query: `MATCH(${k}) AGAINST(? IN BOOLEAN MODE)`,
-            bindings: [searchKeyword]
+            bindings: [`+${searchKeyword}`]
           })
         },
       });

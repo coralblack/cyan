@@ -1,7 +1,6 @@
 import { Get, Post, Put, Delete } from "../../../dist/router";
 import { BaseController } from "./Base.controller";
 import { QueryParam, BodyParam, PathParam } from "../../../dist/router";
-import { IsString, IsNumber, IsOptional } from "class-validator";
 import { ApiTags, ApiOperation, ApiResponse, ApiProperty, ApiModel } from "../../../dist/swagger";
 import { UserRole, Department, ProjectStructure, AuditedEntity, GetUsersResponse } from "src/types/swaggerTestType";
 
@@ -15,7 +14,6 @@ export class CreateUserDto {
     example: "user@example.com",
     required: true,
   })
-  @IsString()
   email: string;
 
   @ApiProperty({
@@ -23,7 +21,6 @@ export class CreateUserDto {
     example: "John Doe",
     required: true,
   })
-  @IsString()
   name: string;
 
   @ApiProperty({
@@ -31,8 +28,6 @@ export class CreateUserDto {
     example: 25,
     required: false,
   })
-  @IsNumber()
-  @IsOptional()
   age?: number;
 }
 

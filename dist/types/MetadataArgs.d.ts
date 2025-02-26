@@ -4,7 +4,7 @@ import { EntityColumnOptions, EntityColumnType, EntityOptions } from "../model/M
 import { EntityRelationColumnOptions, EntityRelationType } from "../model/Model.entity.relation";
 import { MiddlewareOptions } from "../router";
 import { RouteOptions } from "../router/Router.action";
-import { ParamOptions, ParamType, SystemParamOptions } from "../router/Router.param";
+import { ContextParamOptions, ParamOptions, ParamType, SystemParamOptions } from "../router/Router.param";
 import { TaskOptions, TaskType } from "../task/Task.types";
 import { ClassType } from ".";
 export interface RouteMetadataArgs {
@@ -15,7 +15,7 @@ export interface RouteMetadataArgs {
     params: any[];
     options: RouteOptions;
 }
-export interface RouteParamMetadataArgs<T = ParamOptions | SystemParamOptions> {
+export interface RouteParamMetadataArgs<T = ParamOptions | SystemParamOptions | ContextParamOptions> {
     target: Function;
     method: string;
     index: number;

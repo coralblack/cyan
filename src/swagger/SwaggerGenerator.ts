@@ -4,7 +4,7 @@ import swaggerJsdoc, { Operation, Options, Parameter, Reference, RequestBody, Re
 import { DefaultSwaggerSchemaInitializer } from "./SchemaInitializer";
 import { ApiPropertyOptions, ApiTagOptions, SwaggerOperationMetadata, SwaggerOptions } from "./Swagger";
 import { Metadata } from "../core/Decorator";
-import { ParamOptions, ParamType, SystemParamOptions } from "../router";
+import { ContextParamOptions, ParamOptions, ParamType, SystemParamOptions } from "../router";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
 
 enum SwaggerParameterType {
@@ -159,7 +159,7 @@ export class SwaggerGenerator {
     };
   }
 
-  private getParamDescription(options: ParamOptions | SystemParamOptions): string {
+  private getParamDescription(options: ParamOptions | SystemParamOptions | ContextParamOptions): string {
     return "delimiter" in options && options.delimiter ? `Delimiter: ${options.delimiter}` : "";
   }
 

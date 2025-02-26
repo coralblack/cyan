@@ -24,8 +24,8 @@ class Controller {
                 .end();
         };
     }
-    async beforeHandle(request) { }
-    async afterHandle(request, response) {
+    async beforeHandle(request, executionContext) { }
+    async afterHandle(request, response, executionContext) {
         return response;
     }
     async onHttpError(request, error) {

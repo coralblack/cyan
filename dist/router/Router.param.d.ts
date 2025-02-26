@@ -9,6 +9,8 @@ export interface ParamBaseOptions<T = string | number | boolean | object> {
     delimiter?: string;
     validate?: (v: T) => boolean | void;
 }
+export interface ContextParamAttributes {
+}
 export interface ParamClassOptions extends ParamBaseOptions {
     type?: ClassType<any> | BigIntConstructor;
 }
@@ -37,7 +39,9 @@ export interface SystemRequestParamOptions {
 }
 export declare type ContextParamOptions = CyanRequestContextParamOptions;
 export interface CyanRequestContextParamOptions {
-    type: ClassType<any>;
+    type: "CONTEXT";
+    attr: keyof ContextParamAttributes;
+    validate?: (v: any) => boolean;
 }
 export declare function HeaderParam(name: string, options?: ParamOptions): ParameterDecorator;
 export declare function BodyParam(name: string, options?: ParamOptions): ParameterDecorator;

@@ -2,11 +2,13 @@
 import { ok as assert } from "assert";
 import { Inject } from "@coralblack/cyan/dist/core";
 import { HttpHelper } from "@coralblack/cyan/dist/helper";
-import { HttpMethod } from "@coralblack/cyan/dist/http";
-import { HttpResponder } from "@coralblack/cyan/dist/http/Http.response";
+import { HttpMethod, HttpRequest } from "@coralblack/cyan/dist/http";
+import { HttpResponder, HttpResponse } from "@coralblack/cyan/dist/http/Http.response";
 import {
   BodyParam,
+  ContextAttributeKeyType,
   ContextParam,
+  ContextParamAttributes,
   Get,
   HeaderParam,
   Middleware,
@@ -16,6 +18,7 @@ import {
   SystemParam,
 } from "@coralblack/cyan/dist/router";
 import { BaseController } from "./Base.controller";
+import { AuthorizedContext, BasicAuthMiddleware } from "./middleware/BasicAuthMiddleware";
 import { HttpError } from "../../../dist/http/Http.error";
 import { HelloService } from "../service/Hello.service";
 
@@ -80,6 +83,16 @@ const DEFAULT_VAL = "DEFAULT_VAL";
 export class HelloController extends BaseController {
   constructor(@Inject() private readonly helloService: HelloService, @Inject() private readonly httpHelper: HttpHelper) {
     super();
+  }
+
+  async afterHandle(request: HttpRequest, response: any, executionContext: ContextParamAttributes): Promise<HttpResponse> {
+    const authContext = executionContext.authContext;
+
+    console.log("controller AfterHandle Example", { executionContext });
+
+    return new Promise(res => {
+      return res(response as HttpResponse);
+    });
   }
 
   @Get("/hello/string/:foo?")
@@ -394,59 +407,37 @@ export class HelloController extends BaseController {
 
   @Get("/test/middleware/class/instance")
   @Middleware((req, res, next) => {
-    req.executionContext = new CyanRequestContext("test", 88);
+    req.executionContext.authContext = { email: "myemail@naver.com", id: "1111", lastLoginAt: new Date() };
+    req.executionContext.requestContext = { foo: "foo", bar: 11, boo: { innerFoo: "innerFoo" } };
+
+    // NOTE: Compile Error
+    // req.executionContext.invalidAttribute = "test";
+
+    const a: ContextAttributeKeyType = "authContext";
+    const b: ContextAttributeKeyType = "authContext";
+    const test: ContextAttributeKeyType = "authContext";
+
     return next();
   })
-  testMiddlewareTypeValidation(@ContextParam({ type: CyanRequestContext }) myContext: CyanRequestContext): {
+  testMiddlewareTypeValidation(
+    @ContextParam({ type: "CONTEXT", attr: "requestContext" }) myContext: CyanRequestContext,
+    @ContextParam({ type: "CONTEXT", attr: "authContext", validate: (auth: AuthorizedContext) => !!auth.email })
+    authContext: AuthorizedContext
+  ): {
     context: CyanRequestContext;
+    authContext: AuthorizedContext;
   } {
-    return { context: myContext };
+    return { context: myContext, authContext };
   }
 
-  @Get("/test/middleware/class/instance/invalid")
-  @Middleware((req, res, next) => {
-    const invalidContext = new InvalidCyanRequestContext();
-
-    req.executionContext = invalidContext;
-    return next();
-  })
-  testInvalidMiddlewareTypeValidation1(@ContextParam({ type: CyanRequestContext }) myContext: CyanRequestContext): never {
-    throw Error("this controller should not reach to this point. it must end at middleware layer");
-  }
-
-  @Get("/test/middleware/class/instance/same")
-  @Middleware((req, res, next) => {
-    const sameFieldContext = new SameFieldWithValidRequestContext();
-
-    req.executionContext = sameFieldContext;
-    return next();
-  })
-  testInvalidMiddlewareTypeValidation2(@ContextParam({ type: CyanRequestContext }) myContext: CyanRequestContext): never {
-    throw Error("this controller should not reach to this point. it must end at middleware layer");
-  }
-
-  @Get("/test/middleware/class/instance/obj")
-  @Middleware((req, res, next) => {
-    req.executionContext = {
-      dummy: "string",
-      foo: 50,
-      notThis: { otherDummy: "su" },
-    };
-    return next();
-  })
-  testInvalidMiddlewareTypeValidation3(@ContextParam({ type: CyanRequestContext }) myContext: CyanRequestContext): never {
-    throw Error("this controller should not reach to this point. it must end at middleware layer");
-  }
-
-  @Get("/test/middleware/class/instance/same/obj")
-  @Middleware((req, res, next) => {
-    req.executionContext = {
-      foo: "test",
-      bar: 50,
-    };
-    return next();
-  })
-  testInvalidMiddlewareTypeValidation4(@ContextParam({ type: CyanRequestContext }) myContext: CyanRequestContext): never {
-    throw Error("this controller should not reach to this point. it must end at middleware layer");
+  @Get("/test/middleware/basic-auth")
+  @Middleware(BasicAuthMiddleware)
+  basicAuthMiddleware(
+    @ContextParam({ type: "CONTEXT", attr: "authContext", validate: (auth: AuthorizedContext) => !!auth.email })
+    authContext: AuthorizedContext
+  ): {
+    authContext: AuthorizedContext;
+  } {
+    return { authContext };
   }
 }

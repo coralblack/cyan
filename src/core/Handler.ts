@@ -13,7 +13,7 @@ import { HttpError } from "../http/Http.error";
 import { HttpRequest as HttpRequest } from "../http/Http.request";
 import { HttpResponder, HttpResponse } from "../http/Http.response";
 import { Status as HttpStatus } from "../http/Http.status";
-import { ParamOptions, ParamType } from "../router";
+import { ContextParamAttributes, ParamOptions, ParamType } from "../router";
 import { CyanRequest, CyanResponse, ErrorHandlerFunction, HandlerFunction } from "../types/Handler";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
 import { datetime } from "../util";
@@ -23,14 +23,15 @@ export class Handler {
   public static beforeHandler(controller: HttpController): HandlerFunction {
     return (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       req.httpRequestContext = HttpRequest.getContext(req);
-      controller
-        .beforeHandle(req.httpRequestContext)
-        .then(() => {
-          next();
-        })
-        .catch((err: Error) => {
-          next(err);
-        });
+      (req.executionContext = {} as ContextParamAttributes),
+        controller
+          .beforeHandle(req.httpRequestContext, req.executionContext)
+          .then(() => {
+            next();
+          })
+          .catch((err: Error) => {
+            next(err);
+          });
     };
   }
 
@@ -82,6 +83,17 @@ export class Handler {
         const { httpRequestContext } = req;
 
         return httpRequestContext[actionParamFound.options.attr];
+      } else if (hasOwnProperty(actionParamFound.options, "type") && actionParamFound.options.type === "CONTEXT") {
+        const { attr, validate } = actionParamFound.options;
+        const contextAttr = req.executionContext[attr];
+
+        if (validate) {
+          if (validate(contextAttr) === false) {
+            throw HttpResponder.badRequest.message(`BadRequest (Invalid ${actionParamFound.options.type.toString()}: ${attr})`)();
+          }
+        }
+
+        return contextAttr;
       } else {
         actionParam = (actionParamFound as unknown) as RouteParamMetadataArgs<ParamOptions>;
       }
@@ -261,7 +273,7 @@ export class Handler {
   public static afterHandler(controller: HttpController): HandlerFunction {
     return (req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       controller
-        .afterHandle(req.httpRequestContext, res.preparedResponse)
+        .afterHandle(req.httpRequestContext, res.preparedResponse, req.executionContext)
         .then(resp => {
           if (resp instanceof HttpError) {
             next(resp);

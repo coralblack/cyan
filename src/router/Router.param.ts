@@ -12,6 +12,8 @@ export interface ParamBaseOptions<T = string | number | boolean | object> {
   validate?: (v: T) => boolean | void;
 }
 
+export interface ContextParamAttributes {}
+
 export interface ParamClassOptions extends ParamBaseOptions {
   type?: ClassType<any> | BigIntConstructor;
 }
@@ -43,7 +45,9 @@ export interface SystemRequestParamOptions {
 export type ContextParamOptions = CyanRequestContextParamOptions;
 
 export interface CyanRequestContextParamOptions {
-  type: ClassType<any>;
+  type: "CONTEXT";
+  attr: keyof ContextParamAttributes;
+  validate?: (v: any) => boolean;
 }
 
 function Param(type: ParamType, name: string, options: ParamOptions | SystemParamOptions | ContextParamOptions): ParameterDecorator {

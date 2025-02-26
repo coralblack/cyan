@@ -4,6 +4,7 @@ import { HttpMethod } from "../http";
 import { HttpError } from "../http/Http.error";
 import { HttpRequest } from "../http/Http.request";
 import { Status as HttpStatus } from "../http/Http.status";
+import { ContextParamAttributes } from "../router/Router.param";
 
 export type HandlerFunction = (req: CyanRequest, res: CyanResponse, next: NextFunction) => void;
 export type ErrorHandlerFunction = (err: Error | HttpError, req: CyanRequest, res: CyanResponse, next: NextFunction) => void;
@@ -19,7 +20,7 @@ export interface CyanRequest {
   _remoteAddress: string;
   //
   httpRequestContext: HttpRequest;
-  executionContext: any;
+  executionContext: ContextParamAttributes;
 }
 
 export interface CyanResponse {

@@ -2,12 +2,12 @@ import { TaskOptions } from "./Task.types";
 import { Logger } from "../core";
 import { delay } from "../util";
 
-export class TaskInvoker {
+export class TaskInvoker<T extends Record<string | symbol, Function>> {
   private invokeEnabled = true;
 
   constructor(
-    private readonly target: Function,
-    private readonly method: string,
+    private readonly target: T,
+    private readonly method: keyof T & (string | symbol),
     private readonly options: TaskOptions,
     private readonly logger: Logger
   ) {}

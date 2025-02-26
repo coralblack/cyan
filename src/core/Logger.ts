@@ -6,7 +6,7 @@ import { datetime } from "../util";
 export class Logger {
   public appName = "App";
 
-  public static _instance: Logger = null;
+  public static _instance: Logger | null = null;
 
   static getInstance(): Logger {
     if (Logger._instance) return Logger._instance;

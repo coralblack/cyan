@@ -16,6 +16,7 @@ class Repository {
         this.kx = scopeOrKnex instanceof Model_connection_1.TransactionScope ? scopeOrKnex.kx : scopeOrKnex;
     }
     static getRepositoryInfo(entity) {
+        var _a;
         if (entity[exports.symRepositoryInfo])
             return entity[exports.symRepositoryInfo];
         const info = {};
@@ -30,7 +31,7 @@ class Repository {
             throw new Error(`Invalid Repository: No Decorated Columns (${entity.name})`);
         }
         (info.target = metadata.target),
-            (info.tableName = metadata.options.name),
+            (info.tableName = (_a = metadata.options) === null || _a === void 0 ? void 0 : _a.name),
             (info.columns = columns.map(e => e.propertyKey)),
             (info.fields = columns.reduce((p, e) => {
                 p[e.propertyKey] = e.options;
@@ -41,15 +42,12 @@ class Repository {
             (info.oneToOneRelationColumns = relations.filter(e => e.type === Model_entity_relation_1.EntityRelationType.OneToOne).map(e => e.propertyKey)),
             (info.oneToOneRelations = relations
                 .filter(e => e.type === Model_entity_relation_1.EntityRelationType.OneToOne)
-                .reduce((p, e) => {
-                p[e.propertyKey] = {
-                    options: {
-                        ...e.options,
-                        name: Array.isArray(e.options.name) ? e.options.name : [e.options.name],
-                    },
-                    repository: Repository.getRepositoryInfo(e.options.target),
+                .reduce((output, relation) => {
+                output[relation.propertyKey] = {
+                    options: Object.assign(Object.assign({}, relation.options), { name: Array.isArray(relation.options.name) ? relation.options.name : [relation.options.name] }),
+                    repository: Repository.getRepositoryInfo(relation.options.target),
                 };
-                return p;
+                return output;
             }, {}));
         return info;
     }
@@ -57,24 +55,24 @@ class Repository {
         try {
             const kx = (trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx;
             const [res] = await kx
-                .insert(this.repositoryInfo.columns.reduce((p, e) => {
+                .insert(this.repositoryInfo.columns.reduce((output, columnName) => {
                 const [key, val] = (() => {
-                    const column = this.repositoryInfo.fields[e];
-                    if ((0, builtin_1.hasOwnProperty)(column, "name")) {
+                    const column = this.repositoryInfo.fields[columnName];
+                    if ("name" in column) {
                         const key = column.name;
                         const val = ((v) => {
                             if (typeof v === "function")
                                 return kx.raw(v(key));
-                            else if (v === undefined && column.default) {
+                            else if (v === undefined && column && "default" in column && column.default) {
                                 return kx.raw(column.default(key));
                             }
                             else
                                 return v;
-                        })(entity[e]);
+                        })(entity[columnName]);
                         return [key, val];
                     }
                     else {
-                        if ((0, builtin_1.hasOwnProperty)(entity, e)) {
+                        if ((0, builtin_1.hasOwnProperty)(entity, columnName)) {
                             throw new Error(`Invalid Usage: Save with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
                         }
                         else {
@@ -83,9 +81,9 @@ class Repository {
                     }
                 })();
                 if (key === null)
-                    return p;
-                p[key] = val;
-                return p;
+                    return output;
+                output[key] = val;
+                return output;
             }, {}))
                 .into(this.repositoryInfo.tableName);
             if (this.repositoryInfo.primaryColumns.length === 1) {
@@ -112,11 +110,11 @@ class Repository {
             }
             const insertedIds = [];
             const newEntities = entities.map(entity => {
-                return this.repositoryInfo.columns.reduce((p, column) => {
+                return this.repositoryInfo.columns.reduce((output, column) => {
                     const field = this.repositoryInfo.fields[column];
                     const isPrimaryColumn = this.repositoryInfo.primaryColumns[0] === column;
                     if (!field) {
-                        throw new Error(`Invalid Usage: Save with column(${column}) not allowed. `);
+                        throw new Error(`Invalid Usage: Save with column(${String(column)}) not allowed. `);
                     }
                     const [key, val] = (() => {
                         if (!field) {
@@ -145,12 +143,12 @@ class Repository {
                         }
                     })();
                     if (key === null)
-                        return p;
+                        return output;
                     if (isPrimaryColumn) {
                         insertedIds.push(val);
                     }
-                    p[key] = val;
-                    return p;
+                    output[key] = val;
+                    return output;
                 }, {});
             });
             await kx.insert(newEntities).into(this.repositoryInfo.tableName);
@@ -168,15 +166,15 @@ class Repository {
                 conditions[e] = entity[e];
             });
             kx = this.where(kx, conditions);
-            kx = kx.update(((options === null || options === void 0 ? void 0 : options.update) || this.repositoryInfo.columns).reduce((p, e) => {
-                const column = this.repositoryInfo.fields[e];
-                if ((0, builtin_1.hasOwnProperty)(column, "name")) {
-                    p[column.name] = entity[e];
+            kx = kx.update(((options === null || options === void 0 ? void 0 : options.update) || this.repositoryInfo.columns).reduce((output, columnName) => {
+                const column = this.repositoryInfo.fields[columnName];
+                if ("name" in column) {
+                    output[column.name] = entity[columnName];
                 }
                 else {
                     throw new Error(`Invalid Usage: Update with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
                 }
-                return p;
+                return output;
             }, {}));
             if (options === null || options === void 0 ? void 0 : options.debug) {
                 console.log(">", kx.toSQL());
@@ -210,7 +208,7 @@ class Repository {
             })
                 .filter(e => e);
             if (!primaryFieldName) {
-                throw new Error(`Invalid Usage: UpdateBulk with primary column(${primaryColumn}) not allowed.`);
+                throw new Error(`Invalid Usage: UpdateBulk with primary column(${String(primaryColumn)}) not allowed.`);
             }
             else if (updateFieldNames.length !== options.update.length) {
                 throw new Error(`Invalid Usage: UpdateBulk with column(${options.update.join(", ")}) not allowed.`);
@@ -224,11 +222,11 @@ class Repository {
                 return this.repositoryInfo.columns.reduce((p, column) => {
                     const field = this.repositoryInfo.fields[column];
                     if (!field) {
-                        throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) not allowed.`);
+                        throw new Error(`Invalid Usage: UpdateBulk with raw column(${String(column)}) not allowed.`);
                     }
                     else if ("name" in field) {
                         if (entity[column] === undefined) {
-                            throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) is undefined.`);
+                            throw new Error(`Invalid Usage: UpdateBulk with raw column(${String(column)}) is undefined.`);
                         }
                         p[field.name] = entity[column];
                     }
@@ -328,7 +326,7 @@ class Repository {
     }
     async findOne(options, trx) {
         try {
-            const [res] = await this.select({ ...options, limit: 1 }, trx);
+            const [res] = await this.select(Object.assign(Object.assign({}, options), { limit: 1 }), trx);
             return res || null;
         }
         catch (err) {
@@ -351,8 +349,8 @@ class Repository {
             const rpp = Math.max(1, options && options.rpp ? options.rpp : 30);
             const limit = BigInt(rpp);
             const offset = (BigInt(page) - BigInt(1)) * limit;
-            const count = (await this.where(kx.from(this.repositoryInfo.tableName), options.where || {}).count("* as cnt"))[0].cnt;
-            const items = await this.find({ ...options, limit, offset }, trx);
+            const count = (await this.where(kx.from(this.repositoryInfo.tableName), (options === null || options === void 0 ? void 0 : options.where) || {}).count("* as cnt"))[0].cnt;
+            const items = await this.find(Object.assign(Object.assign({}, options), { limit, offset }), trx);
             return {
                 page,
                 rpp,
@@ -378,7 +376,7 @@ class Repository {
             kx.stream(stream => {
                 stream.on("data", row => streamFn.onData(this.mapping(row)));
                 if (streamFn.onStreamEnd) {
-                    stream.on("end", () => streamFn.onStreamEnd());
+                    stream.on("end", () => { var _a; return (_a = streamFn.onStreamEnd) === null || _a === void 0 ? void 0 : _a.call(streamFn); });
                 }
             });
         }
@@ -391,7 +389,7 @@ class Repository {
             const knex = (trx === null || trx === void 0 ? void 0 : trx.kx) || this.kx;
             const joinAliases = {};
             let kx = knex.from(this.repositoryInfo.tableName);
-            const selectColumns = options.select || this.repositoryInfo.columns;
+            const selectColumns = (options === null || options === void 0 ? void 0 : options.select) || this.repositoryInfo.columns;
             const select = selectColumns
                 .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
                 .map(alias => {
@@ -403,33 +401,34 @@ class Repository {
                     kx.select(knex.raw(`${column.raw(this.repositoryInfo.tableName)} as ${alias}`));
                 }
             })
-                .filter(x => x);
+                .filter(x => x)
+                .map(e => e);
             kx = kx.select(select);
-            if (typeof options.distinct === "boolean" && options.distinct) {
+            if (typeof (options === null || options === void 0 ? void 0 : options.distinct) === "boolean" && options.distinct) {
                 kx.distinct(select);
             }
-            if (options.forUpdate) {
+            if (options === null || options === void 0 ? void 0 : options.forUpdate) {
                 kx = kx.forUpdate();
             }
-            kx = this.join(kx, options.select, joinAliases);
-            if (options.where) {
+            kx = this.join(kx, options === null || options === void 0 ? void 0 : options.select, joinAliases);
+            if (options === null || options === void 0 ? void 0 : options.where) {
                 kx = this.where(kx, options.where);
             }
-            const joinAliasesProp = Object.keys(joinAliases).reduce((p, e) => {
-                p[`.${e.split(joinSeparator).join(".")}`] = joinAliases[e];
-                return p;
+            const joinAliasesProp = Object.keys(joinAliases).reduce((output, joinAliasKey) => {
+                output[`.${joinAliasKey.split(joinSeparator).join(".")}`] = joinAliases[joinAliasKey];
+                return output;
             }, {});
-            if (options.order) {
+            if (options === null || options === void 0 ? void 0 : options.order) {
                 const orderBy = Array.isArray(options.order) ? options.order : [options.order];
                 for (let i = 0; i < orderBy.length; i++) {
                     kx = this.order(kx, orderBy[i], joinAliasesProp);
                 }
             }
-            if (options.offset)
+            if (options === null || options === void 0 ? void 0 : options.offset)
                 kx = kx.offset(String(options.offset));
-            if (options.limit)
+            if (options === null || options === void 0 ? void 0 : options.limit)
                 kx = kx.limit(String(options.limit));
-            if (options.debug) {
+            if (options === null || options === void 0 ? void 0 : options.debug) {
                 console.log(">", kx.toSQL());
             }
             return kx;
@@ -478,20 +477,21 @@ class Repository {
         const joinTableColumns = to.repository.columns.map(col => {
             const column = to.repository.fields[col];
             if ((0, builtin_1.hasOwnProperty)(column, "name")) {
-                return `${toTableNameAlias}.${column.name} as ${propertyKey}${joinSeparator}${col}`;
+                return `${toTableNameAlias}.${column.name} as ${String(propertyKey)}${joinSeparator}${String(col)}`;
             }
             else {
                 throw new Error(`Invalid Usage: Join with raw column not allowed. (${column.raw(toTableNameAlias)})`);
             }
         });
-        aliases[propertyKey] = toTableNameAlias;
+        if (aliases)
+            aliases[propertyKey] = toTableNameAlias;
         if (fromColumns.length !== toColumns.length) {
             throw new Error(`Invalid Relation: Joining columns are not matched (${fromColumns.join(",")} -> ${toColumns.join(",")})`);
         }
         kxx.leftOuterJoin(toTable, function () {
             for (let i = 0; i < fromColumns.length; i++) {
                 const column = toFields[toColumns[i]];
-                if ((0, builtin_1.hasOwnProperty)(column, "name")) {
+                if ("name" in column) {
                     this.on(`${fromTable}.${fromColumns[i]}`, `${toTableNameAlias}.${column.name}`);
                 }
                 else {
@@ -502,7 +502,7 @@ class Repository {
         kxx.select(joinTableColumns);
         let idx = 0;
         to.repository.oneToOneRelationColumns.forEach(relationColumn => {
-            this.joinWith(kxx, rec * 10 + idx++, toTableNameAlias, `${propertyKey}${joinSeparator}${relationColumn}`, to.repository.oneToOneRelations[relationColumn], aliases);
+            this.joinWith(kxx, rec * 10 + idx++, toTableNameAlias, `${String(propertyKey)}${joinSeparator}${String(relationColumn)}`, to.repository.oneToOneRelations[relationColumn], aliases);
         });
         return kxx;
     }
@@ -518,19 +518,21 @@ class Repository {
     }
     where(kx, where, orWhere) {
         let kxx = kx;
+        if (!where)
+            return kxx;
         Object.keys(where).forEach(ke => {
             if (ke === "$AND" || ke === "$OR") {
                 const that = this;
-                if (Array.isArray(where[ke])) {
+                if (Array.isArray(where === null || where === void 0 ? void 0 : where[ke])) {
                     if (ke === "$AND") {
-                        where[ke].forEach(chWhere => {
+                        where[ke].forEach((chWhere) => {
                             kxx = kx.andWhere(function () {
                                 that.where(this, chWhere, false);
                             });
                         });
                     }
                     else if (ke === "$OR") {
-                        where[ke].forEach(chWhere => {
+                        where[ke].forEach((chWhere) => {
                             kxx = kx.orWhere(function () {
                                 that.where(this, chWhere, true);
                             });
@@ -540,12 +542,12 @@ class Repository {
                 else {
                     if (ke === "$AND") {
                         kx.andWhere(function () {
-                            that.where(this, where[ke], false);
+                            that.where(this, where === null || where === void 0 ? void 0 : where[ke], false);
                         });
                     }
                     else if (ke === "$OR") {
                         kx.orWhere(function () {
-                            that.where(this, where[ke], true);
+                            that.where(this, where === null || where === void 0 ? void 0 : where[ke], true);
                         });
                     }
                 }
@@ -570,7 +572,7 @@ class Repository {
                 const k = (0, builtin_1.hasOwnProperty)(column, "name")
                     ? `${this.repositoryInfo.tableName}.${column.name}`
                     : column.raw(this.repositoryInfo.tableName);
-                const v = where[ke];
+                const v = where === null || where === void 0 ? void 0 : where[ke];
                 if (Array.isArray(v)) {
                     if (!raw) {
                         kxx.whereIn(k, v);
@@ -684,18 +686,18 @@ class Repository {
     mapping(row, repositoryInfo, prefix) {
         const x = (0, class_transformer_1.plainToClass)((repositoryInfo || this.repositoryInfo).target, Object.keys(row)
             .filter(e => !prefix || e.startsWith(`${prefix}${joinSeparator}`))
-            .reduce((p, c) => {
+            .reduce((output, c) => {
             const col = !prefix ? c : c.substring(prefix.length + 1);
             if (!col.includes(joinSeparator)) {
-                p[col] = row[c];
+                output[col] = row[c];
             }
             else {
                 const [join] = col.split(joinSeparator);
-                if (!p[join]) {
-                    p[join] = this.mapping(row, (repositoryInfo || this.repositoryInfo).oneToOneRelations[join].repository, !prefix ? join : `${prefix}_${join}`);
+                if (!output[join]) {
+                    output[join] = this.mapping(row, (repositoryInfo || this.repositoryInfo).oneToOneRelations[join].repository, !prefix ? join : `${prefix}_${join}`);
                 }
             }
-            return p;
+            return output;
         }, {}));
         return x;
     }

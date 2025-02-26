@@ -11,7 +11,7 @@
     "lint:fix": "eslint --fix . --ext .js,.jsx,.ts,.tsx",
     "test": "dotenv -e .env.local -- jest"
   },
-  "author": "Gonzo",
+  "author": "JNPMEDI Inc.",
   "license": "MIT",
   "dependencies": {
     "@coralblack/cyan": "file:..",

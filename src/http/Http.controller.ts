@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { ContextParamAttributes } from "src/router";
 import { Handler as ExpressHandler, Request as ExpressRequest, Response as ExpressResponse, NextFunction } from "express";
 import { HttpError } from "./Http.error";
 import { HttpRequest as HttpRequest } from "./Http.request";
@@ -10,7 +11,6 @@ import { HttpResponse } from "./Http.response";
 import { Status as HttpStatus } from "./Http.status";
 import { Cyan } from "../core";
 import { ExtendedError } from "../core/Error";
-import { ContextParamAttributes } from "../router/Router.param";
 import { CyanRequest } from "../types/Handler";
 import { getConstructorName, hasOwnProperty } from "../util/builtin";
 
@@ -36,13 +36,13 @@ export abstract class Controller {
   }
 
   render(cyan: Cyan): ExpressHandler {
-    return (request: ExpressRequest, response: ProcessedExpressResponse, next: NextFunction) => {
+    return ((request: ExpressRequest, response: ProcessedExpressResponse, next: NextFunction) => {
       response
         .status(response.processedResponse.status)
         .set(response.processedResponse.headers)
         .send(response.processedResponse.content)
         .end();
-    };
+    }) as ExpressHandler;
   }
 
   async beforeHandle(request: HttpRequest, executionContext: ContextParamAttributes): Promise<void> {}

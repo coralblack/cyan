@@ -44,9 +44,9 @@ export interface HttpRawRequestPayload
 
 export interface HttpRequestedPayload {
   method: HttpMethod;
-  url: string;
+  url?: string;
   path: string;
-  headers: HttpHeaders;
+  headers?: HttpHeaders;
 }
 export interface HttpRequestResponse<T> {
   body: T;
@@ -75,18 +75,18 @@ export class HttpHelper {
         console.debug("> HttpHelper.request, Request", payload);
       }
 
-      const e = await axios.request(payload);
+      const reqResponse = await axios.request(payload);
       const resp = {} as HttpRequestResponse<T>;
 
-      resp.body = e.data;
-      resp.status = e.status;
-      resp.statusText = e.statusText;
-      resp.headers = e.headers;
+      resp.body = reqResponse.data;
+      resp.status = reqResponse.status;
+      resp.statusText = reqResponse.statusText;
+      resp.headers = reqResponse.headers;
       resp.request = {
-        method: String(e.config.method).toUpperCase() as HttpMethod,
-        url: e.config.url,
-        path: e.request.path,
-        headers: e.config.headers,
+        method: String(reqResponse.config.method).toUpperCase() as HttpMethod,
+        url: reqResponse.config.url,
+        path: reqResponse.request.path,
+        headers: reqResponse.config.headers,
       };
 
       if (payload.debug === true) {
@@ -99,24 +99,24 @@ export class HttpHelper {
       }
 
       return resp;
-    } catch (e) {
+    } catch (err: any) {
       const resp = {} as HttpRequestResponseError<T>;
 
       // Not a valid HTTP Error
-      if (!e.response) {
-        throw e;
+      if (!err?.response) {
+        throw err;
       }
 
-      resp.body = e.response.data;
-      resp.status = e.response.status;
-      resp.statusText = e.response.statusText;
-      resp.headers = e.response.headers;
-      resp.errorMessage = e.message;
+      resp.body = err.response.data;
+      resp.status = err.response.status;
+      resp.statusText = err.response.statusText;
+      resp.headers = err.response.headers;
+      resp.errorMessage = err.message;
       resp.request = {
-        method: e.config.method,
-        url: e.config.url,
-        path: e.request.path,
-        headers: e.config.headers,
+        method: err.config.method,
+        url: err.config.url,
+        path: err.request.path,
+        headers: err.config.headers,
       };
 
       if (payload.debug === true) {

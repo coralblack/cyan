@@ -6,7 +6,7 @@ export interface RepeatOptions {
 }
 
 export function Repeat(delayOrOptions: RepeatOptions | number): MethodDecorator {
-  return function RepeatInner(target: any, method: string) {
+  return function RepeatInner(target: any, method: string | symbol) {
     const options: RepeatOptions = typeof delayOrOptions === "number" ? { interval: delayOrOptions } : delayOrOptions;
 
     const taskOptions: TaskOptions = {

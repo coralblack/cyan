@@ -12,7 +12,7 @@ export interface EntityRelationColumnOptions {
 }
 
 function EntityRelationColumn(type: EntityRelationType, options: EntityRelationColumnOptions): PropertyDecorator {
-  return function EntityRelationColumnInner(target: Object, propertyKey: string) {
+  return function EntityRelationColumnInner(target: Object, propertyKey: string | symbol) {
     const relationColumnEntity = Reflect.getMetadata("design:type", target, propertyKey);
 
     Metadata.getStorage().entityRelations.push({

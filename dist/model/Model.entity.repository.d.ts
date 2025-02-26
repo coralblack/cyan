@@ -13,23 +13,26 @@ interface RelationalRepositoryInfo<T = any> {
 export interface RepositoryInfo<T = any> {
     target: ClassType<T>;
     tableName: string;
-    columns: Array<string>;
+    columns: Array<string | symbol>;
     fields: {
-        [key: string]: EntityColumnOptions;
+        [key: string | symbol]: EntityColumnOptions;
     };
-    primaryColumns: Array<string>;
-    criteriaColumns: Array<string>;
-    oneToOneRelationColumns: Array<string>;
+    primaryColumns: Array<string | symbol>;
+    criteriaColumns: Array<string | symbol>;
+    oneToOneRelationColumns: Array<string | symbol>;
     oneToOneRelations: {
-        [key: string]: RelationalRepositoryInfo;
+        [key: string | symbol]: RelationalRepositoryInfo;
     };
 }
 export declare const symRepositoryInfo: unique symbol;
-export declare class Repository<T> {
+interface HasSymRepositoryInfo<T> {
+    [symRepositoryInfo]?: RepositoryInfo<T>;
+}
+export declare class Repository<T extends Record<string | symbol, any>> {
     private readonly repositoryInfo;
     private readonly kx;
     constructor(scopeOrKnex: TransactionScope | Knex, entity: ClassType<T>);
-    static getRepositoryInfo<T>(entity: ClassType<T>): RepositoryInfo<T>;
+    static getRepositoryInfo<T>(entity: ClassType<T> & HasSymRepositoryInfo<T>): RepositoryInfo<T>;
     save(entity: T, trx?: TransactionScope): Promise<InsertId>;
     saveBulk(entities: Array<T>, trx?: TransactionScope): Promise<InsertId[]>;
     update(entity: T, options?: UpdateOptions<T>, trx?: TransactionScope): Promise<number>;

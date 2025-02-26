@@ -1,17 +1,17 @@
 import { Controller as HttpController } from "..//http/Http.controller";
-export declare type Headers = {
+export type Headers = {
     [key: string]: string | number | boolean;
 };
-export declare type Queries = {
+export type Queries = {
     [key: string]: string;
 };
-export declare type Params = {
+export type Params = {
     [key: string]: string;
 };
-export declare type ReqParams = {
+export type ReqParams = {
     [key: string]: any;
 };
-export declare type ReqData = {
+export type ReqData = {
     [key: string]: any;
 };
-export declare type Controller = new (...args: any[]) => HttpController;
+export type Controller = new (...args: any[]) => HttpController;

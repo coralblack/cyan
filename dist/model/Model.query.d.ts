@@ -1,14 +1,14 @@
 /// <reference types="node" />
-declare type Value = string | number | bigint | boolean | null | Date | Array<string> | Array<number> | Array<Date> | Array<boolean> | Buffer;
-export declare type RawQuery = (k: string) => (string | {
+type Value = string | number | bigint | boolean | null | Date | Array<string> | Array<number> | Array<Date> | Array<boolean> | Buffer;
+export type RawQuery = (k: string) => (string | {
     query: string;
     bindings: Value[];
 }) | {
     operand: string;
     bindings: Value[];
 };
-export declare type InsertId = bigint | number;
-declare type FindOperatorComp<T> = Partial<{
+export type InsertId = bigint | number;
+type FindOperatorComp<T> = Partial<{
     ">=": T | RawQuery;
     ">": T | RawQuery;
     "<=": T | RawQuery;
@@ -24,19 +24,19 @@ declare type FindOperatorComp<T> = Partial<{
     $AND: Array<FindOperatorComp<T>>;
     $OR: Array<FindOperatorComp<T>>;
 }>;
-export declare type FindChainingConditions<T> = Partial<{
+export type FindChainingConditions<T> = Partial<{
     $AND: FindChainingConditions<T> | FindConditions<T> | Array<FindChainingConditions<T>>;
     $OR: FindChainingConditions<T> | FindConditions<T> | Array<FindChainingConditions<T>>;
 }>;
-export declare type FindConditions<T> = {
+export type FindConditions<T> = {
     [P in keyof T]?: T[P] | T[P][] | FindOperatorComp<T[P]> | RawQuery;
 };
-export declare type OrderCondition<T> = {
+export type OrderCondition<T> = {
     [P in keyof T]?: "ASC" | "DESC" | RawQuery;
 } | ((aliases: {
     [key: string]: string;
 }) => string);
-export declare type OrderConditions<T> = OrderCondition<T> | Array<OrderCondition<T>>;
+export type OrderConditions<T> = OrderCondition<T> | Array<OrderCondition<T>>;
 export interface FindOneOptions<T> {
     select?: (keyof T)[];
     where?: FindConditions<T> | FindChainingConditions<T>;

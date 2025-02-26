@@ -15,6 +15,7 @@
     "release:patch": "npm version patch --no-git-tag-version",
     "prerelease": "git diff --exit-code",
     "release": "npm run release:patch && export RELEASE_VER=$(node -e \"console.log(require('./package.json').version)\") && git checkout -b feature/bump-ver_${RELEASE_VER} && npm run build && git add . && git commit -m \"Bump version, v${RELEASE_VER}\" &&git tag -a v${RELEASE_VER} -m \"Release version, v${RELEASE_VER}\" && git push --set-upstream origin feature/bump-ver_${RELEASE_VER} && git push origin v${RELEASE_VER}"
+
   },
   "engines": {
     "node": ">=10.4"
@@ -23,7 +24,7 @@
     "type": "git",
     "url": "git+https://github.com/coralblack/cyan.git"
   },
-  "author": "CORAL.BLACK",
+  "author": "JNPMEDI Inc.",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/coralblack/cyan/issues"
@@ -37,7 +38,7 @@
     "dotenv": "^16.0.0",
     "express": "^4.19.2",
     "glob": "^11.0.0",
-    "knex": "^0.95.6",
+    "knex": "^0.95.15",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",
     "mysql2": "^2.3.3",
@@ -50,12 +51,12 @@
     "@types/body-parser": "^1.19.2",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.21",
-    "@types/knex": "^0.16.1",
     "@types/lodash": "^4.14.179",
     "@types/morgan": "^1.9.3",
-    "@types/node": "^14.17.9",
+    "@types/node": "^18.17.9",
     "@types/source-map-support": "^0.5.4",
     "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "eslint-import-resolver-typescript": "^2.5.0",
     "eslint-plugin-import": "^2.25.4",
     "gts": "^3.1.0",

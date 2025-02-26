@@ -10,7 +10,7 @@ import { ClassType } from ".";
 
 export interface RouteMetadataArgs {
   target: Function;
-  method: string;
+  method: string | symbol;
 
   action: HttpMethod;
   path: string;
@@ -20,17 +20,17 @@ export interface RouteMetadataArgs {
 
 export interface RouteParamMetadataArgs<T = ParamOptions | SystemParamOptions | ContextParamOptions> {
   target: Function;
-  method: string;
+  method: string | symbol | undefined;
   index: number;
 
   type: ParamType;
-  name: string;
+  name: string | undefined;
   options: T;
 }
 
 export interface MiddlewareMetadataArgs {
   target: Function;
-  method: string;
+  method: string | symbol;
 
   handler: HandlerFunction;
   options: MiddlewareOptions;
@@ -44,7 +44,7 @@ export interface EntityMetadataArgs<T = any> {
 
 export interface EntityColumnMetadataArgs {
   target: Function;
-  propertyKey: string;
+  propertyKey: string | symbol;
 
   type: EntityColumnType;
   options: EntityColumnOptions;
@@ -52,7 +52,7 @@ export interface EntityColumnMetadataArgs {
 
 export interface EntityRelationMetadataArgs {
   target: Function;
-  propertyKey: string;
+  propertyKey: string | symbol;
 
   type: EntityRelationType;
   table: Function;
@@ -61,7 +61,7 @@ export interface EntityRelationMetadataArgs {
 
 export interface TaskMetadataArgs<T = any> {
   target: ClassType<T>;
-  method: string;
+  method: string | symbol;
 
   type: TaskType;
   options: TaskOptions;

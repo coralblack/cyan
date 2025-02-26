@@ -81,7 +81,7 @@ class SwaggerGenerator {
         return (0, swagger_jsdoc_1.default)(swaggerOptions);
     }
     initializeSchemas() {
-        const defaultSchemas = new SchemaInitializer_1.DefaultSwaggerSchemaInitializer({ ...this.options.path }).initializeSchemas();
+        const defaultSchemas = new SchemaInitializer_1.DefaultSwaggerSchemaInitializer(Object.assign({}, this.options.path)).initializeSchemas();
         this.schemas = this.generateSwaggerSchemas(defaultSchemas);
     }
     getTags() {
@@ -98,7 +98,7 @@ class SwaggerGenerator {
         return this.storage.routes.reduce((paths, route) => {
             const parsedPath = this.parseRoutePath(route.path);
             const pathItem = this.getPathItem(route, tags);
-            paths[parsedPath] = { ...paths[parsedPath], ...pathItem };
+            paths[parsedPath] = Object.assign(Object.assign({}, paths[parsedPath]), pathItem);
             return paths;
         }, {});
     }
@@ -142,7 +142,8 @@ class SwaggerGenerator {
         return this.storage.routeParams
             .filter(param => this.isValidRouteParam(param, route))
             .map(param => this.createParameterObject(param))
-            .filter(param => param !== undefined);
+            .filter(param => param !== undefined)
+            .map(e => e);
     }
     isValidRouteParam(param, route) {
         return (param.target === route.target &&
@@ -170,7 +171,7 @@ class SwaggerGenerator {
         return "delimiter" in options && options.delimiter ? `Delimiter: ${options.delimiter}` : "";
     }
     isParamRequired(param) {
-        return param.type === router_1.ParamType.Path || ("required" in param.options && param.options.required);
+        return param.type === router_1.ParamType.Path || !!("required" in param.options && param.options.required);
     }
     getParamLocation(paramType) {
         const locationMap = {
@@ -180,6 +181,8 @@ class SwaggerGenerator {
             [router_1.ParamType.Path]: SwaggerParameterType.Path,
             [router_1.ParamType.Body]: SwaggerParameterType.Body,
         };
+        if (paramType === router_1.ParamType.Context)
+            throw Error(`Not supported type: ${router_1.ParamType.Context}`);
         const location = locationMap[paramType];
         if (!location) {
             throw new Error(`Unknown param type: ${paramType}`);
@@ -187,7 +190,7 @@ class SwaggerGenerator {
         return location;
     }
     getSchemaType(options) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d;
         if (options.type === null)
             return { type: "null" };
         if (options.type === undefined)
@@ -195,9 +198,9 @@ class SwaggerGenerator {
         if (typeof options.type === "object" && options.type !== null) {
             return this.getObjectSchema(options.type);
         }
-        if (this.schemas[options.type])
+        if ((_a = this.schemas) === null || _a === void 0 ? void 0 : _a[options.type])
             return { $ref: `#/components/schemas/${options.type}` };
-        const typeName = ((_a = options.type) === null || _a === void 0 ? void 0 : _a.name) || ((_c = (_b = options.type) === null || _b === void 0 ? void 0 : _b.constructor) === null || _c === void 0 ? void 0 : _c.name);
+        const typeName = ((_b = options.type) === null || _b === void 0 ? void 0 : _b.name) || ((_d = (_c = options.type) === null || _c === void 0 ? void 0 : _c.constructor) === null || _d === void 0 ? void 0 : _d.name);
         if (this.isArrayType(typeName, options)) {
             return this.getArraySchema(options);
         }
@@ -233,7 +236,7 @@ class SwaggerGenerator {
     }
     getArraySchema(options) {
         var _a;
-        const itemOptions = { ...options, array: false };
+        const itemOptions = Object.assign(Object.assign({}, options), { array: false });
         if ("delimiter" in itemOptions)
             delete itemOptions.delimiter;
         if (((_a = options.type) === null || _a === void 0 ? void 0 : _a.name) === "Array")
@@ -294,7 +297,9 @@ class SwaggerGenerator {
         const required = [];
         bodyParams.forEach(param => {
             const schema = this.getSchemaType(param.options);
-            properties[param.name] = schema;
+            if (schema) {
+                properties[param.name] = schema;
+            }
             if ("required" in param.options && param.options.required) {
                 required.push(param.name);
             }
@@ -340,7 +345,7 @@ class SwaggerGenerator {
         return responses;
     }
     generateSwaggerSchemas(defaultSchemas) {
-        const schemas = { ...defaultSchemas };
+        const schemas = Object.assign({}, defaultSchemas);
         this.storage.swaggerModels.forEach(model => {
             const properties = {};
             const required = [];
@@ -363,10 +368,10 @@ class SwaggerGenerator {
     }
     getPropertySchema(options) {
         const schema = this.getSchemaType(options);
-        if ("description" in schema && options.description) {
+        if (schema && "description" in schema && options.description) {
             schema.description = options.description;
         }
-        if ("example" in schema && options.example !== undefined) {
+        if (schema && "example" in schema && options.example !== undefined) {
             schema.example = options.example;
         }
         return schema;
@@ -381,12 +386,13 @@ class SwaggerGenerator {
         };
     }
     saveSwaggerJsonSchema() {
+        var _a, _b;
         try {
-            const outputPath = this.options.schemaOutput.outputPath;
-            const fileName = this.options.schemaOutput.fileName || "swagger-schema.json";
+            const outputPath = (_a = this.options.schemaOutput) === null || _a === void 0 ? void 0 : _a.outputPath;
+            const fileName = ((_b = this.options.schemaOutput) === null || _b === void 0 ? void 0 : _b.fileName) || "swagger-schema.json";
             const finalFileName = fileName.endsWith(".json") ? fileName : `${fileName}.json`;
-            const fullPath = path.join(outputPath, finalFileName);
-            if (!fs.existsSync(outputPath)) {
+            const fullPath = outputPath ? path.join(outputPath, finalFileName) : finalFileName;
+            if (outputPath && !fs.existsSync(outputPath)) {
                 fs.mkdirSync(outputPath, { recursive: true });
             }
             const jsonContent = JSON.stringify(this.schemas, null, 2);

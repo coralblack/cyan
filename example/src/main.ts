@@ -2,10 +2,10 @@ import { Cyan, Stage } from "@coralblack/cyan/dist/core";
 import { ApiController } from "./controller/Api.controller";
 import { HelloController } from "./controller/Hello.controller";
 import { JsonController } from "./controller/Json.controller";
+import { SwaggerController } from "./controller/Swagger.controller";
 import { WorldController } from "./controller/World.controller";
 import { AppServer } from "./Server";
 import { RepeatTask } from "./task/Repeat.task";
-import { SwaggerController } from "./controller/Swagger.controller";
 
 const app = new Cyan({
   name: "Example",

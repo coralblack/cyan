@@ -17,6 +17,7 @@ import {
   QueryParam,
   SystemParam,
 } from "@coralblack/cyan/dist/router";
+
 import { BaseController } from "./Base.controller";
 import { AuthorizedContext, BasicAuthMiddleware, CyanRequestContext } from "./middleware/BasicAuthMiddleware";
 import { HttpError } from "../../../dist/http/Http.error";

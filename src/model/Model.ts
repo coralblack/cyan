@@ -60,7 +60,7 @@ export abstract class Model {
 
         return resp;
       } catch (err) {
-        throw TraceableError(err);
+        throw TraceableError(err as Error);
       }
     }
 

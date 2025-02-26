@@ -37,7 +37,7 @@ export declare class Cyan {
     readonly settings: CyanSettings;
     readonly logger: Logger;
     readonly server: Server;
-    readonly swaggerGenerator: SwaggerGenerator;
+    readonly swaggerGenerator: SwaggerGenerator | undefined;
     constructor(settings?: CyanSettings);
     start(): void;
     initialize(): Server;

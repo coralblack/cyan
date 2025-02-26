@@ -21,7 +21,7 @@ export interface ParamEnumOptions<T extends {
     enum: T;
     array?: boolean;
 }
-export declare type ParamOptions<T extends {
+export type ParamOptions<T extends {
     [key: string]: string | number;
 } = any> = ParamClassOptions | ParamEnumOptions<T>;
 export declare enum ParamType {
@@ -32,12 +32,12 @@ export declare enum ParamType {
     System = "SYSTEM",
     Context = "CONTEXT"
 }
-export declare type SystemParamOptions = SystemRequestParamOptions;
+export type SystemParamOptions = SystemRequestParamOptions;
 export interface SystemRequestParamOptions {
     type: "REQ";
     attr: keyof HttpRequest;
 }
-export declare type ContextParamOptions = CyanRequestContextParamOptions;
+export type ContextParamOptions = CyanRequestContextParamOptions;
 export interface CyanRequestContextParamOptions {
     type: "CONTEXT";
     attr: keyof ContextParamAttributes;

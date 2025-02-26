@@ -26,11 +26,12 @@ export class HttpResponse {
   }
 
   setHeader(name: string, value: string): void {
+    if (!this.headers) this.headers = {};
     this.headers[name] = value;
   }
 
   setHeaders(headers: HttpHeaders): void {
-    this.headers = Object.assign(this.headers, headers);
+    this.headers = Object.assign(this.headers || {}, headers);
   }
 }
 

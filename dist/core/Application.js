@@ -33,10 +33,10 @@ class Cyan {
             port: 8080,
             routes: [],
         }, settings || {});
-        this.logger = (settings.logger || Logger_1.Logger).getInstance();
-        this.logger.appName = this.settings.name;
-        this.server = settings.server ? new settings.server(this) : new Server_1.Server(this);
-        if (this.settings.swagger && this.settings.swagger.targetEnvs.includes(this.settings.stage)) {
+        this.logger = ((settings === null || settings === void 0 ? void 0 : settings.logger) || Logger_1.Logger).getInstance();
+        this.logger.appName = this.settings.name || "App";
+        this.server = (settings === null || settings === void 0 ? void 0 : settings.server) ? new settings.server(this) : new Server_1.Server(this);
+        if (this.settings.swagger && this.settings.stage && this.settings.swagger.targetEnvs.includes(this.settings.stage)) {
             this.swaggerGenerator = new swagger_1.SwaggerGenerator(this.settings.swagger);
         }
     }
@@ -71,7 +71,7 @@ class Cyan {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
         if ((_a = this.settings.options) === null || _a === void 0 ? void 0 : _a.accessLog) {
             this.logger.info("[handler] AccessLogger registered");
-            this.server.use(Handler_1.Handler.accessLogger(this.settings.name));
+            this.server.use(Handler_1.Handler.accessLogger(this.settings.name || "App"));
         }
         if ((_b = this.settings.options) === null || _b === void 0 ? void 0 : _b.cors) {
             this.logger.info("[handler] CorsHandler registered");
@@ -98,7 +98,7 @@ class Cyan {
         var _a;
         const basePath = ((_a = this.settings.basePath) === null || _a === void 0 ? void 0 : _a.endsWith("/")) ? this.settings.basePath.slice(0, -1) : this.settings.basePath || "";
         const path = (basePath => (route.path.startsWith("/") ? `${basePath}${route.path}` : `${basePath}/${route.path}`))(basePath);
-        this.logger.info(`[router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
+        this.logger.info(`[router] ${route.action} ${path} - ${route.target.name}.${String(route.method)}`);
         const handlers = [
             [router_1.MIDDLEWARE_PRIORITY_BEFORE_HANDLER, Handler_1.Handler.beforeHandler(controller)],
             [router_1.MIDDLEWARE_PRIORITY_ACTION_HANDLER, Handler_1.Handler.actionHandler(controller, route)],
@@ -129,7 +129,7 @@ class Cyan {
                 return `(${meta.options.nextInvokeDelay})`;
             return "";
         })();
-        this.logger.info(`[task] ${readableType}${taskOptions} - ${meta.target.name}.${meta.method}`);
+        this.logger.info(`[task] ${readableType}${taskOptions} - ${meta.target.name}.${String(meta.method)}`);
         const task = Injector_1.Injector.resolve(meta.target);
         const invoker = new Task_invoker_1.TaskInvoker(task, meta.method, meta.options, this.logger);
         invoker.init();
@@ -148,7 +148,7 @@ class Cyan {
                 this.logger.info(`[swagger] Swagger UI available at ${swaggerPath}`);
             }
             catch (error) {
-                this.logger.error(`[swagger] Error setting up Swagger UI: ${error.message}`);
+                this.logger.error(`[swagger] Error setting up Swagger UI: ${error === null || error === void 0 ? void 0 : error.message}`);
             }
         }
         else {

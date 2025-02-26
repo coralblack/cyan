@@ -73,7 +73,7 @@ export class SwaggerGenerator {
   }
 
   private getPaths(tags: ApiTagOptions[]): Record<string, any> {
-    return this.storage.routes.reduce((paths, route) => {
+    return this.storage.routes.reduce<Record<string, any>>((paths, route) => {
       const parsedPath = this.parseRoutePath(route.path);
       const pathItem = this.getPathItem(route, tags);
 
@@ -99,7 +99,7 @@ export class SwaggerGenerator {
     };
   }
 
-  private findSwaggerOperation(route: RouteMetadataArgs): SwaggerOperationMetadata {
+  private findSwaggerOperation(route: RouteMetadataArgs): SwaggerOperationMetadata | undefined {
     return this.storage.swaggerOperations.find(op => op.target === route.target && op.method === route.method);
   }
 
@@ -130,7 +130,8 @@ export class SwaggerGenerator {
     return this.storage.routeParams
       .filter(param => this.isValidRouteParam(param, route))
       .map(param => this.createParameterObject(param))
-      .filter(param => param !== undefined);
+      .filter(param => param !== undefined)
+      .map(e => e!);
   }
 
   private isValidRouteParam(param: RouteParamMetadataArgs, route: RouteMetadataArgs): boolean {
@@ -151,7 +152,7 @@ export class SwaggerGenerator {
     const description = this.getParamDescription(param.options);
 
     return {
-      name: param.name,
+      name: param.name!,
       in: this.getParamLocation(param.type),
       required: this.isParamRequired(param),
       schema,
@@ -164,7 +165,7 @@ export class SwaggerGenerator {
   }
 
   private isParamRequired(param: RouteParamMetadataArgs): boolean {
-    return param.type === ParamType.Path || ("required" in param.options && param.options.required);
+    return param.type === ParamType.Path || !!("required" in param.options && param.options.required);
   }
 
   private getParamLocation(paramType: ParamType): SwaggerParameterType {
@@ -176,7 +177,9 @@ export class SwaggerGenerator {
       [ParamType.Body]: SwaggerParameterType.Body,
     };
 
-    const location = locationMap[paramType];
+    if (paramType === ParamType.Context) throw Error(`Not supported type: ${ParamType.Context}`);
+
+    const location: SwaggerParameterType = locationMap[paramType];
 
     if (!location) {
       throw new Error(`Unknown param type: ${paramType}`);
@@ -192,7 +195,7 @@ export class SwaggerGenerator {
       return this.getObjectSchema(options.type);
     }
 
-    if (this.schemas[options.type]) return { $ref: `#/components/schemas/${options.type}` };
+    if (this.schemas?.[options.type]) return { $ref: `#/components/schemas/${options.type}` };
 
     const typeName: string = options.type?.name || options.type?.constructor?.name;
 
@@ -331,9 +334,12 @@ export class SwaggerGenerator {
     bodyParams.forEach(param => {
       const schema = this.getSchemaType(param.options);
 
-      properties[param.name] = schema;
+      if (schema) {
+        properties[param.name!] = schema;
+      }
+
       if ("required" in param.options && param.options.required) {
-        required.push(param.name);
+        required.push(param.name!);
       }
     });
 
@@ -353,7 +359,7 @@ export class SwaggerGenerator {
   private getSwaggerResponses(route: RouteMetadataArgs): Responses | undefined {
     const responses = this.storage.swaggerResponses
       .filter(resp => resp.target === route.target && resp.method === route.method)
-      .reduce((acc, resp) => {
+      .reduce<Record<number, { description: string; content: Record<string, { schema: BaseSchemaType | undefined }> }>>((acc, resp) => {
         acc[resp.statusCode] = {
           description: resp.options.description || "Response description",
           content: {
@@ -409,13 +415,13 @@ export class SwaggerGenerator {
   }
 
   private getPropertySchema(options: ApiPropertyOptions): BaseSchemaType | undefined {
-    const schema: BaseSchemaType = this.getSchemaType(options);
+    const schema: BaseSchemaType | undefined = this.getSchemaType(options);
 
-    if ("description" in schema && options.description) {
+    if (schema && "description" in schema && options.description) {
       schema.description = options.description;
     }
 
-    if ("example" in schema && options.example !== undefined) {
+    if (schema && "example" in schema && options.example !== undefined) {
       schema.example = options.example;
     }
 
@@ -434,14 +440,14 @@ export class SwaggerGenerator {
 
   private saveSwaggerJsonSchema(): void {
     try {
-      const outputPath = this.options.schemaOutput.outputPath;
-      const fileName = this.options.schemaOutput.fileName || "swagger-schema.json";
+      const outputPath = this.options.schemaOutput?.outputPath;
+      const fileName = this.options.schemaOutput?.fileName || "swagger-schema.json";
 
       // 파일 확장자가 .json이 아니면 추가
       const finalFileName = fileName.endsWith(".json") ? fileName : `${fileName}.json`;
-      const fullPath = path.join(outputPath, finalFileName);
+      const fullPath = outputPath ? path.join(outputPath, finalFileName) : finalFileName;
 
-      if (!fs.existsSync(outputPath)) {
+      if (outputPath && !fs.existsSync(outputPath)) {
         fs.mkdirSync(outputPath, { recursive: true });
       }
 

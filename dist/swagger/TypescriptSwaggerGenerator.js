@@ -6,6 +6,7 @@ class TypescriptSchemaGenerator {
     constructor(ts, filePatterns) {
         this.ts = ts;
         this.filePatterns = filePatterns;
+        this.typeChecker = null;
         this.schemas = {};
         this.maxDepth = 5;
     }
@@ -82,11 +83,7 @@ class TypescriptSchemaGenerator {
             this.schemas[typeName] = result;
         const description = this.getJsDocDescription(type);
         const example = this.getJsDocExample(type);
-        return {
-            ...result,
-            ...(description ? { description } : {}),
-            ...(example ? { example: example } : {}),
-        };
+        return Object.assign(Object.assign(Object.assign({}, result), (description ? { description } : {})), (example ? { example: example } : {}));
     }
     getUnionType(type, depth) {
         return {
@@ -233,13 +230,8 @@ class TypescriptSchemaGenerator {
         }
         const description = this.getJsDocDescription(type);
         const example = this.getJsDocExample(type);
-        return {
-            type: "string",
-            enum: enumValues,
-            ...(defaultValue !== undefined && { default: defaultValue }),
-            example,
-            description,
-        };
+        return Object.assign(Object.assign({ type: "string", enum: enumValues }, (defaultValue !== undefined && { default: defaultValue })), { example,
+            description });
     }
     getJsDocDescription(type) {
         const symbol = type.getSymbol();

@@ -3,17 +3,18 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "module": "commonjs",
+    "strict": true,
+    "skipLibCheck": true,
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es2019",
+    "target": "es2017",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "paths": {},
-    "lib": ["es2019"]
+    "paths": {}
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "test", "dist", "example"]

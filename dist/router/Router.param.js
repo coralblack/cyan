@@ -40,11 +40,11 @@ function QueryParam(name, options) {
 }
 exports.QueryParam = QueryParam;
 function SystemParam(options) {
-    return Param(ParamType.System, null, options);
+    return Param(ParamType.System, undefined, options);
 }
 exports.SystemParam = SystemParam;
 function ContextParam(options) {
-    return Param(ParamType.Context, null, options);
+    return Param(ParamType.Context, undefined, options);
 }
 exports.ContextParam = ContextParam;
 //# sourceMappingURL=Router.param.js.map

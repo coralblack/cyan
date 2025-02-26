@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getColumnByEntityProperty = exports.getEntityProperties = exports.Column = exports.PrimaryColumn = exports.Entity = exports.EntityColumnType = void 0;
 const Decorator_1 = require("../core/Decorator");
-const builtin_1 = require("../util/builtin");
 var EntityColumnType;
 (function (EntityColumnType) {
     EntityColumnType["Primary"] = "PRIMARY";
@@ -12,14 +11,14 @@ function Entity(options) {
     return function EntityInner(target) {
         Decorator_1.Metadata.getStorage().entities.push({
             target,
-            options,
+            options: options || { name: "" },
         });
     };
 }
 exports.Entity = Entity;
 function EntityColumn(type, options) {
     return function EntityColumnInner(target, propertyKey) {
-        if (propertyKey.includes("_")) {
+        if (typeof propertyKey === "string" && propertyKey.includes("_")) {
             throw new Error(`Invalid Usage: Underscore is not allowed for the property key. (${propertyKey})`);
         }
         Decorator_1.Metadata.getStorage().entityColumns.push({
@@ -48,7 +47,7 @@ function getEntityProperties(entity) {
 }
 exports.getEntityProperties = getEntityProperties;
 function getColumnByEntityProperty(entity, propertyKey) {
-    return (v => ((0, builtin_1.hasOwnProperty)(v.options, "name") ? v.options.name : undefined))(Decorator_1.Metadata.getStorage().entityColumns.find(x => x.target === entity && x.propertyKey === propertyKey));
+    return (entityColumn => ((entityColumn === null || entityColumn === void 0 ? void 0 : entityColumn.options) && "name" in (entityColumn === null || entityColumn === void 0 ? void 0 : entityColumn.options) ? entityColumn.options.name : undefined))(Decorator_1.Metadata.getStorage().entityColumns.find(x => x.target === entity && x.propertyKey === propertyKey));
 }
 exports.getColumnByEntityProperty = getColumnByEntityProperty;
 //# sourceMappingURL=Model.entity.js.map

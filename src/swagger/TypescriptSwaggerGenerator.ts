@@ -16,7 +16,7 @@ import { TypeScriptFileResolver } from "../swagger/TypescriptFileResolver";
 export class TypescriptSchemaGenerator {
   constructor(private ts: typeof import("typescript"), private filePatterns: string[]) {}
 
-  private typeChecker: TypeChecker;
+  private typeChecker: TypeChecker | null = null;
   private schemas: RecordSchemaType = {};
   private maxDepth = 5;
 
@@ -44,14 +44,14 @@ export class TypescriptSchemaGenerator {
   private extractTypes(sourceFile: SourceFile): void {
     this.ts.forEachChild(sourceFile, node => {
       if (this.ts.isInterfaceDeclaration(node) || this.ts.isClassDeclaration(node) || this.ts.isTypeAliasDeclaration(node)) {
-        const symbol = this.typeChecker.getSymbolAtLocation(node.name);
+        const symbol = this.typeChecker!.getSymbolAtLocation(node.name!);
 
         if (symbol) {
-          const type = this.typeChecker.getDeclaredTypeOfSymbol(symbol);
+          const type = this.typeChecker!.getDeclaredTypeOfSymbol(symbol);
           const name = symbol.getName();
 
-          if (!this.schemas[name]) {
-            this.schemas[name] = this.getTypeDefinition(type);
+          if (!this.schemas![name]) {
+            this.schemas![name] = this.getTypeDefinition(type);
           }
         }
       }
@@ -59,13 +59,13 @@ export class TypescriptSchemaGenerator {
   }
 
   getTypeDefinition(type: Type, depth = 0): BaseSchemaType {
-    const typeName = this.typeChecker.typeToString(type);
+    const typeName = this.typeChecker!.typeToString(type);
 
     if (depth > this.maxDepth) {
       return { type: "object" };
     }
 
-    if (this.schemas[typeName]) {
+    if (this.schemas![typeName]) {
       return { $ref: `#/components/schemas/${typeName}` };
     }
 
@@ -98,7 +98,7 @@ export class TypescriptSchemaGenerator {
       shouldAddToSchemas = true;
     }
 
-    if (!shouldAddToSchemas) this.schemas[typeName] = result;
+    if (!shouldAddToSchemas) this.schemas![typeName] = result;
 
     const description = this.getJsDocDescription(type);
     const example = this.getJsDocExample(type);
@@ -123,8 +123,8 @@ export class TypescriptSchemaGenerator {
   }
 
   private getObjectType(type: InterfaceType | BaseType, depth: number): BaseSchemaType {
-    const properties = {};
-    const required = [];
+    const properties: Record<string | symbol, BaseSchemaType> = {};
+    const required: Array<any> = [];
 
     this.processProperties(type.getProperties(), properties, required, depth);
 
@@ -135,7 +135,7 @@ export class TypescriptSchemaGenerator {
     if (type.symbol && type.symbol.flags & this.ts.SymbolFlags.Class && type.symbol.exports) {
       type.symbol.exports.forEach((member, key) => {
         if (member.flags & this.ts.SymbolFlags.Property && key !== "prototype") {
-          const memberType = this.typeChecker.getTypeOfSymbolAtLocation(member, member.valueDeclaration);
+          const memberType = this.typeChecker!.getTypeOfSymbolAtLocation(member, member.valueDeclaration!);
           const memberName = key.toString();
 
           let memberValue;
@@ -169,10 +169,10 @@ export class TypescriptSchemaGenerator {
     };
   }
 
-  private processProperties(props: Symbol[], properties: BaseSchemaType, required: string[], depth: number): void {
+  private processProperties(props: Symbol[], properties: { [key: string]: any }, required: string[], depth: number): void {
     props.forEach(prop => {
       if (prop.name !== "prototype") {
-        const propType = this.typeChecker.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration);
+        const propType = this.typeChecker!.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration!);
         const propName = prop.getName();
 
         properties[propName] = this.getTypeDefinition(propType, depth + 1);
@@ -186,11 +186,11 @@ export class TypescriptSchemaGenerator {
   }
 
   private getAnonymousObjectType(type: Type, depth: number): BaseSchemaType {
-    const properties = {};
-    const required = [];
+    const properties: Record<string, BaseSchemaType> = {};
+    const required: Array<any> = [];
 
     type.getProperties().forEach(prop => {
-      const propType = this.typeChecker.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration);
+      const propType = this.typeChecker!.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration!);
       const propName = prop.getName();
       const propDeclaration = prop.valueDeclaration;
 
@@ -248,15 +248,15 @@ export class TypescriptSchemaGenerator {
       const enumDeclaration = type.symbol.valueDeclaration;
 
       for (const member of enumDeclaration.members) {
-        const memberSymbol = this.typeChecker.getSymbolAtLocation(member.name);
+        const memberSymbol = this.typeChecker!.getSymbolAtLocation(member.name);
 
         if (memberSymbol) {
-          const constantValue = this.typeChecker.getConstantValue(member);
+          const constantValue = this.typeChecker!.getConstantValue(member);
 
           if (constantValue !== undefined) {
             enumValues.push(constantValue);
           } else {
-            const memberType = this.typeChecker.getTypeOfSymbolAtLocation(memberSymbol, member);
+            const memberType = this.typeChecker!.getTypeOfSymbolAtLocation(memberSymbol, member);
 
             if (memberType.isLiteral() && memberType.isStringLiteral()) {
               enumValues.push(memberType.value);
@@ -272,7 +272,7 @@ export class TypescriptSchemaGenerator {
       const enumMemberDeclaration = type.symbol.declarations?.[0];
 
       if (enumMemberDeclaration && this.ts.isEnumMember(enumMemberDeclaration)) {
-        defaultValue = this.typeChecker.getConstantValue(enumMemberDeclaration);
+        defaultValue = this.typeChecker!.getConstantValue(enumMemberDeclaration);
       }
     }
 

@@ -50,7 +50,7 @@ export class DefaultSwaggerSchemaInitializer {
     this.loadTypeScriptModule();
 
     try {
-      const schemaGenerator = new TypescriptSchemaGenerator(this.tsModule, typesPath);
+      const schemaGenerator = new TypescriptSchemaGenerator(this.tsModule!, typesPath);
 
       return schemaGenerator.generateSchema();
     } catch (error) {

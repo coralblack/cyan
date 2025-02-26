@@ -22,7 +22,7 @@ export interface ModelConnectivitySettings {
 }
 export interface ModelSettings extends ModelConnectivitySettings {
 }
-export declare type TxDelegate<T> = (scope: TransactionScope) => Promise<T>;
+export type TxDelegate<T> = (scope: TransactionScope) => Promise<T>;
 export declare abstract class Model {
     protected readonly settings: ModelSettings;
     private readonly _connection;

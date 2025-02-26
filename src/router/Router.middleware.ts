@@ -12,7 +12,7 @@ export interface MiddlewareOptions {
 }
 
 export function Middleware(handler: HandlerFunction, options?: MiddlewareOptions): MethodDecorator {
-  return function MiddlewareInner<T>(target: Object, method: string, descriptor: TypedPropertyDescriptor<T>) {
+  return function MiddlewareInner<T>(target: Object, method: string | symbol, descriptor: TypedPropertyDescriptor<T>) {
     Metadata.getStorage().middlewares.push({
       target: target.constructor,
       method,

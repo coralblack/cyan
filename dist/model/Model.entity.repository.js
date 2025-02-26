@@ -44,7 +44,10 @@ class Repository {
                 .filter(e => e.type === Model_entity_relation_1.EntityRelationType.OneToOne)
                 .reduce((output, relation) => {
                 output[relation.propertyKey] = {
-                    options: Object.assign(Object.assign({}, relation.options), { name: Array.isArray(relation.options.name) ? relation.options.name : [relation.options.name] }),
+                    options: {
+                        ...relation.options,
+                        name: Array.isArray(relation.options.name) ? relation.options.name : [relation.options.name],
+                    },
                     repository: Repository.getRepositoryInfo(relation.options.target),
                 };
                 return output;
@@ -326,7 +329,7 @@ class Repository {
     }
     async findOne(options, trx) {
         try {
-            const [res] = await this.select(Object.assign(Object.assign({}, options), { limit: 1 }), trx);
+            const [res] = await this.select({ ...options, limit: 1 }, trx);
             return res || null;
         }
         catch (err) {
@@ -350,7 +353,7 @@ class Repository {
             const limit = BigInt(rpp);
             const offset = (BigInt(page) - BigInt(1)) * limit;
             const count = (await this.where(kx.from(this.repositoryInfo.tableName), (options === null || options === void 0 ? void 0 : options.where) || {}).count("* as cnt"))[0].cnt;
-            const items = await this.find(Object.assign(Object.assign({}, options), { limit, offset }), trx);
+            const items = await this.find({ ...options, limit, offset }, trx);
             return {
                 page,
                 rpp,

@@ -64,22 +64,22 @@ class HttpHelper {
         }
     }
     get(payload) {
-        return this.request(Object.assign(Object.assign({}, payload), { method: Http_method_1.HttpMethod.Get }));
+        return this.request({ ...payload, method: Http_method_1.HttpMethod.Get });
     }
     post(payload) {
-        return this.request(Object.assign(Object.assign({}, payload), { method: Http_method_1.HttpMethod.Post }));
+        return this.request({ ...payload, method: Http_method_1.HttpMethod.Post });
     }
     put(payload) {
-        return this.request(Object.assign(Object.assign({}, payload), { method: Http_method_1.HttpMethod.Put }));
+        return this.request({ ...payload, method: Http_method_1.HttpMethod.Put });
     }
     patch(payload) {
-        return this.request(Object.assign(Object.assign({}, payload), { method: Http_method_1.HttpMethod.Patch }));
+        return this.request({ ...payload, method: Http_method_1.HttpMethod.Patch });
     }
     delete(payload) {
-        return this.request(Object.assign(Object.assign({}, payload), { method: Http_method_1.HttpMethod.Delete }));
+        return this.request({ ...payload, method: Http_method_1.HttpMethod.Delete });
     }
     head(payload) {
-        return this.request(Object.assign(Object.assign({}, payload), { method: Http_method_1.HttpMethod.Head }));
+        return this.request({ ...payload, method: Http_method_1.HttpMethod.Head });
     }
 }
 exports.HttpHelper = HttpHelper;

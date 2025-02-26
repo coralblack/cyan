@@ -81,7 +81,7 @@ class SwaggerGenerator {
         return (0, swagger_jsdoc_1.default)(swaggerOptions);
     }
     initializeSchemas() {
-        const defaultSchemas = new SchemaInitializer_1.DefaultSwaggerSchemaInitializer(Object.assign({}, this.options.path)).initializeSchemas();
+        const defaultSchemas = new SchemaInitializer_1.DefaultSwaggerSchemaInitializer({ ...this.options.path }).initializeSchemas();
         this.schemas = this.generateSwaggerSchemas(defaultSchemas);
     }
     getTags() {
@@ -98,7 +98,7 @@ class SwaggerGenerator {
         return this.storage.routes.reduce((paths, route) => {
             const parsedPath = this.parseRoutePath(route.path);
             const pathItem = this.getPathItem(route, tags);
-            paths[parsedPath] = Object.assign(Object.assign({}, paths[parsedPath]), pathItem);
+            paths[parsedPath] = { ...paths[parsedPath], ...pathItem };
             return paths;
         }, {});
     }
@@ -236,7 +236,7 @@ class SwaggerGenerator {
     }
     getArraySchema(options) {
         var _a;
-        const itemOptions = Object.assign(Object.assign({}, options), { array: false });
+        const itemOptions = { ...options, array: false };
         if ("delimiter" in itemOptions)
             delete itemOptions.delimiter;
         if (((_a = options.type) === null || _a === void 0 ? void 0 : _a.name) === "Array")
@@ -345,7 +345,7 @@ class SwaggerGenerator {
         return responses;
     }
     generateSwaggerSchemas(defaultSchemas) {
-        const schemas = Object.assign({}, defaultSchemas);
+        const schemas = { ...defaultSchemas };
         this.storage.swaggerModels.forEach(model => {
             const properties = {};
             const required = [];

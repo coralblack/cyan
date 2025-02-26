@@ -55,7 +55,7 @@ export class Cyan {
   public readonly settings: CyanSettings;
   public readonly logger: Logger;
   public readonly server: Server;
-  public readonly swaggerGenerator: SwaggerGenerator;
+  public readonly swaggerGenerator: SwaggerGenerator | undefined;
 
   constructor(settings?: CyanSettings) {
     this.settings = Object.assign(
@@ -68,12 +68,12 @@ export class Cyan {
       settings || {}
     );
 
-    this.logger = (settings.logger || Logger).getInstance();
-    this.logger.appName = this.settings.name;
+    this.logger = (settings?.logger || Logger).getInstance();
+    this.logger.appName = this.settings.name || "App";
 
-    this.server = settings.server ? new settings.server(this) : new Server(this);
+    this.server = settings?.server ? new settings.server(this) : new Server(this);
 
-    if (this.settings.swagger && this.settings.swagger.targetEnvs.includes(this.settings.stage)) {
+    if (this.settings.swagger && this.settings.stage && this.settings.swagger.targetEnvs.includes(this.settings.stage)) {
       this.swaggerGenerator = new SwaggerGenerator(this.settings.swagger);
     }
   }
@@ -117,7 +117,7 @@ export class Cyan {
   private initSysHandlers(): void {
     if (this.settings.options?.accessLog) {
       this.logger.info("[handler] AccessLogger registered");
-      this.server.use(Handler.accessLogger(this.settings.name));
+      this.server.use(Handler.accessLogger(this.settings.name || "App"));
     }
 
     if (this.settings.options?.cors) {
@@ -158,7 +158,7 @@ export class Cyan {
     const basePath = this.settings.basePath?.endsWith("/") ? this.settings.basePath.slice(0, -1) : this.settings.basePath || "";
     const path = (basePath => (route.path.startsWith("/") ? `${basePath}${route.path}` : `${basePath}/${route.path}`))(basePath);
 
-    this.logger.info(`[router] ${route.action} ${path} - ${route.target.name}.${route.method}`);
+    this.logger.info(`[router] ${route.action} ${path} - ${route.target.name}.${String(route.method)}`);
 
     // Default middlewares
     const handlers: Array<[number, HandlerFunction]> = [
@@ -174,7 +174,7 @@ export class Cyan {
         handlers.push([middleware.options.priority || MIDDLEWARE_PRIORITY_ACTION_HANDLER - 100, middleware.handler]);
       });
 
-    this.server[route.action.toLowerCase()](
+    (this.server[route.action.toLowerCase() as keyof Server] as (...args: any[]) => any)(
       path,
       controller.beforeMiddleware(this),
       ...handlers.sort((a, b) => a[0] - b[0]).map(e => e[1]),
@@ -192,7 +192,7 @@ export class Cyan {
     }
 
     Metadata.getStorage()
-      .tasks.filter(task => this.settings.tasks.includes(task.target))
+      .tasks.filter(task => this.settings.tasks!.includes(task.target))
       .forEach(task => {
         this.initTask(task);
       });
@@ -205,7 +205,7 @@ export class Cyan {
       return "";
     })();
 
-    this.logger.info(`[task] ${readableType}${taskOptions} - ${meta.target.name}.${meta.method}`);
+    this.logger.info(`[task] ${readableType}${taskOptions} - ${meta.target.name}.${String(meta.method)}`);
 
     const task = Injector.resolve(meta.target);
     const invoker = new TaskInvoker(task, meta.method, meta.options, this.logger);
@@ -230,7 +230,7 @@ export class Cyan {
 
         this.logger.info(`[swagger] Swagger UI available at ${swaggerPath}`);
       } catch (error) {
-        this.logger.error(`[swagger] Error setting up Swagger UI: ${error.message}`);
+        this.logger.error(`[swagger] Error setting up Swagger UI: ${(error as Error)?.message}`);
       }
     } else {
       this.logger.info("[swagger] Swagger documentation is disabled");

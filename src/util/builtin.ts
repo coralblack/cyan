@@ -4,7 +4,7 @@ export function hasOwnProperty<X extends {}, Y extends PropertyKey>(obj: X, prop
   return Object.prototype.hasOwnProperty.call(obj, prop);
 }
 
-export function getConstructorName<T extends {}>(obj: T): string {
+export function getConstructorName<T extends {}>(obj: T): string | null {
   if (obj && (obj as any).constructor) {
     if (hasOwnProperty(obj.constructor, "name")) {
       return (obj.constructor as any).name as string;

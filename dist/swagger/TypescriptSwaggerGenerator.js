@@ -6,6 +6,7 @@ class TypescriptSchemaGenerator {
     constructor(ts, filePatterns) {
         this.ts = ts;
         this.filePatterns = filePatterns;
+        this.typeChecker = null;
         this.schemas = {};
         this.maxDepth = 5;
     }

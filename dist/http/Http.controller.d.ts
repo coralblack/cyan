@@ -1,10 +1,10 @@
+import { ContextParamAttributes } from "src/router";
 import { Handler as ExpressHandler, Response as ExpressResponse } from "express";
 import { HttpError } from "./Http.error";
 import { HttpRequest as HttpRequest } from "./Http.request";
 import { HttpResponse } from "./Http.response";
 import { Cyan } from "../core";
 import { ExtendedError } from "../core/Error";
-import { ContextParamAttributes } from "../router/Router.param";
 import { CyanRequest } from "../types/Handler";
 export interface ProcessedExpressResponse extends ExpressResponse {
     processedResponse: {

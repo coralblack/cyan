@@ -2,7 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ExtendedError = exports.TraceableError = void 0;
 function TraceableError(originalError) {
-    originalError.stack = originalError.stack + "\n" + new Error().stack.split("\n")[2];
+    var _a;
+    originalError.stack = originalError.stack + "\n" + ((_a = new Error().stack) === null || _a === void 0 ? void 0 : _a.split("\n")[2]);
     return originalError;
 }
 exports.TraceableError = TraceableError;

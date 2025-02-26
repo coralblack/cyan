@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
-import { ClassType } from "src/types";
 import * as bodyParser from "body-parser";
 import cors, { CorsOptions, CorsOptionsDelegate } from "cors";
 import { NextFunction } from "express";
@@ -10,7 +9,7 @@ import { ExtendedError } from "./Error";
 import { hasOwnProperty } from "..//util/builtin";
 import { Controller as HttpController, ProcessedExpressResponse } from "../http/Http.controller";
 import { HttpError } from "../http/Http.error";
-import { HttpRequest as HttpRequest } from "../http/Http.request";
+import { HttpRequest } from "../http/Http.request";
 import { HttpResponder, HttpResponse } from "../http/Http.response";
 import { Status as HttpStatus } from "../http/Http.status";
 import { ContextParamAttributes, ParamOptions, ParamType } from "../router";
@@ -75,8 +74,8 @@ export class Handler {
 
   public static getActionParams(req: CyanRequest, route: RouteMetadataArgs, actionParams: RouteParamMetadataArgs[]): any[] {
     return (route.params || []).map((e, i) => {
-      const actionParamFound: RouteParamMetadataArgs = actionParams.find(ap => ap.index === i);
-      let actionParam: RouteParamMetadataArgs<ParamOptions> = null;
+      const actionParamFound: RouteParamMetadataArgs | undefined = actionParams.find(ap => ap.index === i);
+      let actionParam: RouteParamMetadataArgs<ParamOptions> | null = null;
 
       if (!actionParamFound) return undefined;
       if (hasOwnProperty(actionParamFound.options, "type") && actionParamFound.options.type === "REQ") {
@@ -103,7 +102,7 @@ export class Handler {
         if (type === ParamType.Path) return req.params[name];
         if (type === ParamType.Header) return req.headers[name];
         if (type === ParamType.Body) return get(req.body, name); // eslint-disable-line @typescript-eslint/no-unsafe-return
-      })(actionParam.type, actionParam.name);
+      })(actionParam.type, actionParam.name!);
 
       try {
         if (value || typeof value === "boolean" || typeof value === "number") {
@@ -111,12 +110,12 @@ export class Handler {
             const em = actionParam.options.enum;
             const check = (iterVal: any) => {
               const emKey = Object.keys(em).find(e => {
-                if (actionParam.type === ParamType.Query) return String(em[e]) === String(iterVal);
+                if (actionParam?.type === ParamType.Query) return String(em[e]) === String(iterVal);
                 return em[e] === iterVal;
               });
 
               if (!emKey) {
-                let invalid: any = actionParam.options.invalid;
+                let invalid: any = actionParam?.options.invalid;
 
                 if (typeof invalid === "function") {
                   invalid = invalid(iterVal);
@@ -125,25 +124,25 @@ export class Handler {
                 throw invalid instanceof HttpError
                   ? invalid
                   : HttpResponder.badRequest.message(
-                      invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`
+                      invalid || `BadRequest (Invalid ${actionParam?.type.toString()}: ${actionParam?.name})`
                     )();
               }
             };
 
             if (typeof value === "string") {
-              if (actionParam.options.delimiter) {
+              if (actionParam?.options.delimiter) {
                 value = value.split(actionParam.options.delimiter);
               }
             }
 
-            if (actionParam.options.array === true) {
+            if (actionParam?.options.array === true) {
               value = Array.isArray(value) ? value : [value];
 
               for (const iterVal of value) {
                 check(iterVal);
               }
 
-              if (actionParam.options.required && !value.length) {
+              if (actionParam?.options.required && !value.length) {
                 value = null;
               }
             } else {
@@ -151,21 +150,21 @@ export class Handler {
             }
           } else if (Array.prototype === e.prototype) {
             if (typeof value === "string") {
-              if (actionParam.options.delimiter) {
+              if (actionParam?.options.delimiter) {
                 value = value.split(actionParam.options.delimiter);
               } else {
                 value = [value];
               }
             }
 
-            if (actionParam.options.type) {
-              value = value.map((v: any) => this.paramTransformer(v, actionParam.options.type));
+            if (actionParam?.options.type) {
+              value = value.map((v: any) => this.paramTransformer(v, actionParam?.options.type));
             }
           } else {
             value = this.paramTransformer(value, e);
           }
 
-          if (actionParam.options.validate) {
+          if (actionParam?.options.validate) {
             if (actionParam.options.validate(value) === false) {
               throw new Error("Validation Failed.");
             }
@@ -174,7 +173,7 @@ export class Handler {
       } catch (err) {
         if (err instanceof HttpError) {
           throw err;
-        } else if (typeof actionParam.options.invalid === "function") {
+        } else if (typeof actionParam?.options.invalid === "function") {
           let invalid: any = actionParam.options.invalid;
 
           if (typeof invalid === "function") {
@@ -191,11 +190,14 @@ export class Handler {
         }
       }
 
-      if (hasOwnProperty(actionParam.options, "default") && value === undefined) {
+      if (actionParam?.options && "default" in actionParam.options && value === undefined) {
         value = actionParam.options.default;
       }
 
-      if (actionParam.options.required && (value === null || typeof value === "undefined" || (typeof value === "string" && value === ""))) {
+      if (
+        actionParam?.options.required &&
+        (value === null || typeof value === "undefined" || (typeof value === "string" && value === ""))
+      ) {
         if (typeof actionParam.options.missing === "function") {
           throw actionParam.options.missing();
         } else {
@@ -215,15 +217,15 @@ export class Handler {
       let thrown = false;
 
       const actionParams: RouteParamMetadataArgs[] = (() => {
-        if (controller[this.symActionParams] && controller[this.symActionParams][route.method]) {
+        if ((controller as any)[this.symActionParams] && (controller as any)[this.symActionParams][route.method]) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-          return controller[this.symActionParams][route.method];
+          return (controller as any)[this.symActionParams][route.method];
         }
 
         const aps = Metadata.getStorage().routeParams.filter(rp => rp.target === route.target && rp.method === route.method);
 
-        controller[this.symActionParams] = controller[this.symActionParams] || {};
-        controller[this.symActionParams][route.method] = aps;
+        (controller as any)[this.symActionParams] = (controller as any)[this.symActionParams] || {};
+        (controller as any)[this.symActionParams][route.method] = aps;
 
         return aps;
       })();
@@ -231,7 +233,7 @@ export class Handler {
       try {
         const params = this.getActionParams(req, route, actionParams);
 
-        resp = await controller[route.method](...params);
+        resp = await (controller as any)[route.method](...params);
       } catch (err) {
         thrown = true;
         resp = err;
@@ -306,7 +308,7 @@ export class Handler {
   }
 
   public static errorHandler(controller: HttpController, cyan: Cyan): ErrorHandlerFunction {
-    return (err: Error, req: CyanRequest, res: CyanResponse, next: NextFunction) => {
+    return ((err: Error, req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       if (err instanceof HttpResponse || err instanceof HttpError) {
         next(err);
         return;
@@ -322,11 +324,11 @@ export class Handler {
         .catch((err: Error) => {
           next(err);
         });
-    };
+    }) as ErrorHandlerFunction;
   }
 
   public static httpErrorHandler(controller: HttpController): ErrorHandlerFunction {
-    return (err: HttpError, req: CyanRequest, res: CyanResponse, next: NextFunction) => {
+    return ((err: HttpError, req: CyanRequest, res: CyanResponse, next: NextFunction) => {
       if (res.finalized) {
         next(err);
         return;
@@ -340,7 +342,7 @@ export class Handler {
         .catch((err: Error) => {
           next(err);
         });
-    };
+    }) as ErrorHandlerFunction;
   }
 
   public static accessLogger(name: string): HandlerFunction {

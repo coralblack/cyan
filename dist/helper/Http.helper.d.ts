@@ -1,6 +1,6 @@
 import { HttpMethod } from "../http/Http.method";
 import { Headers as HttpHeaders, ReqData as HttpReqData, ReqParams as HttpReqParams } from "../types/Http";
-export declare type HttpResponseType = "arraybuffer" | "document" | "json" | "text" | "stream";
+export type HttpResponseType = "arraybuffer" | "document" | "json" | "text" | "stream";
 export interface HttpCommonRequestPayload {
     url: string;
     baseUrl?: string;
@@ -34,9 +34,9 @@ export interface HttpRawRequestPayload extends HttpRequestPayload, HttpGetReques
 }
 export interface HttpRequestedPayload {
     method: HttpMethod;
-    url: string;
+    url?: string;
     path: string;
-    headers: HttpHeaders;
+    headers?: HttpHeaders;
 }
 export interface HttpRequestResponse<T> {
     body: T;

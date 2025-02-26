@@ -30,7 +30,7 @@ export class TransactionScope {
     return res;
   }
 
-  getRepository<T>(repository: ClassType<T>): Repository<T> {
+  getRepository<T extends Record<string | symbol, any>>(repository: ClassType<T>): Repository<T> {
     return new Repository<T>(this, repository);
   }
 }
@@ -73,9 +73,9 @@ export class ConnectionManager {
 
       opts.options = { bindObjectAsString: true };
 
-      if (settings.timezone) {
+      if (settings.timezone && opts.pool) {
         opts.pool.afterCreate = function (connection: any, callback: any) {
-          connection.query(`SET time_zone = '${settings.timezone.replace(/'/g, "\\'")}';`, err => {
+          connection.query(`SET time_zone = '${settings.timezone?.replace(/'/g, "\\'")}';`, (err: Error) => {
             callback(err, connection);
           });
         };
@@ -114,7 +114,7 @@ export class ConnectionManager {
     });
   }
 
-  getRepository<T>(entity: ClassType<T>): Repository<T> {
+  getRepository<T extends Record<string | symbol, any>>(entity: ClassType<T>): Repository<T> {
     return new Repository<T>(this.kx, entity);
   }
 }

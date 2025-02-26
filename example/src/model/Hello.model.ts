@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { assert } from "console";
+import assert from "assert";
 import {
   Column,
   Entity,
@@ -589,10 +589,10 @@ export class HelloModel extends BaseModel {
 
       const found8 = await repo.find({
         where: {
-          name: (k) => ({
+          name: k => ({
             query: `MATCH(${k}) AGAINST(? IN BOOLEAN MODE)`,
-            bindings: [`+${searchKeyword}`]
-          })
+            bindings: [`+${searchKeyword}`],
+          }),
         },
       });
 
@@ -649,7 +649,7 @@ export class HelloModel extends BaseModel {
       assert(latestFoo.bar.baz.foz.id === latestFoz.id, "latestFoo.bar.baz.foz.id");
       assert(typeof latestFoo.bar.baz.foz.id === "bigint", "typeof latestFoo.bar.baz.foz.id");
 
-      const helloEntities = await repo.find({ order: { createdAt: "ASC" }, limit: 2 });
+      const helloEntities = await repo.find({ limit: 2 });
       const orWhere1 = await repo.find({ where: { $OR: { id: helloEntities[0].id, name: helloEntities[1].name } } });
       const orWhere2 = await repo.find({ where: { name: { $OR: [{ LIKE: helloEntities[0].name }, { LIKE: helloEntities[1].name }] } } });
       const andWhere1 = await repo.find({ where: { $AND: { id: helloEntities[0].id, name: helloEntities[0].name } } });
@@ -1038,8 +1038,7 @@ export class HelloModel extends BaseModel {
 
     assert(
       pkAfterFound.id === BigInt(pkBefore),
-      "pkAfterFound.id === pkBefore",
-      `pkAfterFound.id: ${pkAfterFound.id}, pkBefore: ${pkBefore as bigint}`
+      `pkAfterFound.id === pkBefore (pkAfterFound.id: ${pkAfterFound.id}, pkBefore: ${pkBefore as bigint})`
     );
     assert(pkAfterFound.name1 === "UPSERT1-NAME1", "pkAfterFound.name1 === 'UPSERT1-NAME1'");
     assert(pkAfterFound.name2 === "UPSERT1-NAME2", "pkAfterFound.name2 === 'UPSERT1-NAME2'");

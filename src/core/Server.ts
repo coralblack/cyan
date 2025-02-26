@@ -46,31 +46,31 @@ export class Server {
   }
 
   public listen(...args: any[]): any {
-    return this._server.listen.call(this._server, ...args);
+    return (this._server.listen.call as (...args: any[]) => any)(this._server, ...args);
   }
 
   public get(...args: any[]): any {
-    return this._server.get.call(this._server, ...args);
+    return (this._server.get.call as (...args: any[]) => any)(this._server, ...args);
   }
 
   public post(...args: any[]): any {
-    return this._server.post.call(this._server, ...args);
+    return (this._server.post.call as (...args: any[]) => any)(this._server, ...args);
   }
 
   public put(...args: any[]): any {
-    return this._server.put.call(this._server, ...args);
+    return (this._server.put.call as (...args: any[]) => any)(this._server, ...args);
   }
 
   public patch(...args: any[]): any {
-    return this._server.patch.call(this._server, ...args);
+    return (this._server.patch.call as (...args: any[]) => any)(this._server, ...args);
   }
 
   public delete(...args: any[]): any {
-    return this._server.delete.call(this._server, ...args);
+    return (this._server.delete.call as (...args: any[]) => any)(this._server, ...args);
   }
 
   public use(...args: any[]): any {
-    return this._server.use.call(this._server, ...args);
+    return (this._server.use.call as (...args: any[]) => any)(this._server, ...args);
   }
 
   public enable(setting: string): any {

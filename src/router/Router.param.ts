@@ -50,8 +50,12 @@ export interface CyanRequestContextParamOptions {
   validate?: (v: any) => boolean;
 }
 
-function Param(type: ParamType, name: string, options: ParamOptions | SystemParamOptions | ContextParamOptions): ParameterDecorator {
-  return function ParamInner(target: any, method: string, index: number) {
+function Param(
+  type: ParamType,
+  name: string | undefined,
+  options: ParamOptions | SystemParamOptions | ContextParamOptions
+): ParameterDecorator {
+  return function ParamInner(target: any, method: string | symbol | undefined, index: number) {
     Metadata.getStorage().routeParams.push({
       target: target.constructor,
       method,
@@ -80,9 +84,9 @@ export function QueryParam(name: string, options?: ParamOptions): ParameterDecor
 }
 
 export function SystemParam(options: SystemParamOptions): ParameterDecorator {
-  return Param(ParamType.System, null, options);
+  return Param(ParamType.System, undefined, options);
 }
 
 export function ContextParam(options: ContextParamOptions): ParameterDecorator {
-  return Param(ParamType.Context, null, options);
+  return Param(ParamType.Context, undefined, options);
 }

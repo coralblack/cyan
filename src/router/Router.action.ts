@@ -4,7 +4,7 @@ import { HttpMethod } from "../http/Http.method";
 export interface RouteOptions {}
 
 function Route(action: HttpMethod, path: string, options: RouteOptions): MethodDecorator {
-  return function RouteInner(target: any, method: string) {
+  return function RouteInner(target: any, method: string | symbol) {
     const params = Reflect.getMetadata("design:paramtypes", target, method);
 
     Metadata.getStorage().routes.push({

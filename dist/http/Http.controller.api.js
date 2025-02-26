@@ -25,7 +25,7 @@ class ApiController extends Http_controller_1.Controller {
     }
     async onError(error, req, cyan) {
         const resp = await super.onError(error, req, cyan);
-        const name = (0, builtin_1.hasOwnProperty)(error, "originalError") ? (0, builtin_1.getConstructorName)(error.originalError) : null;
+        const name = "originalError" in error ? (0, builtin_1.getConstructorName)(error.originalError) : null;
         const message = `An error has occurred.${name ? ` (${name})` : ""}`;
         resp.content = {
             result: false,

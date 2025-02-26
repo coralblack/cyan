@@ -70,7 +70,7 @@ export interface SwaggerOptions {
         fileName?: string;
     };
 }
-export declare type SwaggerPathType = {
+export type SwaggerPathType = {
     schema: string;
 } | {
     types: string[];

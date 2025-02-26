@@ -37,17 +37,21 @@ interface RelationalRepositoryInfo<T = any> {
 export interface RepositoryInfo<T = any> {
   target: ClassType<T>;
   tableName: string;
-  columns: Array<string>;
-  fields: { [key: string]: EntityColumnOptions };
-  primaryColumns: Array<string>;
-  criteriaColumns: Array<string>;
-  oneToOneRelationColumns: Array<string>;
-  oneToOneRelations: { [key: string]: RelationalRepositoryInfo };
+  columns: Array<string | symbol>;
+  fields: { [key: string | symbol]: EntityColumnOptions };
+  primaryColumns: Array<string | symbol>;
+  criteriaColumns: Array<string | symbol>;
+  oneToOneRelationColumns: Array<string | symbol>;
+  oneToOneRelations: { [key: string | symbol]: RelationalRepositoryInfo };
 }
 
 export const symRepositoryInfo = Symbol();
 
-export class Repository<T> {
+interface HasSymRepositoryInfo<T> {
+  [symRepositoryInfo]?: RepositoryInfo<T>;
+}
+
+export class Repository<T extends Record<string | symbol, any>> {
   private readonly repositoryInfo: RepositoryInfo<T>;
   private readonly kx: Knex;
 
@@ -56,7 +60,7 @@ export class Repository<T> {
     this.kx = scopeOrKnex instanceof TransactionScope ? scopeOrKnex.kx : scopeOrKnex;
   }
 
-  static getRepositoryInfo<T>(entity: ClassType<T>): RepositoryInfo<T> {
+  static getRepositoryInfo<T>(entity: ClassType<T> & HasSymRepositoryInfo<T>): RepositoryInfo<T> {
     if (entity[symRepositoryInfo]) return entity[symRepositoryInfo];
 
     const info: RepositoryInfo<T> = {} as any;
@@ -75,9 +79,9 @@ export class Repository<T> {
     }
 
     (info.target = metadata.target),
-      (info.tableName = metadata.options.name),
+      (info.tableName = metadata.options?.name),
       (info.columns = columns.map(e => e.propertyKey)),
-      (info.fields = columns.reduce((p, e) => {
+      (info.fields = columns.reduce<Record<string | symbol, EntityColumnOptions>>((p, e) => {
         p[e.propertyKey] = e.options;
         return p;
       }, {})),
@@ -86,15 +90,15 @@ export class Repository<T> {
       (info.oneToOneRelationColumns = relations.filter(e => e.type === EntityRelationType.OneToOne).map(e => e.propertyKey)),
       (info.oneToOneRelations = relations
         .filter(e => e.type === EntityRelationType.OneToOne)
-        .reduce((p, e) => {
-          p[e.propertyKey] = {
+        .reduce<Record<string | symbol, { options: EntityRelationColumnOptions; repository: RepositoryInfo<T> }>>((output, relation) => {
+          output[relation.propertyKey] = {
             options: {
-              ...e.options,
-              name: Array.isArray(e.options.name) ? e.options.name : [e.options.name],
+              ...relation.options,
+              name: Array.isArray(relation.options.name) ? relation.options.name : [relation.options.name],
             },
-            repository: Repository.getRepositoryInfo(e.options.target),
+            repository: Repository.getRepositoryInfo(relation.options.target),
           };
-          return p;
+          return output;
         }, {}));
 
     return info;
@@ -105,22 +109,22 @@ export class Repository<T> {
       const kx = trx?.kx || this.kx;
       const [res] = await kx
         .insert(
-          this.repositoryInfo.columns.reduce((p, e) => {
+          this.repositoryInfo.columns.reduce<Record<any, any>>((output, columnName) => {
             const [key, val] = (() => {
-              const column = this.repositoryInfo.fields[e];
+              const column = this.repositoryInfo.fields[columnName];
 
-              if (hasOwnProperty(column, "name")) {
+              if ("name" in column) {
                 const key = column.name;
                 const val = ((v): any => {
                   if (typeof v === "function") return kx.raw(v(key));
-                  else if (v === undefined && column.default) {
+                  else if (v === undefined && column && "default" in column && column.default) {
                     return kx.raw(column.default(key));
                   } else return v;
-                })(entity[e]);
+                })(entity[columnName]);
 
                 return [key, val];
               } else {
-                if (hasOwnProperty(entity, e)) {
+                if (hasOwnProperty(entity, columnName)) {
                   throw new Error(`Invalid Usage: Save with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
                 } else {
                   return [null, null];
@@ -128,10 +132,10 @@ export class Repository<T> {
               }
             })();
 
-            if (key === null) return p;
-            p[key] = val;
+            if (key === null) return output;
+            output[key] = val;
 
-            return p;
+            return output;
           }, {})
         )
         .into(this.repositoryInfo.tableName);
@@ -148,7 +152,7 @@ export class Repository<T> {
 
       return res || lid.seq;
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -165,12 +169,12 @@ export class Repository<T> {
       const insertedIds: InsertId[] = [];
 
       const newEntities = entities.map(entity => {
-        return this.repositoryInfo.columns.reduce((p, column) => {
+        return this.repositoryInfo.columns.reduce<Record<string, any>>((output, column) => {
           const field = this.repositoryInfo.fields[column];
           const isPrimaryColumn = this.repositoryInfo.primaryColumns[0] === column;
 
           if (!field) {
-            throw new Error(`Invalid Usage: Save with column(${column}) not allowed. `);
+            throw new Error(`Invalid Usage: Save with column(${String(column)}) not allowed. `);
           }
 
           const [key, val] = (() => {
@@ -195,14 +199,14 @@ export class Repository<T> {
             }
           })();
 
-          if (key === null) return p;
+          if (key === null) return output;
           if (isPrimaryColumn) {
             insertedIds.push(val);
           }
 
-          p[key] = val;
+          output[key] = val;
 
-          return p;
+          return output;
         }, {});
       });
 
@@ -210,7 +214,7 @@ export class Repository<T> {
 
       return insertedIds;
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -221,20 +225,20 @@ export class Repository<T> {
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
       this.repositoryInfo.primaryColumns.forEach(e => {
-        conditions[e] = entity[e];
+        (conditions as any)[e] = entity[e];
       });
 
       kx = this.where(kx, conditions);
       kx = kx.update(
-        ((options?.update || this.repositoryInfo.columns) as any).reduce((p, e) => {
-          const column = this.repositoryInfo.fields[e];
+        (options?.update || this.repositoryInfo.columns).reduce<Record<string, any>>((output, columnName) => {
+          const column = this.repositoryInfo.fields[columnName];
 
-          if (hasOwnProperty(column, "name")) {
-            p[column.name] = entity[e];
+          if ("name" in column) {
+            output[column.name] = entity[columnName];
           } else {
             throw new Error(`Invalid Usage: Update with raw column not allowed. (${column.raw(this.repositoryInfo.tableName)})`);
           }
-          return p;
+          return output;
         }, {})
       );
 
@@ -247,7 +251,7 @@ export class Repository<T> {
 
       return Number(affected);
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -275,7 +279,7 @@ export class Repository<T> {
         .filter(e => e);
 
       if (!primaryFieldName) {
-        throw new Error(`Invalid Usage: UpdateBulk with primary column(${primaryColumn}) not allowed.`);
+        throw new Error(`Invalid Usage: UpdateBulk with primary column(${String(primaryColumn)}) not allowed.`);
       } else if (updateFieldNames.length !== options.update.length) {
         throw new Error(`Invalid Usage: UpdateBulk with column(${options.update.join(", ")}) not allowed.`);
       }
@@ -283,7 +287,7 @@ export class Repository<T> {
       const entityIds = entities.map(e => e[primaryColumn]);
       const findWhere: FindConditions<T> = {};
 
-      findWhere[primaryColumn] = entityIds;
+      (findWhere as any)[primaryColumn] = entityIds;
 
       const ids = (await this.select({ where: findWhere, forUpdate: true, select: [primaryColumn as keyof T] }, trx)).map(
         e => e[primaryColumn]
@@ -291,14 +295,14 @@ export class Repository<T> {
 
       const filteredEntities = entities.filter(e => ids.includes(e[primaryColumn]));
       const updatedEntities = filteredEntities.map(entity => {
-        return this.repositoryInfo.columns.reduce((p, column) => {
+        return this.repositoryInfo.columns.reduce<Record<string, any>>((p, column) => {
           const field = this.repositoryInfo.fields[column];
 
           if (!field) {
-            throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) not allowed.`);
+            throw new Error(`Invalid Usage: UpdateBulk with raw column(${String(column)}) not allowed.`);
           } else if ("name" in field) {
             if (entity[column] === undefined) {
-              throw new Error(`Invalid Usage: UpdateBulk with raw column(${column}) is undefined.`);
+              throw new Error(`Invalid Usage: UpdateBulk with raw column(${String(column)}) is undefined.`);
             }
 
             p[field.name] = entity[column];
@@ -313,7 +317,7 @@ export class Repository<T> {
 
       return updatedEntities.length;
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -383,7 +387,7 @@ export class Repository<T> {
 
       return res || lid.seq;
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -394,7 +398,7 @@ export class Repository<T> {
       const conditions: FindConditions<T> = Object.assign({}, options?.where || {});
 
       this.repositoryInfo.primaryColumns.forEach(e => {
-        conditions[e] = entity[e];
+        (conditions as any)[e] = entity[e];
       });
 
       kx = this.where(kx, conditions);
@@ -409,7 +413,7 @@ export class Repository<T> {
 
       return Number(affected);
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -419,7 +423,7 @@ export class Repository<T> {
 
       return res || null;
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -429,7 +433,7 @@ export class Repository<T> {
 
       return res;
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -441,7 +445,7 @@ export class Repository<T> {
       const limit = BigInt(rpp);
       const offset: bigint = (BigInt(page) - BigInt(1)) * limit;
 
-      const count = (await this.where(kx.from(this.repositoryInfo.tableName), options.where || {}).count("* as cnt"))[0].cnt;
+      const count = (await this.where(kx.from(this.repositoryInfo.tableName), options?.where || {}).count("* as cnt"))[0].cnt;
 
       const items = await this.find({ ...options, limit, offset }, trx);
 
@@ -452,7 +456,7 @@ export class Repository<T> {
         items,
       };
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -460,7 +464,7 @@ export class Repository<T> {
     try {
       return this.prepareQuery(options, trx).stream();
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -472,21 +476,21 @@ export class Repository<T> {
         stream.on("data", row => streamFn.onData(this.mapping(row)));
 
         if (streamFn.onStreamEnd) {
-          stream.on("end", () => streamFn.onStreamEnd());
+          stream.on("end", () => streamFn.onStreamEnd?.());
         }
       });
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
-  private prepareQuery(options: FindOptions<T>, trx?: TransactionScope): Knex.QueryBuilder {
+  private prepareQuery(options?: FindOptions<T>, trx?: TransactionScope): Knex.QueryBuilder {
     try {
       const knex = trx?.kx || this.kx;
       const joinAliases: { [key: string]: string } = {};
       let kx = knex.from(this.repositoryInfo.tableName);
 
-      const selectColumns: any[] = options.select || this.repositoryInfo.columns;
+      const selectColumns: any[] = options?.select || this.repositoryInfo.columns;
       const select = selectColumns
         .filter(x => this.repositoryInfo.columns.indexOf(x) !== -1)
         .map(alias => {
@@ -498,33 +502,34 @@ export class Repository<T> {
             kx.select(knex.raw(`${column.raw(this.repositoryInfo.tableName)} as ${alias}`));
           }
         })
-        .filter(x => x);
+        .filter(x => x)
+        .map(e => e!);
 
       kx = kx.select(select);
 
-      if (typeof options.distinct === "boolean" && options.distinct) {
+      if (typeof options?.distinct === "boolean" && options.distinct) {
         kx.distinct(select);
       }
 
-      if (options.forUpdate) {
+      if (options?.forUpdate) {
         kx = kx.forUpdate();
       }
 
       // Join
-      kx = this.join(kx, options.select, joinAliases);
+      kx = this.join(kx, options?.select, joinAliases);
 
       // Query
-      if (options.where) {
+      if (options?.where) {
         kx = this.where(kx, options.where);
       }
 
-      const joinAliasesProp = Object.keys(joinAliases).reduce((p, e) => {
-        p[`.${e.split(joinSeparator).join(".")}`] = joinAliases[e];
-        return p;
+      const joinAliasesProp = Object.keys(joinAliases).reduce<Record<string, string>>((output, joinAliasKey) => {
+        output[`.${joinAliasKey.split(joinSeparator).join(".")}`] = joinAliases[joinAliasKey];
+        return output;
       }, {});
 
       // Sort
-      if (options.order) {
+      if (options?.order) {
         const orderBy = Array.isArray(options.order) ? options.order : [options.order];
 
         for (let i = 0; i < orderBy.length; i++) {
@@ -533,21 +538,21 @@ export class Repository<T> {
       }
 
       // Pagination
-      if (options.offset) kx = kx.offset(String(options.offset) as any);
-      if (options.limit) kx = kx.limit(String(options.limit) as any);
+      if (options?.offset) kx = kx.offset(String(options.offset) as any);
+      if (options?.limit) kx = kx.limit(String(options.limit) as any);
 
-      if (options.debug) {
+      if (options?.debug) {
         // eslint-disable-next-line no-console
         console.log(">", kx.toSQL());
       }
 
       return kx;
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
-  private async select(options: FindOptions<T>, trx?: TransactionScope): Promise<T[]> {
+  private async select(options?: FindOptions<T>, trx?: TransactionScope): Promise<T[]> {
     try {
       const rows = await this.prepareQuery(options, trx);
 
@@ -555,7 +560,7 @@ export class Repository<T> {
 
       return rows.map((row: any) => this.mapping(row));
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -581,7 +586,7 @@ export class Repository<T> {
 
       return BigInt(res[0].cnt || 0);
     } catch (err) {
-      throw TraceableError(err);
+      throw TraceableError(err as Error);
     }
   }
 
@@ -589,9 +594,9 @@ export class Repository<T> {
     kx: any,
     rec: number,
     fromTable: string,
-    propertyKey: string,
+    propertyKey: string | symbol,
     to: RelationalRepositoryInfo,
-    aliases: { [key: string]: string }
+    aliases?: { [key: string | symbol]: string }
   ) {
     const kxx = kx;
     const fromColumns = to.options.name;
@@ -603,14 +608,14 @@ export class Repository<T> {
       const column = to.repository.fields[col];
 
       if (hasOwnProperty(column, "name")) {
-        return `${toTableNameAlias}.${column.name} as ${propertyKey}${joinSeparator}${col}`;
+        return `${toTableNameAlias}.${column.name} as ${String(propertyKey)}${joinSeparator}${String(col)}`;
       } else {
         throw new Error(`Invalid Usage: Join with raw column not allowed. (${column.raw(toTableNameAlias)})`);
       }
     });
 
     // Assign alias
-    aliases[propertyKey] = toTableNameAlias;
+    if (aliases) aliases[propertyKey] = toTableNameAlias;
 
     if (fromColumns.length !== toColumns.length) {
       throw new Error(
@@ -618,11 +623,11 @@ export class Repository<T> {
       );
     }
 
-    kxx.leftOuterJoin(toTable, function () {
+    kxx.leftOuterJoin(toTable, function (this: any) {
       for (let i = 0; i < fromColumns.length; i++) {
         const column = toFields[toColumns[i]];
 
-        if (hasOwnProperty(column, "name")) {
+        if ("name" in column) {
           this.on(`${fromTable}.${fromColumns[i]}`, `${toTableNameAlias}.${column.name}`);
         } else {
           throw new Error(`Invalid Usage: Join with raw column not allowed. (${column.raw(fromTable)})`);
@@ -638,7 +643,7 @@ export class Repository<T> {
         kxx,
         rec * 10 + idx++,
         toTableNameAlias,
-        `${propertyKey}${joinSeparator}${relationColumn}`,
+        `${String(propertyKey)}${joinSeparator}${String(relationColumn)}`,
         to.repository.oneToOneRelations[relationColumn],
         aliases
       );
@@ -647,7 +652,7 @@ export class Repository<T> {
     return kxx;
   }
 
-  private join(kx: any, selectColumns: Array<keyof T>, aliases: { [key: string]: string }): any {
+  private join(kx: any, selectColumns?: Array<keyof T>, aliases?: { [key: string]: string }): any {
     const kxx = kx;
     let idx = 0;
 
@@ -671,32 +676,34 @@ export class Repository<T> {
     /* eslint-disable no-prototype-builtins, @typescript-eslint/no-this-alias */
     let kxx = kx;
 
+    if (!where) return kxx;
+
     Object.keys(where).forEach(ke => {
       if (ke === "$AND" || ke === "$OR") {
         const that = this;
 
-        if (Array.isArray(where[ke])) {
+        if (Array.isArray(where?.[ke])) {
           if (ke === "$AND") {
-            where[ke].forEach(chWhere => {
-              kxx = kx.andWhere(function () {
+            (where[ke] as any).forEach((chWhere: any) => {
+              kxx = kx.andWhere(function (this: any) {
                 that.where(this, chWhere, false);
               });
             });
           } else if (ke === "$OR") {
-            where[ke].forEach(chWhere => {
-              kxx = kx.orWhere(function () {
+            (where[ke] as any).forEach((chWhere: any) => {
+              kxx = kx.orWhere(function (this: any) {
                 that.where(this, chWhere, true);
               });
             });
           }
         } else {
           if (ke === "$AND") {
-            kx.andWhere(function () {
-              that.where(this, where[ke], false);
+            kx.andWhere(function (this: any) {
+              that.where(this, where?.[ke] as any, false);
             });
           } else if (ke === "$OR") {
-            kx.orWhere(function () {
-              that.where(this, where[ke], true);
+            kx.orWhere(function (this: any) {
+              that.where(this, where?.[ke] as any, true);
             });
           }
         }
@@ -723,7 +730,7 @@ export class Repository<T> {
         const k = hasOwnProperty(column, "name")
           ? `${this.repositoryInfo.tableName}.${column.name}`
           : column.raw(this.repositoryInfo.tableName);
-        const v = where[ke];
+        const v = (where as any)?.[ke];
 
         if (Array.isArray(v)) {
           if (!raw) {
@@ -735,10 +742,11 @@ export class Repository<T> {
         } else if (isManipulatable(v) || isConditional(v)) {
           const that = this;
 
-          kxx[orWhere ? "orWhere" : "andWhere"](function () {
+          kxx[orWhere ? "orWhere" : "andWhere"](function (this: any) {
             Object.keys(v).forEach(cond => {
               if (cond === "$AND" || cond === "$OR") {
-                this[cond === "$OR" ? "orWhere" : "andWhere"](function () {
+                // eslint-disable-next-line prefer-arrow-callback
+                this[cond === "$OR" ? "orWhere" : "andWhere"](function (this: any) {
                   v[cond].forEach((vv: any) => {
                     that.where(this, { [ke]: vv }, cond === "$OR");
                   });
@@ -781,7 +789,7 @@ export class Repository<T> {
           if (!raw) {
             kxx[orWhere ? "orWhere" : "where"](k, v);
           } else {
-            kxx[orWhere ? "orWhere" : "andWhere"](function () {
+            kxx[orWhere ? "orWhere" : "andWhere"](function (this: any) {
               this.whereRaw(`${k} = ?`, [v]);
             });
           }
@@ -818,7 +826,7 @@ export class Repository<T> {
     Object.keys(order).forEach(ke => {
       const column = this.repositoryInfo.fields[ke];
       const oto = !column && this.repositoryInfo.oneToOneRelations[ke];
-      const v = order[ke];
+      const v = (order as any)[ke];
 
       if (oto) {
         throw new Error("Invalid Usage: Sorting by joining column must be used delegated function.)");
@@ -847,16 +855,16 @@ export class Repository<T> {
       (repositoryInfo || this.repositoryInfo).target,
       Object.keys(row)
         .filter(e => !prefix || e.startsWith(`${prefix}${joinSeparator}`))
-        .reduce((p, c) => {
+        .reduce<Record<string, any>>((output, c) => {
           const col = !prefix ? c : c.substring(prefix.length + 1);
 
           if (!col.includes(joinSeparator)) {
-            p[col] = row[c];
+            output[col] = row[c];
           } else {
             const [join] = col.split(joinSeparator);
 
-            if (!p[join]) {
-              p[join] = this.mapping(
+            if (!output[join]) {
+              output[join] = this.mapping(
                 row,
                 (repositoryInfo || this.repositoryInfo).oneToOneRelations[join].repository,
                 !prefix ? join : `${prefix}_${join}`
@@ -864,7 +872,7 @@ export class Repository<T> {
             }
           }
 
-          return p;
+          return output;
         }, {})
     );
 

@@ -15,17 +15,17 @@ class HttpHelper {
             if (payload.debug === true) {
                 console.debug("> HttpHelper.request, Request", payload);
             }
-            const e = await axios_1.default.request(payload);
+            const reqResponse = await axios_1.default.request(payload);
             const resp = {};
-            resp.body = e.data;
-            resp.status = e.status;
-            resp.statusText = e.statusText;
-            resp.headers = e.headers;
+            resp.body = reqResponse.data;
+            resp.status = reqResponse.status;
+            resp.statusText = reqResponse.statusText;
+            resp.headers = reqResponse.headers;
             resp.request = {
-                method: String(e.config.method).toUpperCase(),
-                url: e.config.url,
-                path: e.request.path,
-                headers: e.config.headers,
+                method: String(reqResponse.config.method).toUpperCase(),
+                url: reqResponse.config.url,
+                path: reqResponse.request.path,
+                headers: reqResponse.config.headers,
             };
             if (payload.debug === true) {
                 console.debug("> HttpHelper.request, Succeed Response", {
@@ -36,21 +36,21 @@ class HttpHelper {
             }
             return resp;
         }
-        catch (e) {
+        catch (err) {
             const resp = {};
-            if (!e.response) {
-                throw e;
+            if (!(err === null || err === void 0 ? void 0 : err.response)) {
+                throw err;
             }
-            resp.body = e.response.data;
-            resp.status = e.response.status;
-            resp.statusText = e.response.statusText;
-            resp.headers = e.response.headers;
-            resp.errorMessage = e.message;
+            resp.body = err.response.data;
+            resp.status = err.response.status;
+            resp.statusText = err.response.statusText;
+            resp.headers = err.response.headers;
+            resp.errorMessage = err.message;
             resp.request = {
-                method: e.config.method,
-                url: e.config.url,
-                path: e.request.path,
-                headers: e.config.headers,
+                method: err.config.method,
+                url: err.config.url,
+                path: err.request.path,
+                headers: err.config.headers,
             };
             if (payload.debug === true) {
                 console.debug("> HttpHelper.request, Failed Response", {

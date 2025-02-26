@@ -38,7 +38,7 @@ export class ApiController extends Controller {
   async onError(error: Error, req: CyanRequest, cyan: Cyan): Promise<HttpResponse> {
     const resp = await super.onError(error, req, cyan);
 
-    const name = hasOwnProperty(error, "originalError") ? getConstructorName(error.originalError) : null;
+    const name = "originalError" in error ? getConstructorName(error.originalError as any) : null;
     const message = `An error has occurred.${name ? ` (${name})` : ""}`;
 
     resp.content = {

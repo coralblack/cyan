@@ -6,7 +6,7 @@ export declare enum EntityColumnType {
     Primary = "PRIMARY",
     Column = "COLUMN"
 }
-export declare type EntityColumnOptions = EntityTableColumnOptions | EntityRawColumnOptions;
+export type EntityColumnOptions = EntityTableColumnOptions | EntityRawColumnOptions;
 export interface EntityTableColumnOptions {
     name: string;
     default?: (tableName: string) => string;

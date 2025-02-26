@@ -1,4 +1,4 @@
-import { ApiTagOptions, SwaggerModelMetadata, SwaggerOperationMetadata, SwaggerPropertyMetadata, SwaggerResponseMetadata } from "src/swagger";
+import { ApiTagOptions, SwaggerModelMetadata, SwaggerOperationMetadata, SwaggerPropertyMetadata, SwaggerResponseMetadata } from "src/swagger/Swagger";
 import { EntityColumnMetadataArgs, EntityMetadataArgs, EntityRelationMetadataArgs, MiddlewareMetadataArgs, RouteMetadataArgs, RouteParamMetadataArgs, TaskMetadataArgs } from "../types/MetadataArgs";
 export declare class MetadataStorage {
     readonly routes: RouteMetadataArgs[];

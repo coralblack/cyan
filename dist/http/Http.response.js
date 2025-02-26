@@ -23,10 +23,12 @@ class HttpResponse {
         return this;
     }
     setHeader(name, value) {
+        if (!this.headers)
+            this.headers = {};
         this.headers[name] = value;
     }
     setHeaders(headers) {
-        this.headers = Object.assign(this.headers, headers);
+        this.headers = Object.assign(this.headers || {}, headers);
     }
 }
 exports.HttpResponse = HttpResponse;

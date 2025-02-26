@@ -56,9 +56,10 @@ class ConnectionManager {
         if (settings.driver === Model_1.ModelConnectivitySettingsDriver.MySQL) {
             delete opts.connection.timezone;
             opts.options = { bindObjectAsString: true };
-            if (settings.timezone) {
+            if (settings.timezone && opts.pool) {
                 opts.pool.afterCreate = function (connection, callback) {
-                    connection.query(`SET time_zone = '${settings.timezone.replace(/'/g, "\\'")}';`, err => {
+                    var _a;
+                    connection.query(`SET time_zone = '${(_a = settings.timezone) === null || _a === void 0 ? void 0 : _a.replace(/'/g, "\\'")}';`, (err) => {
                         callback(err, connection);
                     });
                 };

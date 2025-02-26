@@ -1,9 +1,9 @@
 import { Options, Reference, Schema } from "swagger-jsdoc";
 import { SwaggerOptions } from "./Swagger";
-export declare type RecordSchemaType = {
+export type RecordSchemaType = {
     [key: string]: Schema | Reference;
 } | undefined;
-export declare type BaseSchemaType = Schema | Reference;
+export type BaseSchemaType = Schema | Reference;
 export declare class SwaggerGenerator {
     private options;
     private readonly storage;

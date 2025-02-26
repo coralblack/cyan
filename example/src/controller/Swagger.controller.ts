@@ -1,7 +1,6 @@
 import { AuditedEntity, Department, GetUsersResponse, ProjectStructure, UserRole } from "src/types/swaggerTestType";
 import { BaseController } from "./Base.controller";
 import { BodyParam, Delete, Get, PathParam, Post, Put, QueryParam } from "../../../dist/router";
-
 import { ApiModel, ApiOperation, ApiProperty, ApiResponse, ApiTags } from "../../../dist/swagger";
 
 // DTO Models

@@ -18,7 +18,7 @@ import {
   SystemParam,
 } from "@coralblack/cyan/dist/router";
 import { BaseController } from "./Base.controller";
-import { AuthorizedContext, BasicAuthMiddleware } from "./middleware/BasicAuthMiddleware";
+import { AuthorizedContext, BasicAuthMiddleware, CyanRequestContext } from "./middleware/BasicAuthMiddleware";
 import { HttpError } from "../../../dist/http/Http.error";
 import { HelloService } from "../service/Hello.service";
 
@@ -47,35 +47,6 @@ enum FooBarMix {
 
 class CustomClass {
   constructor(public readonly message: string) {}
-}
-
-class CyanRequestContext {
-  foo: string;
-  bar: number;
-  boo: {
-    innerFoo: string;
-    innerBar?: number;
-  };
-
-  constructor(foo: string, bar: number, boo?: { innerFoo: string; innerBar?: number }) {
-    this.foo = foo;
-    this.bar = bar;
-    this.boo = boo || { innerFoo: "init" };
-  }
-}
-
-class SameFieldWithValidRequestContext {
-  foo: string;
-  bar: number;
-  boo: {
-    innerFoo: string;
-    innerBar?: number;
-  };
-}
-
-class InvalidCyanRequestContext {
-  notFoo: string;
-  notBar: number;
 }
 
 const DEFAULT_VAL = "DEFAULT_VAL";

@@ -1,6 +1,6 @@
 {
   "name": "@coralblack/cyan",
-  "version": "0.1.28",
+  "version": "0.1.29",
   "description": "Node.js, Faster, cheaper, better web framework written in Typescript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -64,15 +64,8 @@
     "nodemon": "^2.0.15",
     "supertest": "^6.2.2",
     "ts-node": "^10.7.0",
-    "tsconfig-paths": "^3.10.1"
-  },
-  "peerDependencies": {
-    "typescript": ">=4.x"
-  },
-  "peerDependenciesMeta": {
-    "typescript": {
-      "optional": true
-    }
+    "tsconfig-paths": "^3.10.1",
+    "typescript": "^4.9.5"
   },
   "husky": {
     "hooks": {

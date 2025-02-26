@@ -1,6 +1,9 @@
 /// <reference types="node" />
 declare type Value = string | number | bigint | boolean | null | Date | Array<string> | Array<number> | Array<Date> | Array<boolean> | Buffer;
-export declare type RawQuery = (k: string) => string | {
+export declare type RawQuery = (k: string) => (string | {
+    query: string;
+    bindings: Value[];
+}) | {
     operand: string;
     bindings: Value[];
 };

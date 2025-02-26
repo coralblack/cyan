@@ -630,7 +630,13 @@ class Repository {
                     });
                 }
                 else if (typeof v === "function") {
-                    kxx[orWhere ? "orWhere" : "where"](this.kx.raw(v(k)));
+                    const result = v(k);
+                    if (result.hasOwnProperty("query")) {
+                        kxx.whereRaw(result.query, result.bindings);
+                    }
+                    else {
+                        kxx[orWhere ? "orWhere" : "where"](this.kx.raw(result));
+                    }
                 }
                 else {
                     if (!raw) {

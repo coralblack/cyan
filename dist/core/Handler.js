@@ -44,15 +44,15 @@ class Handler {
     static beforeHandler(controller) {
         return (req, res, next) => {
             req.httpRequestContext = Http_request_1.HttpRequest.getContext(req);
-            (req.executionContext = {}),
-                controller
-                    .beforeHandle(req.httpRequestContext, req.executionContext)
-                    .then(() => {
-                    next();
-                })
-                    .catch((err) => {
-                    next(err);
-                });
+            req.executionContext = {};
+            controller
+                .beforeHandle(req.httpRequestContext, req.executionContext)
+                .then(() => {
+                next();
+            })
+                .catch((err) => {
+                next(err);
+            });
         };
     }
     static paramTransformer(value, type) {
@@ -133,8 +133,6 @@ class Handler {
                     return req.headers[name];
                 if (type === router_1.ParamType.Body)
                     return (0, lodash_1.get)(req.body, name);
-                if (type === router_1.ParamType.Context)
-                    return req.executionContext;
             })(actionParam.type, actionParam.name);
             try {
                 if (value || typeof value === "boolean" || typeof value === "number") {
@@ -195,11 +193,6 @@ class Handler {
                             throw new Error("Validation Failed.");
                         }
                     }
-                    if (actionParam.type === router_1.ParamType.Context) {
-                        if (!(value instanceof actionParam.options.type)) {
-                            throw new Error("Middleware Type Validation Failed");
-                        }
-                    }
                 }
             }
             catch (err) {
@@ -214,9 +207,6 @@ class Handler {
                     throw invalid instanceof Http_error_1.HttpError
                         ? invalid
                         : Http_response_1.HttpResponder.badRequest.message(invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();
-                }
-                else if (err.message.includes("Middleware")) {
-                    throw Http_response_1.HttpResponder.badRequest.message(`BadRequest (Invalid Middleware ${actionParam.type.toString()})`)();
                 }
                 else {
                     throw Http_response_1.HttpResponder.badRequest.message(actionParam.options.invalid || `BadRequest (Invalid ${actionParam.type.toString()}: ${actionParam.name})`)();

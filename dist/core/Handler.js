@@ -44,8 +44,9 @@ class Handler {
     static beforeHandler(controller) {
         return (req, res, next) => {
             req.httpRequestContext = Http_request_1.HttpRequest.getContext(req);
+            req.executionContext = {};
             controller
-                .beforeHandle(req.httpRequestContext)
+                .beforeHandle(req.httpRequestContext, req.executionContext)
                 .then(() => {
                 next();
             })
@@ -109,6 +110,16 @@ class Handler {
             if ((0, builtin_1.hasOwnProperty)(actionParamFound.options, "type") && actionParamFound.options.type === "REQ") {
                 const { httpRequestContext } = req;
                 return httpRequestContext[actionParamFound.options.attr];
+            }
+            else if ((0, builtin_1.hasOwnProperty)(actionParamFound.options, "type") && actionParamFound.options.type === "CONTEXT") {
+                const { attr, validate } = actionParamFound.options;
+                const contextAttr = req.executionContext[attr];
+                if (validate) {
+                    if (validate(contextAttr) === false) {
+                        throw Http_response_1.HttpResponder.badRequest.message(`BadRequest (Invalid ${actionParamFound.options.type.toString()}: ${attr})`)();
+                    }
+                }
+                return contextAttr;
             }
             else {
                 actionParam = actionParamFound;
@@ -263,7 +274,7 @@ class Handler {
     static afterHandler(controller) {
         return (req, res, next) => {
             controller
-                .afterHandle(req.httpRequestContext, res.preparedResponse)
+                .afterHandle(req.httpRequestContext, res.preparedResponse, req.executionContext)
                 .then(resp => {
                 if (resp instanceof Http_error_1.HttpError) {
                     next(resp);

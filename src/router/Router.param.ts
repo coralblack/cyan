@@ -12,6 +12,8 @@ export interface ParamBaseOptions<T = string | number | boolean | object> {
   validate?: (v: T) => boolean | void;
 }
 
+export interface ContextParamAttributes {}
+
 export interface ParamClassOptions extends ParamBaseOptions {
   type?: ClassType<any> | BigIntConstructor;
 }
@@ -30,6 +32,7 @@ export enum ParamType {
   Body = "BODY",
   Path = "PATH",
   System = "SYSTEM",
+  Context = "CONTEXT",
 }
 
 export type SystemParamOptions = SystemRequestParamOptions;
@@ -39,7 +42,15 @@ export interface SystemRequestParamOptions {
   attr: keyof HttpRequest;
 }
 
-function Param(type: ParamType, name: string, options: ParamOptions | SystemParamOptions): ParameterDecorator {
+export type ContextParamOptions = CyanRequestContextParamOptions;
+
+export interface CyanRequestContextParamOptions {
+  type: "CONTEXT";
+  attr: keyof ContextParamAttributes;
+  validate?: (v: any) => boolean;
+}
+
+function Param(type: ParamType, name: string, options: ParamOptions | SystemParamOptions | ContextParamOptions): ParameterDecorator {
   return function ParamInner(target: any, method: string, index: number) {
     Metadata.getStorage().routeParams.push({
       target: target.constructor,
@@ -70,4 +81,8 @@ export function QueryParam(name: string, options?: ParamOptions): ParameterDecor
 
 export function SystemParam(options: SystemParamOptions): ParameterDecorator {
   return Param(ParamType.System, null, options);
+}
+
+export function ContextParam(options: ContextParamOptions): ParameterDecorator {
+  return Param(ParamType.Context, null, options);
 }

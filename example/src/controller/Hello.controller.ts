@@ -2,10 +2,23 @@
 import { ok as assert } from "assert";
 import { Inject } from "@coralblack/cyan/dist/core";
 import { HttpHelper } from "@coralblack/cyan/dist/helper";
-import { HttpMethod } from "@coralblack/cyan/dist/http";
-import { HttpResponder } from "@coralblack/cyan/dist/http/Http.response";
-import { BodyParam, Get, HeaderParam, PathParam, Post, QueryParam, SystemParam } from "@coralblack/cyan/dist/router";
+import { HttpMethod, HttpRequest } from "@coralblack/cyan/dist/http";
+import { HttpResponder, HttpResponse } from "@coralblack/cyan/dist/http/Http.response";
+import {
+  BodyParam,
+  ContextAttributeKeyType,
+  ContextParam,
+  ContextParamAttributes,
+  Get,
+  HeaderParam,
+  Middleware,
+  PathParam,
+  Post,
+  QueryParam,
+  SystemParam,
+} from "@coralblack/cyan/dist/router";
 import { BaseController } from "./Base.controller";
+import { AuthorizedContext, BasicAuthMiddleware, CyanRequestContext } from "./middleware/BasicAuthMiddleware";
 import { HttpError } from "../../../dist/http/Http.error";
 import { HelloService } from "../service/Hello.service";
 
@@ -41,6 +54,16 @@ const DEFAULT_VAL = "DEFAULT_VAL";
 export class HelloController extends BaseController {
   constructor(@Inject() private readonly helloService: HelloService, @Inject() private readonly httpHelper: HttpHelper) {
     super();
+  }
+
+  async afterHandle(request: HttpRequest, response: any, executionContext: ContextParamAttributes): Promise<HttpResponse> {
+    const authContext = executionContext.authContext;
+
+    console.log("controller AfterHandle Example", { executionContext });
+
+    return new Promise(res => {
+      return res(response as HttpResponse);
+    });
   }
 
   @Get("/hello/string/:foo?")
@@ -351,5 +374,41 @@ export class HelloController extends BaseController {
     @SystemParam({ type: "REQ", attr: "remoteAddress" }) remoteAddress: string
   ): string {
     return `RES:${reqMethod}:${remoteAddress}`;
+  }
+
+  @Get("/test/middleware/class/instance")
+  @Middleware((req, res, next) => {
+    req.executionContext.authContext = { email: "myemail@naver.com", id: "1111", lastLoginAt: new Date() };
+    req.executionContext.requestContext = { foo: "foo", bar: 11, boo: { innerFoo: "innerFoo" } };
+
+    // NOTE: Compile Error
+    // req.executionContext.invalidAttribute = "test";
+
+    const a: ContextAttributeKeyType = "authContext";
+    const b: ContextAttributeKeyType = "authContext";
+    const test: ContextAttributeKeyType = "authContext";
+
+    return next();
+  })
+  testMiddlewareTypeValidation(
+    @ContextParam({ type: "CONTEXT", attr: "requestContext" }) myContext: CyanRequestContext,
+    @ContextParam({ type: "CONTEXT", attr: "authContext", validate: (auth: AuthorizedContext) => !!auth.email })
+    authContext: AuthorizedContext
+  ): {
+    context: CyanRequestContext;
+    authContext: AuthorizedContext;
+  } {
+    return { context: myContext, authContext };
+  }
+
+  @Get("/test/middleware/basic-auth")
+  @Middleware(BasicAuthMiddleware)
+  basicAuthMiddleware(
+    @ContextParam({ type: "CONTEXT", attr: "authContext", validate: (auth: AuthorizedContext) => !!auth.email })
+    authContext: AuthorizedContext
+  ): {
+    authContext: AuthorizedContext;
+  } {
+    return { authContext };
   }
 }

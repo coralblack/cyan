@@ -4,7 +4,7 @@ import swaggerJsdoc, { Operation, Options, Parameter, Reference, RequestBody, Re
 import { DefaultSwaggerSchemaInitializer } from "./SchemaInitializer";
 import { ApiPropertyOptions, ApiTagOptions, SwaggerOperationMetadata, SwaggerOptions } from "./Swagger";
 import { Metadata } from "../core/Decorator";
-import { ParamOptions, ParamType, SystemParamOptions } from "../router";
+import { ContextParamOptions, ParamOptions, ParamType, SystemParamOptions } from "../router";
 import { RouteMetadataArgs, RouteParamMetadataArgs } from "../types/MetadataArgs";
 
 enum SwaggerParameterType {
@@ -17,6 +17,7 @@ enum SwaggerParameterType {
 export type RecordSchemaType = { [key: string]: Schema | Reference } | undefined;
 export type BaseSchemaType = Schema | Reference;
 type ParameterOptionsType = ParamOptions | ApiPropertyOptions | SystemParamOptions;
+type AllowedParamType = Exclude<ParamType, "CONTEXT">;
 
 export class SwaggerGenerator {
   private readonly storage = Metadata.getStorage();
@@ -126,7 +127,10 @@ export class SwaggerGenerator {
   }
 
   private getSwaggerParameters(route: RouteMetadataArgs): Parameter[] {
-    return this.storage.routeParams.filter(param => this.isValidRouteParam(param, route)).map(param => this.createParameterObject(param));
+    return this.storage.routeParams
+      .filter(param => this.isValidRouteParam(param, route))
+      .map(param => this.createParameterObject(param))
+      .filter(param => param !== undefined);
   }
 
   private isValidRouteParam(param: RouteParamMetadataArgs, route: RouteMetadataArgs): boolean {
@@ -135,12 +139,14 @@ export class SwaggerGenerator {
       param.method === route.method &&
       param.type !== ParamType.Body &&
       param.type !== ParamType.System &&
+      param.type !== ParamType.Context &&
       param.name !== "authorization" &&
       param.name !== "user-agent"
     );
   }
 
-  private createParameterObject(param: RouteParamMetadataArgs): Parameter {
+  private createParameterObject(param: RouteParamMetadataArgs): Parameter | undefined {
+    if (param.type === ParamType.Context) return undefined;
     const schema = this.getSchemaType(param.options);
     const description = this.getParamDescription(param.options);
 
@@ -153,7 +159,7 @@ export class SwaggerGenerator {
     };
   }
 
-  private getParamDescription(options: ParamOptions | SystemParamOptions): string {
+  private getParamDescription(options: ParamOptions | SystemParamOptions | ContextParamOptions): string {
     return "delimiter" in options && options.delimiter ? `Delimiter: ${options.delimiter}` : "";
   }
 
@@ -162,7 +168,7 @@ export class SwaggerGenerator {
   }
 
   private getParamLocation(paramType: ParamType): SwaggerParameterType {
-    const locationMap: Record<ParamType, SwaggerParameterType> = {
+    const locationMap: Record<AllowedParamType, SwaggerParameterType> = {
       [ParamType.System]: SwaggerParameterType.Header,
       [ParamType.Header]: SwaggerParameterType.Header,
       [ParamType.Query]: SwaggerParameterType.Query,

@@ -139,17 +139,23 @@ class SwaggerGenerator {
             .replace(/\/$/, "");
     }
     getSwaggerParameters(route) {
-        return this.storage.routeParams.filter(param => this.isValidRouteParam(param, route)).map(param => this.createParameterObject(param));
+        return this.storage.routeParams
+            .filter(param => this.isValidRouteParam(param, route))
+            .map(param => this.createParameterObject(param))
+            .filter(param => param !== undefined);
     }
     isValidRouteParam(param, route) {
         return (param.target === route.target &&
             param.method === route.method &&
             param.type !== router_1.ParamType.Body &&
             param.type !== router_1.ParamType.System &&
+            param.type !== router_1.ParamType.Context &&
             param.name !== "authorization" &&
             param.name !== "user-agent");
     }
     createParameterObject(param) {
+        if (param.type === router_1.ParamType.Context)
+            return undefined;
         const schema = this.getSchemaType(param.options);
         const description = this.getParamDescription(param.options);
         return {

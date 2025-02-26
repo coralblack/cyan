@@ -1,6 +1,6 @@
 {
   "name": "@coralblack/cyan",
-  "version": "0.1.29",
+  "version": "0.1.30",
   "description": "Node.js, Faster, cheaper, better web framework written in Typescript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,7 +15,6 @@
     "release:patch": "npm version patch --no-git-tag-version",
     "prerelease": "git diff --exit-code",
     "release": "npm run release:patch && export RELEASE_VER=$(node -e \"console.log(require('./package.json').version)\") && git checkout -b feature/bump-ver_${RELEASE_VER} && npm run build && git add . && git commit -m \"Bump version, v${RELEASE_VER}\" &&git tag -a v${RELEASE_VER} -m \"Release version, v${RELEASE_VER}\" && git push --set-upstream origin feature/bump-ver_${RELEASE_VER} && git push origin v${RELEASE_VER}"
-
   },
   "engines": {
     "node": ">=10.4"

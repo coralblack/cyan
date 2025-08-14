@@ -484,7 +484,7 @@ export class Repository<T extends Record<string | symbol, any>> {
     }
   }
 
-  private prepareQuery<TKeys extends keyof T = keyof T>(options?: FindOptions<T, TKeys>, trx?: TransactionScope): Knex.QueryBuilder {
+  private prepareQuery(options?: FindOptions<T>, trx?: TransactionScope): Knex.QueryBuilder {
     try {
       const knex = trx?.kx || this.kx;
       const joinAliases: { [key: string]: string } = {};

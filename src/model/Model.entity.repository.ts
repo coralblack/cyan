@@ -417,7 +417,7 @@ export class Repository<T extends Record<string | symbol, any>> {
     }
   }
 
-  async findOne(options?: FindOneOptions<T>, trx?: TransactionScope): Promise<T> {
+  async findOne<TKeys extends keyof T = keyof T>(options?: FindOneOptions<T, TKeys>, trx?: TransactionScope): Promise<Pick<T, TKeys>> {
     try {
       const [res] = await this.select({ ...options, limit: 1 }, trx);
 
@@ -427,7 +427,7 @@ export class Repository<T extends Record<string | symbol, any>> {
     }
   }
 
-  async find(options?: FindOptions<T>, trx?: TransactionScope): Promise<T[]> {
+  async find<TKeys extends keyof T = keyof T>(options?: FindOptions<T, TKeys>, trx?: TransactionScope): Promise<Pick<T, TKeys>[]> {
     try {
       const res = await this.select(options, trx);
 
@@ -437,7 +437,7 @@ export class Repository<T extends Record<string | symbol, any>> {
     }
   }
 
-  async pagination(options?: PaginationOptions<T>, trx?: TransactionScope): Promise<Paginatable<T>> {
+  async pagination<TKeys extends keyof T = keyof T>(options?: PaginationOptions<T, TKeys>, trx?: TransactionScope): Promise<Paginatable<Pick<T, TKeys>>> {
     try {
       const kx = trx?.kx || this.kx;
       const page = Math.max(1, options && options.page ? options.page : 1);
@@ -484,7 +484,7 @@ export class Repository<T extends Record<string | symbol, any>> {
     }
   }
 
-  private prepareQuery(options?: FindOptions<T>, trx?: TransactionScope): Knex.QueryBuilder {
+  private prepareQuery<TKeys extends keyof T = keyof T>(options?: FindOptions<T, TKeys>, trx?: TransactionScope): Knex.QueryBuilder {
     try {
       const knex = trx?.kx || this.kx;
       const joinAliases: { [key: string]: string } = {};
@@ -552,7 +552,7 @@ export class Repository<T extends Record<string | symbol, any>> {
     }
   }
 
-  private async select(options?: FindOptions<T>, trx?: TransactionScope): Promise<T[]> {
+  private async select<TKeys extends keyof T = keyof T>(options?: FindOptions<T, TKeys>, trx?: TransactionScope): Promise<Pick<T, TKeys>[]> {
     try {
       const rows = await this.prepareQuery(options, trx);
 

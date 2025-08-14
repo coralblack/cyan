@@ -33,15 +33,15 @@ export type FindConditions<T> = {
 export type OrderCondition<T> = { [P in keyof T]?: "ASC" | "DESC" | RawQuery } | ((aliases: { [key: string]: string }) => string);
 export type OrderConditions<T> = OrderCondition<T> | Array<OrderCondition<T>>;
 
-export interface FindOneOptions<T> {
-  select?: (keyof T)[];
+export interface FindOneOptions<T, TKeys extends keyof T = keyof T> {
+  select?: TKeys[];
   where?: FindConditions<T> | FindChainingConditions<T>;
   order?: OrderConditions<T>;
   debug?: boolean;
   forUpdate?: boolean;
 }
 
-export interface FindOptions<T> extends FindOneOptions<T> {
+export interface FindOptions<T, TKeys extends keyof T = keyof T> extends FindOneOptions<T, TKeys> {
   offset?: number | bigint;
   limit?: number | bigint;
   distinct?: boolean;
@@ -49,7 +49,7 @@ export interface FindOptions<T> extends FindOneOptions<T> {
 
 export interface CountOptions<T> extends Omit<FindOneOptions<T>, "select" | "order"> {}
 
-export interface PaginationOptions<T> extends FindOneOptions<T> {
+export interface PaginationOptions<T, TKeys extends keyof T = keyof T> extends FindOneOptions<T, TKeys> {
   page?: number;
   rpp?: number;
 }

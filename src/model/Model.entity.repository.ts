@@ -437,7 +437,10 @@ export class Repository<T extends Record<string | symbol, any>> {
     }
   }
 
-  async pagination<TKeys extends keyof T = keyof T>(options?: PaginationOptions<T, TKeys>, trx?: TransactionScope): Promise<Paginatable<Pick<T, TKeys>>> {
+  async pagination<TKeys extends keyof T = keyof T>(
+    options?: PaginationOptions<T, TKeys>,
+    trx?: TransactionScope
+  ): Promise<Paginatable<Pick<T, TKeys>>> {
     try {
       const kx = trx?.kx || this.kx;
       const page = Math.max(1, options && options.page ? options.page : 1);
@@ -552,7 +555,10 @@ export class Repository<T extends Record<string | symbol, any>> {
     }
   }
 
-  private async select<TKeys extends keyof T = keyof T>(options?: FindOptions<T, TKeys>, trx?: TransactionScope): Promise<Pick<T, TKeys>[]> {
+  private async select<TKeys extends keyof T = keyof T>(
+    options?: FindOptions<T, TKeys>,
+    trx?: TransactionScope
+  ): Promise<Pick<T, TKeys>[]> {
     try {
       const rows = await this.prepareQuery(options, trx);
 

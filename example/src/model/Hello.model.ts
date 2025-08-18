@@ -746,6 +746,7 @@ export class HelloModel extends BaseModel {
       await this.testStreaming(scope);
       await this.testDistinct(scope);
       await this.testUpsert(scope);
+      await this.testFindOneOptions(scope);
       return null;
     });
 
@@ -1120,5 +1121,34 @@ export class HelloModel extends BaseModel {
     assert(uckAfterFound.name2 === "NAME2", "uckAfterFound.name2 === 'NAME2'");
     assert(uckAfterFound.name3 === "NAME3", "uckAfterFound.name3 === 'NAME3'");
     assert(uckAfterFound.createdAt.getTime() === uckBeforeDate.getTime(), "uckAfterFound.createdAt === uckBeforeDate");
+  }
+
+  private async testFindOneOptions(trx: TransactionScope) {
+    const repo = trx.getRepository(HelloUniqueEntity);
+
+    const entity = await repo.findOne({ select: ["name1"] }, trx);
+    
+    entity.name1;
+
+    // @ts-expect-error
+    entity.name2;
+
+    const entities = await repo.find({ select: ["name1"] }, trx);
+    
+    for (const entity of entities) {
+      entity.name1;
+      
+      // @ts-expect-error
+      entity.name2;
+    }
+    
+    const paginatedEntities = await repo.pagination({ select: ["name1"] }, trx);
+    
+    for (const entity of paginatedEntities.items) {
+      entity.name1;
+      
+      // @ts-expect-error
+      entity.name2;
+    }
   }
 }
